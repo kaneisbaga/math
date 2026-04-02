@@ -2,12 +2,11 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>分數練習_下移避開切邊版</title>
+    <title>Fractions: Improper ↔ Mixed</title>
     <style>
         @page { size: A4; margin: 0.5cm; }
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; background-color: #fff; line-height: 1.2; }
         
-        /* 解決切邊問題：讓內容從距離紙張頂部 1.2cm 處才開始 */
         .page-container { 
             padding-top: 1.2cm; 
             min-height: 28cm; 
@@ -30,7 +29,6 @@
 
         .quiz-grid { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 15px; padding: 0 15px; }
         
-        /* 微調高度至 78px 以騰出上方 1.2cm 的空間 */
         .q-item { display: flex; flex-direction: column; justify-content: center; height: 78px; border-bottom: 1px dashed #bbb; }
         
         .q-main { display: flex; align-items: center; width: 100%; }
@@ -53,14 +51,14 @@
 <body>
 
 <div class="no-print">
-    <h3 style="margin:0;">🚀 內容下移修正版</h3>
-    <p>已經將標題內容整體<b>下移 1.2 公分</b>，防止印表機切掉最上方的文字。</p>
+    <h3 style="margin:0;">🚀 不重複題目版</h3>
+    <p>系統會從 500 多種組合中自動挑選出 <b>40 題完全不重複</b> 的題目。</p>
     <button onclick="window.print()" style="padding: 10px 20px; background: #e65100; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ 滿版列印</button>
-    <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 換一組題</button>
+    <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 換一組不重複題</button>
 </div>
 
 <div class="page-break page-container">
-    <div class="header-title">分數轉換練習題 (40題)</div>
+    <div class="header-title">Fractions: Improper ↔ Mixed (40 Qs)</div>
     <div class="info-bar">
         <span>姓名：__________</span>
         <span class="date-display"></span>
@@ -91,36 +89,15 @@
 </div>
 
 <div class="is-answer-page page-container">
-    <div class="header-title">【答案卷】分數轉換練習題</div>
+    <div class="header-title">【答案卷】Fractions: Improper ↔ Mixed</div>
     <div class="info-bar">
         <span class="date-display"></span>
         <span>對照題號批改</span>
     </div>
-
-    <div class="example-section">
-        <div class="ex-title">💡 解題示範答案</div>
-        <div style="display:flex; flex-direction:column; border-right: 1px solid #ccc;">
-            <div class="q-main">
-                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[例A]</span>
-                <div class="math-box"><div class="fraction"><div class="num">17</div><div class="den">5</div></div></div><div class="equal">=</div>
-                <div style="display:flex; align-items:center; color:#d32f2f;"><span class="whole" style="font-size:18px">3</span><div class="fraction" style="font-size:14px"><div class="num">2</div><div class="den">5</div></div></div>
-            </div>
-        </div>
-        <div style="display:flex; flex-direction:column;">
-            <div class="q-main">
-                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[例B]</span>
-                <div class="math-box"><span class="whole">2</span><div class="fraction"><div class="num">3</div><div class="den">4</div></div></div><div class="equal">=</div>
-                <div style="display:flex; align-items:center; color:#d32f2f;"><div class="fraction" style="font-size:16px"><div class="num">11</div><div class="den">4</div></div></div>
-            </div>
-        </div>
-    </div>
-
     <div class="quiz-grid" id="answer-content"></div>
 </div>
 
 <script>
-    function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
     function init() {
         const today = new Date();
         const dateStr = `日期：${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
@@ -129,29 +106,46 @@
         const quizContainer = document.getElementById('quiz-content');
         const ansContainer = document.getElementById('answer-content');
         
+        // 1. 生成所有可能的題目池
+        let pool = [];
+        for (let d = 2; d <= 12; d++) {      // 分母 2-12
+            for (let w = 1; w <= 9; w++) {   // 整數 1-9
+                for (let r = 1; r < d; r++) { // 餘數 (分子) 需小於分母
+                    pool.push({ den: d, whole: w, rem: r });
+                }
+            }
+        }
+
+        // 2. 洗牌演算法 (Fisher-Yates Shuffle)
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+
+        // 3. 取出前 40 題
+        let selected = pool.slice(0, 40);
         let quizHtml = '';
         let ansHtml = '';
 
-        for (let i = 1; i <= 40; i++) {
+        selected.forEach((item, index) => {
+            const i = index + 1;
+            // 隨機決定該題是「假轉帶」還是「帶轉假」
             const isToMixed = Math.random() > 0.5;
-            const den = getRandom(2, 12);
-            const whole = getRandom(1, 9);
-            const rem = getRandom(1, den - 1);
+            
             let prob, ans;
-
             if (isToMixed) {
-                const num = (whole * den) + rem;
-                prob = `<div class="fraction"><div class="num">${num}</div><div class="den">${den}</div></div>`;
-                ans = `<span class="whole">${whole}</span><div class="fraction"><div class="num">${rem}</div><div class="den">${den}</div></div>`;
+                const num = (item.whole * item.den) + item.rem;
+                prob = `<div class="fraction"><div class="num">${num}</div><div class="den">${item.den}</div></div>`;
+                ans = `<span class="whole">${item.whole}</span><div class="fraction"><div class="num">${item.rem}</div><div class="den">${item.den}</div></div>`;
             } else {
-                const num = (whole * den) + rem;
-                prob = `<span class="whole">${whole}</span><div class="fraction"><div class="num">${rem}</div><div class="den">${den}</div></div>`;
-                ans = `<div class="fraction"><div class="num">${num}</div><div class="den">${den}</div></div>`;
+                const num = (item.whole * item.den) + item.rem;
+                prob = `<span class="whole">${item.whole}</span><div class="fraction"><div class="num">${item.rem}</div><div class="den">${item.den}</div></div>`;
+                ans = `<div class="fraction"><div class="num">${num}</div><div class="den">${item.den}</div></div>`;
             }
 
             quizHtml += `<div class="q-item"><div class="q-main"><div class="q-num">${i}.</div><div class="math-box">${prob}</div><div class="equal">=</div><div class="ans-area"></div></div></div>`;
             ansHtml += `<div class="q-item"><div class="q-main"><div class="q-num">${i}.</div><div class="math-box">${prob}</div><div class="equal">=</div><div class="ans-area">${ans}</div></div></div>`;
-        }
+        });
 
         quizContainer.innerHTML = quizHtml;
         ansContainer.innerHTML = ansHtml;
