@@ -2,35 +2,20 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Fractions: Improper ↔ Mixed</title>
+    <title>Fractions: Improper ↔ Mixed (難度分層版)</title>
     <style>
         @page { size: A4; margin: 0.5cm; }
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; background-color: #fff; line-height: 1.2; }
-        
-        .page-container { 
-            padding-top: 1.2cm; 
-            min-height: 28cm; 
-            box-sizing: border-box;
-        }
-
+        .page-container { padding-top: 1.2cm; min-height: 28cm; box-sizing: border-box; }
         .no-print { background: #fff3e0; padding: 15px; border: 1px solid #ff9800; border-radius: 8px; margin: 10px; }
         .page-break { page-break-after: always; }
-
         .header-title { text-align: center; font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 5px; }
         .info-bar { display: flex; justify-content: space-around; margin: 5px 15px; padding-bottom: 5px; border-bottom: 2px solid #000; font-size: 14px; }
-        
-        .example-section {
-            display: grid; grid-template-columns: repeat(2, 1fr);
-            gap: 15px; margin: 0 15px 10px 15px; padding: 8px;
-            border: 2px solid #444; border-radius: 8px; background-color: #fcfcfc;
-        }
+        .example-section { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 0 15px 10px 15px; padding: 8px; border: 2px solid #444; border-radius: 8px; background-color: #fcfcfc; }
         .ex-title { grid-column: span 2; font-weight: bold; font-size: 14px; color: #d32f2f; margin-bottom: 2px; }
         .step-hint { font-size: 11px; color: #d32f2f; margin-top: 1px; font-weight: bold; text-align: center;}
-
         .quiz-grid { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 15px; padding: 0 15px; }
-        
         .q-item { display: flex; flex-direction: column; justify-content: center; height: 78px; border-bottom: 1px dashed #bbb; }
-        
         .q-main { display: flex; align-items: center; width: 100%; }
         .q-num { font-size: 12px; font-weight: bold; width: 25px; }
         .math-box { display: flex; align-items: center; font-size: 19px; min-width: 50px; justify-content: center; }
@@ -40,21 +25,19 @@
         .whole { font-size: 22px; font-weight: bold; margin-right: 1px; }
         .equal { margin: 0 8px; font-size: 16px; font-weight: bold; }
         .ans-area { flex-grow: 1; border-bottom: 1.5px solid #000; height: 35px; margin-right: 5px; }
-        
         .is-answer-page .ans-area { border-bottom: none; color: #d32f2f; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 18px; background: #fff5f5; }
         .is-answer-page .header-title { color: #d32f2f; }
         .is-answer-page .info-bar { border-bottom-color: #d32f2f; color: #d32f2f; }
-
         @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h3 style="margin:0;">🚀 不重複題目版</h3>
-    <p>系統會從 500 多種組合中自動挑選出 <b>40 題完全不重複</b> 的題目。</p>
+    <h3 style="margin:0;">🚀 難度分層版 (10/10/10/5/5)</h3>
+    <p>題目已按照：極易(10)、簡易(10)、普通(10)、極難(5)、地獄(5) 比例混合生成。</p>
     <button onclick="window.print()" style="padding: 10px 20px; background: #e65100; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ 滿版列印</button>
-    <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 換一組不重複題</button>
+    <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 重新出題</button>
 </div>
 
 <div class="page-break page-container">
@@ -106,39 +89,72 @@
         const quizContainer = document.getElementById('quiz-content');
         const ansContainer = document.getElementById('answer-content');
         
-        // 1. 生成所有可能的題目池
-        let pool = [];
-        for (let d = 2; d <= 12; d++) {      // 分母 2-12
-            for (let w = 1; w <= 9; w++) {   // 整數 1-9
-                for (let r = 1; r < d; r++) { // 餘數 (分子) 需小於分母
-                    pool.push({ den: d, whole: w, rem: r });
+        // 1. 分類題目池 (分母 2-12, 整數 1-9)
+        let levels = {
+            veryEasy: [], // 10題
+            easy: [],     // 10題
+            normal: [],   // 10題
+            hard: [],     // 5題
+            hell: []      // 5題
+        };
+
+        for (let d = 2; d <= 12; d++) {
+            for (let w = 1; w <= 9; w++) {
+                for (let r = 1; r < d; r++) {
+                    const item = { den: d, whole: w, rem: r };
+                    // 根據分母大小與整數大小來定義難度
+                    if (d <= 4 && w <= 3) {
+                        levels.veryEasy.push(item);
+                    } else if (d <= 6 && w <= 5) {
+                        levels.easy.push(item);
+                    } else if (d <= 9 && w <= 7) {
+                        levels.normal.push(item);
+                    } else if (d <= 11 && w <= 8) {
+                        levels.hard.push(item);
+                    } else {
+                        levels.hell.push(item);
+                    }
                 }
             }
         }
 
-        // 2. 洗牌演算法 (Fisher-Yates Shuffle)
-        for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
+        // 洗牌函數
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
-        // 3. 取出前 40 題
-        let selected = pool.slice(0, 40);
+        // 2. 依比例選題 (確保各等級都有題目)
+        let selected = [
+            ...shuffle(levels.veryEasy).slice(0, 10),
+            ...shuffle(levels.easy).slice(0, 10),
+            ...shuffle(levels.normal).slice(0, 10),
+            ...shuffle(levels.hard).slice(0, 5),
+            ...shuffle(levels.hell).slice(0, 5)
+        ];
+
+        // 再次打亂這 40 題，讓難度交錯
+        shuffle(selected);
+
+        // 3. 渲染
         let quizHtml = '';
         let ansHtml = '';
 
         selected.forEach((item, index) => {
             const i = index + 1;
-            // 隨機決定該題是「假轉帶」還是「帶轉假」
             const isToMixed = Math.random() > 0.5;
+            const num = (item.whole * item.den) + item.rem;
             
             let prob, ans;
             if (isToMixed) {
-                const num = (item.whole * item.den) + item.rem;
+                // 假分數轉帶分數
                 prob = `<div class="fraction"><div class="num">${num}</div><div class="den">${item.den}</div></div>`;
                 ans = `<span class="whole">${item.whole}</span><div class="fraction"><div class="num">${item.rem}</div><div class="den">${item.den}</div></div>`;
             } else {
-                const num = (item.whole * item.den) + item.rem;
+                // 帶分數轉假分數
                 prob = `<span class="whole">${item.whole}</span><div class="fraction"><div class="num">${item.rem}</div><div class="den">${item.den}</div></div>`;
                 ans = `<div class="fraction"><div class="num">${num}</div><div class="den">${item.den}</div></div>`;
             }
@@ -151,7 +167,8 @@
         ansContainer.innerHTML = ansHtml;
     }
 
-    init();
+    // 確保頁面載入後才執行
+    window.onload = init;
 </script>
 
 </body>
