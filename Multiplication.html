@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Math Quiz: Multiplication (50 Qs)</title>
+    <title>Math Quiz: Multiplication by 2 (50 Qs)</title>
     <style>
         @page { size: A4; margin: 0.5cm; }
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; background-color: #fff; line-height: 1.2; }
@@ -15,12 +15,11 @@
         .ex-title { grid-column: span 2; font-weight: bold; font-size: 14px; color: #e65100; margin-bottom: 2px; }
         .step-hint { font-size: 11px; color: #666; margin-top: 1px; font-weight: bold; text-align: center;}
         
-        /* 調整為 5 欄讓 50 題放得下 */
         .quiz-grid { display: grid; grid-template-columns: repeat(5, 1fr); column-gap: 10px; padding: 0 10px; }
         .q-item { display: flex; flex-direction: column; justify-content: center; height: 75px; border-bottom: 1px dashed #bbb; }
         .q-main { display: flex; align-items: center; width: 100%; }
         .q-num { font-size: 11px; font-weight: bold; width: 22px; }
-        .math-box { display: flex; align-items: center; font-size: 16px; min-width: 60px; justify-content: flex-start; font-weight: bold; }
+        .math-box { display: flex; align-items: center; font-size: 18px; min-width: 60px; justify-content: flex-start; font-weight: bold; }
         .equal { margin: 0 4px 0 2px; font-size: 14px; font-weight: bold; }
         .ans-area { flex-grow: 1; border-bottom: 1.5px solid #000; height: 28px; margin-right: 3px; }
         
@@ -32,14 +31,14 @@
 <body>
 
 <div class="no-print">
-    <h3 style="margin:0;">✖️ 乘法出題 (50 題版)</h3>
-    <p>包含 2D×2D 與 3D×2D。比例：12:13:10:10:5</p>
+    <h3 style="margin:0;">✖️ 乘法出題 (乘以 2 專區)</h3>
+    <p>包含 2D×2 與 3D×2。比例：12:13:10:10:5</p>
     <button onclick="window.print()" style="padding: 10px 20px; background: #e65100; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ 滿版列印</button>
     <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 重新出題</button>
 </div>
 
 <div class="page-break page-container">
-    <div class="header-title">Multiplication Quiz (50 Qs)</div>
+    <div class="header-title">Multiplication Quiz (× 2)</div>
     <div class="info-bar">
         <span>姓名：__________</span>
         <span class="date-display"></span>
@@ -50,19 +49,19 @@
         <div class="ex-title">💡 解題示範</div>
         <div style="display:flex; flex-direction:column; border-right: 1px solid #ccc;">
             <div class="q-main">
-                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[2D×2D]</span>
-                <div class="math-box">23 × 12</div><div class="equal">=</div>
-                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">276</div>
+                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[2D×2]</span>
+                <div class="math-box">25 × 2</div><div class="equal">=</div>
+                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">50</div>
             </div>
-            <div class="step-hint">想：23×2 + 23×10</div>
+            <div class="step-hint">想：25 + 25 或直式計算</div>
         </div>
         <div style="display:flex; flex-direction:column;">
             <div class="q-main">
-                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[3D×2D]</span>
-                <div class="math-box">105 × 24</div><div class="equal">=</div>
-                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">2520</div>
+                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[3D×2]</span>
+                <div class="math-box">358 × 2</div><div class="equal">=</div>
+                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">716</div>
             </div>
-            <div class="step-hint">想：直式計算要注意進位</div>
+            <div class="step-hint">想：8×2=16 進1，5×2+1=11 進1...</div>
         </div>
     </div>
 
@@ -70,7 +69,7 @@
 </div>
 
 <div class="is-answer-page page-container">
-    <div class="header-title">【答案卷】Multiplication</div>
+    <div class="header-title">【答案卷】Multiplication (× 2)</div>
     <div class="info-bar">
         <span class="date-display"></span>
         <span>對照題號批改</span>
@@ -89,36 +88,35 @@
         
         let levels = { vEasy: [], easy: [], normal: [], hard: [], hell: [] };
 
-        // 輔助函式：檢查是否完全不進位 (個位相乘、十位相乘等)
-        function noCarry(a, b) {
-            let s_a = a.toString().split('').reverse();
-            let s_b = b.toString().split('').reverse();
-            for(let i=0; i<s_a.length; i++) {
-                for(let j=0; j<s_b.length; j++) {
-                    if (parseInt(s_a[i]) * parseInt(s_b[j]) >= 10) return false;
-                }
-            }
-            return true;
+        // 輔助函式：檢查乘 2 是否完全不進位
+        function noCarryByTwo(n) {
+            let digits = n.toString().split('');
+            return digits.every(d => parseInt(d) * 2 < 10);
         }
 
         // 生成題目池
-        // 2D * 2D
-        for (let i = 0; i < 1000; i++) {
-            let a = Math.floor(Math.random() * 90) + 10;
-            let b = Math.floor(Math.random() * 90) + 10;
-            let item = { a: a, b: b, ans: a * b };
-            if (noCarry(a, b)) levels.vEasy.push(item);
-            else if (a < 40 && b < 30) levels.easy.push(item);
+        const fixedMultiplier = 2;
+
+        // 2D * 2
+        for (let a = 10; a <= 99; a++) {
+            let item = { a: a, b: fixedMultiplier, ans: a * fixedMultiplier };
+            if (noCarryByTwo(a)) {
+                levels.vEasy.push(item);
+            } else {
+                levels.easy.push(item);
+            }
         }
 
-        // 3D * 2D
-        for (let i = 0; i < 1500; i++) {
-            let a = Math.floor(Math.random() * 900) + 100;
-            let b = Math.floor(Math.random() * 90) + 10;
-            let item = { a: a, b: b, ans: a * b };
-            if (a < 300 && b < 20) levels.normal.push(item);
-            else if (a < 700 && b < 50) levels.hard.push(item);
-            else levels.hell.push(item);
+        // 3D * 2
+        for (let a = 100; a <= 999; a++) {
+            let item = { a: a, b: fixedMultiplier, ans: a * fixedMultiplier };
+            if (a < 500 && noCarryByTwo(a)) {
+                levels.normal.push(item);
+            } else if (a < 700) {
+                levels.hard.push(item);
+            } else {
+                levels.hell.push(item);
+            }
         }
 
         function shuffle(array) {
