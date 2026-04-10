@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>Math Quiz: Multiplication (50 Qs)</title>
+    <style>
+        @page { size: A4; margin: 0.5cm; }
+        body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; background-color: #fff; line-height: 1.2; }
+        .page-container { padding-top: 1.2cm; min-height: 28cm; box-sizing: border-box; }
+        .no-print { background: #fff3e0; padding: 15px; border: 1px solid #ff9800; border-radius: 8px; margin: 10px; }
+        .page-break { page-break-after: always; }
+        .header-title { text-align: center; font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 5px; }
+        .info-bar { display: flex; justify-content: space-around; margin: 5px 15px; padding-bottom: 5px; border-bottom: 2px solid #000; font-size: 14px; }
+        .example-section { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 0 15px 10px 15px; padding: 8px; border: 2px solid #444; border-radius: 8px; background-color: #fcfcfc; }
+        .ex-title { grid-column: span 2; font-weight: bold; font-size: 14px; color: #e65100; margin-bottom: 2px; }
+        .step-hint { font-size: 11px; color: #666; margin-top: 1px; font-weight: bold; text-align: center;}
+        
+        /* 調整為 5 欄讓 50 題放得下 */
+        .quiz-grid { display: grid; grid-template-columns: repeat(5, 1fr); column-gap: 10px; padding: 0 10px; }
+        .q-item { display: flex; flex-direction: column; justify-content: center; height: 75px; border-bottom: 1px dashed #bbb; }
+        .q-main { display: flex; align-items: center; width: 100%; }
+        .q-num { font-size: 11px; font-weight: bold; width: 22px; }
+        .math-box { display: flex; align-items: center; font-size: 16px; min-width: 60px; justify-content: flex-start; font-weight: bold; }
+        .equal { margin: 0 4px 0 2px; font-size: 14px; font-weight: bold; }
+        .ans-area { flex-grow: 1; border-bottom: 1.5px solid #000; height: 28px; margin-right: 3px; }
+        
+        .is-answer-page .ans-area { border-bottom: none; color: #d32f2f; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 15px; background: #fff5f5; }
+        .is-answer-page .header-title { color: #d32f2f; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <h3 style="margin:0;">✖️ 乘法出題 (50 題版)</h3>
+    <p>包含 2D×2D 與 3D×2D。比例：12:13:10:10:5</p>
+    <button onclick="window.print()" style="padding: 10px 20px; background: #e65100; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ 滿版列印</button>
+    <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 重新出題</button>
+</div>
+
+<div class="page-break page-container">
+    <div class="header-title">Multiplication Quiz (50 Qs)</div>
+    <div class="info-bar">
+        <span>姓名：__________</span>
+        <span class="date-display"></span>
+        <span>得分：__________</span>
+    </div>
+    
+    <div class="example-section">
+        <div class="ex-title">💡 解題示範</div>
+        <div style="display:flex; flex-direction:column; border-right: 1px solid #ccc;">
+            <div class="q-main">
+                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[2D×2D]</span>
+                <div class="math-box">23 × 12</div><div class="equal">=</div>
+                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">276</div>
+            </div>
+            <div class="step-hint">想：23×2 + 23×10</div>
+        </div>
+        <div style="display:flex; flex-direction:column;">
+            <div class="q-main">
+                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[3D×2D]</span>
+                <div class="math-box">105 × 24</div><div class="equal">=</div>
+                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">2520</div>
+            </div>
+            <div class="step-hint">想：直式計算要注意進位</div>
+        </div>
+    </div>
+
+    <div class="quiz-grid" id="quiz-content"></div>
+</div>
+
+<div class="is-answer-page page-container">
+    <div class="header-title">【答案卷】Multiplication</div>
+    <div class="info-bar">
+        <span class="date-display"></span>
+        <span>對照題號批改</span>
+    </div>
+    <div class="quiz-grid" id="answer-content"></div>
+</div>
+
+<script>
+    function init() {
+        const today = new Date();
+        const dateStr = `日期：${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+        document.querySelectorAll('.date-display').forEach(el => el.innerText = dateStr);
+
+        const quizContainer = document.getElementById('quiz-content');
+        const ansContainer = document.getElementById('answer-content');
+        
+        let levels = { vEasy: [], easy: [], normal: [], hard: [], hell: [] };
+
+        // 輔助函式：檢查是否完全不進位 (個位相乘、十位相乘等)
+        function noCarry(a, b) {
+            let s_a = a.toString().split('').reverse();
+            let s_b = b.toString().split('').reverse();
+            for(let i=0; i<s_a.length; i++) {
+                for(let j=0; j<s_b.length; j++) {
+                    if (parseInt(s_a[i]) * parseInt(s_b[j]) >= 10) return false;
+                }
+            }
+            return true;
+        }
+
+        // 生成題目池
+        // 2D * 2D
+        for (let i = 0; i < 1000; i++) {
+            let a = Math.floor(Math.random() * 90) + 10;
+            let b = Math.floor(Math.random() * 90) + 10;
+            let item = { a: a, b: b, ans: a * b };
+            if (noCarry(a, b)) levels.vEasy.push(item);
+            else if (a < 40 && b < 30) levels.easy.push(item);
+        }
+
+        // 3D * 2D
+        for (let i = 0; i < 1500; i++) {
+            let a = Math.floor(Math.random() * 900) + 100;
+            let b = Math.floor(Math.random() * 90) + 10;
+            let item = { a: a, b: b, ans: a * b };
+            if (a < 300 && b < 20) levels.normal.push(item);
+            else if (a < 700 && b < 50) levels.hard.push(item);
+            else levels.hell.push(item);
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        let selected = [
+            ...shuffle(levels.vEasy).slice(0, 12),
+            ...shuffle(levels.easy).slice(0, 13),
+            ...shuffle(levels.normal).slice(0, 10),
+            ...shuffle(levels.hard).slice(0, 10),
+            ...shuffle(levels.hell).slice(0, 5)
+        ];
+
+        shuffle(selected);
+
+        let quizHtml = '';
+        let ansHtml = '';
+
+        selected.forEach((item, index) => {
+            const i = index + 1;
+            const probStr = `${item.a} × ${item.b}`;
+            quizHtml += `<div class="q-item"><div class="q-main"><div class="q-num">${i}.</div><div class="math-box">${probStr}</div><div class="equal">=</div><div class="ans-area"></div></div></div>`;
+            ansHtml += `<div class="q-item"><div class="q-main"><div class="q-num">${i}.</div><div class="math-box">${probStr}</div><div class="equal">=</div><div class="ans-area">${item.ans}</div></div></div>`;
+        });
+
+        quizContainer.innerHTML = quizHtml;
+        ansContainer.innerHTML = ansHtml;
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
