@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Math Quiz: Mixed Operations (50 Qs)</title>
+    <title>Math Quiz: Mixed (No Spaces)</title>
     <style>
         @page { size: A4; margin: 0.5cm; }
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; background-color: #fff; line-height: 1.1; }
@@ -25,7 +25,8 @@
         .q-main { display: flex; align-items: center; width: 100%; }
         .q-num { font-size: 11px; font-weight: bold; width: 22px; color: #666; }
         
-        .math-box { display: flex; align-items: center; font-size: 15px; min-width: 95px; justify-content: flex-start; font-weight: bold; letter-spacing: 0.5px; }
+        /* 調整 math-box 使其緊湊 */
+        .math-box { display: flex; align-items: center; font-size: 16px; min-width: 85px; justify-content: flex-start; font-weight: bold; }
         .equal { margin: 0 4px 0 2px; font-size: 14px; font-weight: bold; }
         
         .ans-area { flex-grow: 1; border-bottom: 1.5px solid #000; height: 26px; margin-right: 3px; }
@@ -37,14 +38,14 @@
 <body>
 
 <div class="no-print">
-    <h3 style="margin:0;">📝 國小四則運算 (50 題)</h3>
-    <p>混合加減乘除與括號。遵守「先乘除後加減、括號先算」原則。</p>
+    <h3 style="margin:0;">📝 國小四則運算 (緊湊版)</h3>
+    <p>移除所有空白，維持 50 題 4 欄排版。</p>
     <button onclick="window.print()" style="padding: 10px 20px; background: #1976d2; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ 滿版列印</button>
     <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 重新出題</button>
 </div>
 
 <div class="page-break page-container">
-    <div class="header-title">Mixed Operations Quiz (50 Qs)</div>
+    <div class="header-title">Mixed Operations Quiz (No Spaces)</div>
     <div class="info-bar">
         <span>姓名：__________</span>
         <span class="date-display"></span>
@@ -56,18 +57,18 @@
         <div style="display:flex; flex-direction:column; border-right: 1px solid #ccc;">
             <div class="q-main">
                 <span style="font-size:11px; font-weight:bold; margin-right:5px;">[例A]</span>
-                <div class="math-box">10 + 5 × 2</div><div class="equal">=</div>
+                <div class="math-box">10+5×2</div><div class="equal">=</div>
                 <div style="color:#d32f2f; font-weight:bold; font-size:18px;">20</div>
             </div>
-            <div class="step-hint">先算乘法：10 + 10 = 20</div>
+            <div class="step-hint">先乘除後加減</div>
         </div>
         <div style="display:flex; flex-direction:column;">
             <div class="q-main">
                 <span style="font-size:11px; font-weight:bold; margin-right:5px;">[例B]</span>
-                <div class="math-box">(20 - 4) ÷ 4</div><div class="equal">=</div>
+                <div class="math-box">(20-4)÷4</div><div class="equal">=</div>
                 <div style="color:#d32f2f; font-weight:bold; font-size:18px;">4</div>
             </div>
-            <div class="step-hint">括號先算：16 ÷ 4 = 4</div>
+            <div class="step-hint">括號先算</div>
         </div>
     </div>
 
@@ -75,7 +76,7 @@
 </div>
 
 <div class="is-answer-page page-container">
-    <div class="header-title">【答案卷】Mixed Operations (50 Qs)</div>
+    <div class="header-title">【答案卷】Mixed Operations</div>
     <div class="info-bar">
         <span class="date-display"></span>
         <span>對照題號批改</span>
@@ -93,34 +94,31 @@
         const ansContainer = document.getElementById('answer-content');
         
         let pool = [];
-
-        // 隨機生成函數
         function r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-        // 生成不同型態的題目
-        while(pool.length < 100) {
+        while(pool.length < 150) {
             let type = r(1, 5);
-            let a, b, c, text, ans;
+            let a, b, c, d, text, ans;
 
-            if (type === 1) { // a + b * c
-                b = r(2, 9); c = r(2, 9); a = r(5, 50);
-                text = `${a} + ${b} × ${c}`; ans = a + (b * c);
-            } else if (type === 2) { // (a - b) / c
-                c = r(2, 9); ans = r(2, 10); b = r(5, 20);
+            if (type === 1) { // a+b*c
+                b = r(2, 9); c = r(2, 9); a = r(5, 40);
+                text = `${a}+${b}×${c}`; ans = a + (b * c);
+            } else if (type === 2) { // (a-b)/c
+                c = r(2, 9); ans = r(2, 10); b = r(5, 15);
                 a = (ans * c) + b;
-                text = `(${a} - ${b}) ÷ ${c}`;
-            } else if (type === 3) { // a * b - c
-                a = r(3, 12); b = r(2, 9); c = r(1, a*b - 1);
-                text = `${a} × ${b} - ${c}`; ans = (a * b) - c;
-            } else if (type === 4) { // a / b + c
-                b = r(2, 9); ans = r(2, 12); a = b * ans; c = r(5, 30);
-                text = `${a} ÷ ${b} + ${c}`; ans = (a / b) + c;
-            } else { // a + b - c * d (較難)
-                c = r(2, 5); d = r(2, 6); a = r(20, 60); b = r(10, 30);
-                text = `${a} + ${b} - ${c} × ${d}`; ans = a + b - (c * d);
+                text = `(${a}-${b})÷${c}`;
+            } else if (type === 3) { // a*b-c
+                a = r(3, 12); b = r(2, 9); c = r(1, (a * b) - 1);
+                text = `${a}×${b}-${c}`; ans = (a * b) - c;
+            } else if (type === 4) { // a/b+c
+                b = r(2, 9); ans = r(2, 10); a = b * ans; c = r(5, 25);
+                text = `${a}÷${b}+${c}`; ans = (a / b) + c;
+            } else { // a+b-c*d
+                c = r(2, 5); d = r(2, 6); a = r(15, 40); b = r(10, 25);
+                text = `${a}+${b}-${c}×${d}`; ans = a + b - (c * d);
             }
 
-            if (ans > 0 && ans < 200) {
+            if (ans > 0 && ans < 150) {
                 pool.push({ text: text, ans: ans });
             }
         }
