@@ -2,12 +2,12 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Math Quiz: Multiplication by 2 (50 Qs)</title>
+    <title>Math Quiz: Unique Multiplication by 2</title>
     <style>
         @page { size: A4; margin: 0.5cm; }
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; background-color: #fff; line-height: 1.2; }
         .page-container { padding-top: 1.2cm; min-height: 28cm; box-sizing: border-box; }
-        .no-print { background: #fff3e0; padding: 15px; border: 1px solid #ff9800; border-radius: 8px; margin: 10px; }
+        .no-print { background: #e3f2fd; padding: 15px; border: 1px solid #2196f3; border-radius: 8px; margin: 10px; }
         .page-break { page-break-after: always; }
         .header-title { text-align: center; font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 5px; }
         .info-bar { display: flex; justify-content: space-around; margin: 5px 15px; padding-bottom: 5px; border-bottom: 2px solid #000; font-size: 14px; }
@@ -31,10 +31,10 @@
 <body>
 
 <div class="no-print">
-    <h3 style="margin:0;">✖️ 乘法出題 (乘以 2 專區)</h3>
-    <p>包含 2D×2 與 3D×2。比例：12:13:10:10:5</p>
-    <button onclick="window.print()" style="padding: 10px 20px; background: #e65100; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ 滿版列印</button>
-    <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 重新出題</button>
+    <h3 style="margin:0;">✨ 進階乘法出題 (不重複數字版)</h3>
+    <p>規則：50道題目，<strong>題目與答案的所有數字保證不重複</strong>。範圍 999 以內。</p>
+    <button onclick="window.print()" style="padding: 10px 20px; background: #1976d2; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ 滿版列印</button>
+    <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 重新隨機出題</button>
 </div>
 
 <div class="page-break page-container">
@@ -49,19 +49,19 @@
         <div class="ex-title">💡 解題示範</div>
         <div style="display:flex; flex-direction:column; border-right: 1px solid #ccc;">
             <div class="q-main">
-                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[2D×2]</span>
-                <div class="math-box">25 × 2</div><div class="equal">=</div>
-                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">50</div>
+                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[進位練習]</span>
+                <div class="math-box">48 × 2</div><div class="equal">=</div>
+                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">96</div>
             </div>
-            <div class="step-hint">想：25 + 25 或直式計算</div>
+            <div class="step-hint">8×2=16 (寫6進1)，4×2+1=9</div>
         </div>
         <div style="display:flex; flex-direction:column;">
             <div class="q-main">
-                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[3D×2]</span>
-                <div class="math-box">358 × 2</div><div class="equal">=</div>
-                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">716</div>
+                <span style="font-size:12px; font-weight:bold; margin-right:5px;">[大數練習]</span>
+                <div class="math-box">367 × 2</div><div class="equal">=</div>
+                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">734</div>
             </div>
-            <div class="step-hint">想：8×2=16 進1，5×2+1=11 進1...</div>
+            <div class="step-hint">從個位開始，注意每一步的進位</div>
         </div>
     </div>
 
@@ -72,7 +72,7 @@
     <div class="header-title">【答案卷】Multiplication (× 2)</div>
     <div class="info-bar">
         <span class="date-display"></span>
-        <span>對照題號批改</span>
+        <span>請確認題號進行批改</span>
     </div>
     <div class="quiz-grid" id="answer-content"></div>
 </div>
@@ -86,39 +86,10 @@
         const quizContainer = document.getElementById('quiz-content');
         const ansContainer = document.getElementById('answer-content');
         
-        let levels = { vEasy: [], easy: [], normal: [], hard: [], hell: [] };
+        let usedNumbers = new Set();
+        let selected = [];
 
-        // 輔助函式：檢查乘 2 是否完全不進位
-        function noCarryByTwo(n) {
-            let digits = n.toString().split('');
-            return digits.every(d => parseInt(d) * 2 < 10);
-        }
-
-        // 生成題目池
-        const fixedMultiplier = 2;
-
-        // 2D * 2
-        for (let a = 10; a <= 99; a++) {
-            let item = { a: a, b: fixedMultiplier, ans: a * fixedMultiplier };
-            if (noCarryByTwo(a)) {
-                levels.vEasy.push(item);
-            } else {
-                levels.easy.push(item);
-            }
-        }
-
-        // 3D * 2
-        for (let a = 100; a <= 999; a++) {
-            let item = { a: a, b: fixedMultiplier, ans: a * fixedMultiplier };
-            if (a < 500 && noCarryByTwo(a)) {
-                levels.normal.push(item);
-            } else if (a < 700) {
-                levels.hard.push(item);
-            } else {
-                levels.hell.push(item);
-            }
-        }
-
+        // 隨機打亂陣列工具
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -127,14 +98,32 @@
             return array;
         }
 
-        let selected = [
-            ...shuffle(levels.vEasy).slice(0, 12),
-            ...shuffle(levels.easy).slice(0, 13),
-            ...shuffle(levels.normal).slice(0, 10),
-            ...shuffle(levels.hard).slice(0, 10),
-            ...shuffle(levels.hell).slice(0, 5)
-        ];
+        // 生成候選數字 (10 到 499，因為 500*2 = 1000 超出範圍)
+        let candidates = [];
+        for (let i = 10; i <= 499; i++) {
+            candidates.push(i);
+        }
+        shuffle(candidates);
 
+        // 挑選符合「不重複數字」規則的題目
+        for (let a of candidates) {
+            if (selected.length >= 50) break;
+
+            let ans = a * 2;
+            
+            // 檢查規則：
+            // 1. 被乘數 a 沒用過
+            // 2. 答案 ans 沒用過
+            // 3. 答案 ans 不等於被乘數 a (乘以2基本上不會相等，除非是0)
+            // 4. a 不曾作為之前的答案出現，ans 不曾作為之前的題目出現
+            if (!usedNumbers.has(a) && !usedNumbers.has(ans)) {
+                selected.push({ a: a, b: 2, ans: ans });
+                usedNumbers.add(a);
+                usedNumbers.add(ans);
+            }
+        }
+
+        // 再次打亂題目順序增加隨機性
         shuffle(selected);
 
         let quizHtml = '';
