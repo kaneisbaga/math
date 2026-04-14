@@ -2,84 +2,103 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Math Quiz: Mixed (No Spaces)</title>
+    <title>Math Quiz: Ultra Compact 76px</title>
     <style>
         @page { size: A4; margin: 0.5cm; }
-        body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; background-color: #fff; line-height: 1.1; }
-        .page-container { padding-top: 0.8cm; min-height: 28cm; box-sizing: border-box; }
-        .no-print { background: #e3f2fd; padding: 15px; border: 1px solid #2196f3; border-radius: 8px; margin: 10px; }
-        .page-break { page-break-after: always; }
-        .header-title { text-align: center; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 5px; }
-        .info-bar { display: flex; justify-content: space-around; margin: 2px 15px; padding-bottom: 5px; border-bottom: 2px solid #000; font-size: 13px; }
+        body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; background-color: #fff; }
         
-        .example-section { 
-            display: grid; grid-template-columns: repeat(2, 1fr); 
-            gap: 10px; margin: 0 15px 8px 15px; padding: 6px; 
-            border: 2px solid #444; border-radius: 8px; background-color: #fcfcfc; 
+        .page-container { 
+            padding: 0.2cm 0.8cm; 
+            height: 28.5cm; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
         }
-        .ex-title { grid-column: span 2; font-weight: bold; font-size: 13px; color: #1565c0; margin-bottom: 2px; }
-        .step-hint { font-size: 10px; color: #666; margin-top: 1px; font-weight: bold; text-align: center;}
         
-        .quiz-grid { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 15px; padding: 0 15px; }
-        .q-item { display: flex; flex-direction: column; justify-content: center; height: 62px; border-bottom: 1px dashed #bbb; }
-        .q-main { display: flex; align-items: center; width: 100%; }
-        .q-num { font-size: 11px; font-weight: bold; width: 22px; color: #666; }
+        .no-print { background: #f0f4f8; padding: 10px; border: 1px solid #1976d2; border-radius: 6px; margin: 10px; }
+        .page-break { page-break-after: always; }
         
-        /* 調整 math-box 使其緊湊 */
-        .math-box { display: flex; align-items: center; font-size: 16px; min-width: 85px; justify-content: flex-start; font-weight: bold; }
-        .equal { margin: 0 4px 0 2px; font-size: 14px; font-weight: bold; }
+        .header-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 2px; }
+        .info-bar { display: flex; justify-content: space-between; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 2px solid #000; font-size: 12px; }
         
-        .ans-area { flex-grow: 1; border-bottom: 1.5px solid #000; height: 26px; margin-right: 3px; }
-        .is-answer-page .ans-area { border-bottom: none; color: #d32f2f; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 16px; background: #fff5f5; }
+        .quiz-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            column-gap: 30px; 
+            flex-grow: 1;
+        }
+
+        .q-item { 
+            display: flex; 
+            align-items: center; 
+            height: 76px; /* 依照需求調整為 76px */
+            border-bottom: 1px dashed #ddd;
+            padding: 0;
+        }
+
+        .q-content {
+            display: flex;
+            align-items: center;
+            font-size: 15px; /* 稍微縮小字體以配合高度 */
+            font-weight: bold;
+            white-space: nowrap;
+            min-width: 125px;
+        }
+
+        .q-num { font-size: 10px; color: #888; width: 20px; margin-right: 2px; }
+        .equal { margin: 0 6px 0 4px; }
+
+        /* 答題方格 */
+        .ans-box { 
+            width: 110px; 
+            height: 36px; /* 配合 76px 高度稍微降 2px */
+            border: 1.5px solid #000; 
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+
+        /* 答案卷 */
+        .is-answer-page .ans-box { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d32f2f;
+            font-size: 17px;
+            border-color: #d32f2f;
+            background-color: #fffafa;
+        }
+
         .is-answer-page .header-title { color: #d32f2f; }
+        
         @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h3 style="margin:0;">📝 國小四則運算 (緊湊版)</h3>
-    <p>移除所有空白，維持 50 題 4 欄排版。</p>
-    <button onclick="window.print()" style="padding: 10px 20px; background: #1976d2; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ 滿版列印</button>
-    <button onclick="location.reload()" style="padding: 10px 20px; margin-left:10px; cursor: pointer;">🔄 重新出題</button>
+    <h3 style="margin:0;">🎯 最終壓縮版 (高度 76px)</h3>
+    <p>題目 25 題，答案格 110px 長度。此版面最適合 A4 滿版列印。</p>
+    <button onclick="window.print()" style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🖨️ 滿版列印</button>
+    <button onclick="location.reload()" style="padding: 8px 16px; margin-left:10px; cursor: pointer;">🔄 重新出題</button>
 </div>
 
-<div class="page-break page-container">
-    <div class="header-title">Mixed Operations Quiz (No Spaces)</div>
+<div class="page-container">
+    <div class="header-title">Mixed Operations Challenge (25 Problems)</div>
     <div class="info-bar">
-        <span>姓名：__________</span>
+        <span>姓名：________________</span>
         <span class="date-display"></span>
-        <span>得分：__________</span>
+        <span>得分：____________</span>
     </div>
-    
-    <div class="example-section">
-        <div class="ex-title">💡 運算規則示範</div>
-        <div style="display:flex; flex-direction:column; border-right: 1px solid #ccc;">
-            <div class="q-main">
-                <span style="font-size:11px; font-weight:bold; margin-right:5px;">[例A]</span>
-                <div class="math-box">10+5×2</div><div class="equal">=</div>
-                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">20</div>
-            </div>
-            <div class="step-hint">先乘除後加減</div>
-        </div>
-        <div style="display:flex; flex-direction:column;">
-            <div class="q-main">
-                <span style="font-size:11px; font-weight:bold; margin-right:5px;">[例B]</span>
-                <div class="math-box">(20-4)÷4</div><div class="equal">=</div>
-                <div style="color:#d32f2f; font-weight:bold; font-size:18px;">4</div>
-            </div>
-            <div class="step-hint">括號先算</div>
-        </div>
-    </div>
-
     <div class="quiz-grid" id="quiz-content"></div>
 </div>
 
-<div class="is-answer-page page-container">
+<div class="page-break"></div>
+<div class="page-container is-answer-page">
     <div class="header-title">【答案卷】Mixed Operations</div>
     <div class="info-bar">
         <span class="date-display"></span>
-        <span>對照題號批改</span>
+        <span>批改核對用</span>
     </div>
     <div class="quiz-grid" id="answer-content"></div>
 </div>
@@ -87,65 +106,77 @@
 <script>
     function init() {
         const today = new Date();
-        const dateStr = `日期：${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
-        document.querySelectorAll('.date-display').forEach(el => el.innerText = dateStr);
+        document.querySelectorAll('.date-display').forEach(el => 
+            el.innerText = `日期：${today.getFullYear()} / ${today.getMonth()+1} / ${today.getDate()}`);
 
-        const quizContainer = document.getElementById('quiz-content');
-        const ansContainer = document.getElementById('answer-content');
-        
-        let pool = [];
+        const usedQuestions = new Set();
+        const usedAnswers = new Set();
+        const pool = [];
+
         function r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-        while(pool.length < 150) {
-            let type = r(1, 5);
-            let a, b, c, d, text, ans;
+        function generateProblem() {
+            const ops = ['+', '-', '*', '/'];
+            const dOps = {'+': '+', '-': '-', '*': '×', '/': '÷'};
+            let n = Array.from({length: 4}, () => r(2, 30));
+            let pattern = r(0, 1);
+            let expr, result;
 
-            if (type === 1) { // a+b*c
-                b = r(2, 9); c = r(2, 9); a = r(5, 40);
-                text = `${a}+${b}×${c}`; ans = a + (b * c);
-            } else if (type === 2) { // (a-b)/c
-                c = r(2, 9); ans = r(2, 10); b = r(5, 15);
-                a = (ans * c) + b;
-                text = `(${a}-${b})÷${c}`;
-            } else if (type === 3) { // a*b-c
-                a = r(3, 12); b = r(2, 9); c = r(1, (a * b) - 1);
-                text = `${a}×${b}-${c}`; ans = (a * b) - c;
-            } else if (type === 4) { // a/b+c
-                b = r(2, 9); ans = r(2, 10); a = b * ans; c = r(5, 25);
-                text = `${a}÷${b}+${c}`; ans = (a / b) + c;
-            } else { // a+b-c*d
-                c = r(2, 5); d = r(2, 6); a = r(15, 40); b = r(10, 25);
-                text = `${a}+${b}-${c}×${d}`; ans = a + b - (c * d);
+            try {
+                if (pattern === 0) { 
+                    let o1 = ops[r(0, 3)], o2 = ops[r(0, 3)], o3 = ops[r(0, 3)];
+                    let v1 = evalSafe(n[0], n[1], o1);
+                    let v2 = evalSafe(n[2], n[3], o2);
+                    result = evalSafe(v1, v2, o3);
+                    expr = `(${n[0]}${dOps[o1]}${n[1]})${dOps[o3]}(${n[2]}${dOps[o2]}${n[3]})`;
+                } else { 
+                    let o1 = ops[r(0, 3)], o2 = ops[r(0, 3)], o3 = ops[r(0, 3)];
+                    let v1 = evalSafe(n[0], n[1], o1);
+                    let v2 = evalSafe(v1, n[2], o2);
+                    result = evalSafe(v2, n[3], o3);
+                    expr = `(${n[0]}${dOps[o1]}${n[1]}${dOps[o2]}${n[2]})${dOps[o3]}${n[3]}`;
+                }
+
+                if (result !== null && result > 0 && result < 100 && Number.isInteger(result)) {
+                    return { text: expr, ans: result };
+                }
+            } catch (e) { return null; }
+            return null;
+        }
+
+        function evalSafe(a, b, op) {
+            if (a === null || b === null) return null;
+            let res;
+            if (op === '+') res = a + b;
+            if (op === '-') res = a - b;
+            if (op === '*') res = a * b;
+            if (op === '/') {
+                if (b === 0 || a % b !== 0) return null;
+                res = a / b;
             }
+            if (res < 0 || res > 99) return null;
+            return res;
+        }
 
-            if (ans > 0 && ans < 150) {
-                pool.push({ text: text, ans: ans });
+        while (pool.length < 25) {
+            let p = generateProblem();
+            if (p && !usedQuestions.has(p.text) && !usedAnswers.has(p.ans)) {
+                usedQuestions.add(p.text);
+                usedAnswers.add(p.ans);
+                pool.push(p);
             }
         }
 
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        let selected = shuffle(pool).slice(0, 50);
-
-        let quizHtml = '';
-        let ansHtml = '';
-
-        selected.forEach((item, index) => {
-            const i = index + 1;
-            quizHtml += `<div class="q-item"><div class="q-main"><div class="q-num">${i}.</div><div class="math-box">${item.text}</div><div class="equal">=</div><div class="ans-area"></div></div></div>`;
-            ansHtml += `<div class="q-item"><div class="q-main"><div class="q-num">${i}.</div><div class="math-box">${item.text}</div><div class="equal">=</div><div class="ans-area">${item.ans}</div></div></div>`;
+        let qH = '', aH = '';
+        pool.forEach((item, i) => {
+            let common = `<div class="q-content"><span class="q-num">${i+1}.</span>${item.text}<span class="equal">=</span></div>`;
+            qH += `<div class="q-item">${common}<div class="ans-box"></div></div>`;
+            aH += `<div class="q-item">${common}<div class="ans-box">${item.ans}</div></div>`;
         });
 
-        quizContainer.innerHTML = quizHtml;
-        ansContainer.innerHTML = ansHtml;
+        document.getElementById('quiz-content').innerHTML = qH;
+        document.getElementById('answer-content').innerHTML = aH;
     }
-
     window.onload = init;
 </script>
 
