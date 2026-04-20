@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>OO/2</title>
+    <style>
+        :root { --bg: #fff; --accent: #d32f2f; }
+        
+        /* 基礎設定 */
+        html, body { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; 
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #444; overflow: hidden;
+        }
+
+        /* 控制列 */
+        .no-print { 
+            height: 50px; background: #222; color: white;
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+            z-index: 100; position: relative;
+        }
+        input { padding: 5px; width: 60px; border-radius: 4px; border: none; text-align: center; }
+        button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; background: #e67e22; color: white; }
+
+        /* A4 紙張容器 */
+        .page-container {
+            background: white; width: 210mm; height: 297mm;
+            margin: 0 auto; padding: 10mm 12mm; box-sizing: border-box;
+            display: flex; flex-direction: column; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .header { text-align: center; height: 35px; }
+        .info-bar { 
+            display: flex; justify-content: space-between; 
+            border-bottom: 3px solid #000; padding: 5px; margin-bottom: 10px;
+            font-size: 16px; font-weight: bold;
+        }
+
+        /* 💡 滿版核心：使用 Flex 讓 Grid 撐滿全高 */
+        .quiz-grid { 
+            display: grid; 
+            column-gap: 20px; 
+            row-gap: 0; /* 由列高度自動撐開 */
+            flex: 1;    /* 強制撐開填滿剩餘高度 */
+            min-height: 0; 
+        }
+
+        .q-item { 
+            display: flex; align-items: center; justify-content: flex-start;
+            border-bottom: 1px dashed #ddd; 
+            height: 100%; /* 讓每一排平分垂直空間 */
+        }
+
+        .q-text { font-weight: bold; white-space: nowrap; display: flex; align-items: center; }
+        .q-num { color: #888; font-size: 0.6em; width: 28px; }
+
+        /* 修正點：作答框加大且緊貼 */
+        .ans-box { 
+            border: 2.5px solid #000; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-left: 8px; flex-shrink: 0;
+        }
+
+        .answer-sheet { display: none; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; overflow: visible; }
+            .page-container { margin: 0; width: 210mm; height: 297mm; box-shadow: none; display: flex !important; page-break-after: always; }
+            .answer-sheet { display: flex !important; }
+            .ans-box { border-color: var(--accent); color: var(--accent); }
+            .info-bar { border-color: var(--accent); color: var(--accent); }
+            .header { color: var(--accent); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <label>題數：</label>
+    <input type="number" id="inputCount" value="40" min="1" max="100">
+    <button onclick="generate()">⚡ 更新並填滿 A4</button>
+    <button onclick="window.print()" style="background: #27ae60;">🖨️ 列印 A4</button>
+</div>
+
+<div class="page-container">
+    <div class="header"><h2 id="title-text" style="margin:0;">兩位數除以 2 挑戰</h2></div>
+    <div class="info-bar">
+        <span>姓名：__________</span>
+        <span id="date-str"></span>
+        <span>得分：__________</span>
+    </div>
+    <div class="quiz-grid" id="q-grid"></div>
+</div>
+
+<div class="page-container answer-sheet">
+    <div class="header"><h2 style="margin:0;">【答案卷】對照批改</h2></div>
+    <div class="info-bar"><span>批改對照用</span></div>
+    <div class="quiz-grid" id="a-grid"></div>
+</div>
+
+<script>
+    function generate() {
+        const count = parseInt(document.getElementById('inputCount').value);
+        if (count <= 0) return;
+
+        const today = new Date();
+        document.getElementById('date-str').innerText = `日期：${today.getFullYear()}/${today.getMonth()+1}/${today.getDate()}`;
+        document.getElementById('title-text').innerText = `兩位數除以 2 (${count}題)`;
+
+        // 智慧計算排版：動態欄數與列數
+        let cols = 2;
+        if (count > 20) cols = 3;
+        if (count > 45) cols = 4;
+        const rows = Math.ceil(count / cols);
+
+        // 動態調整大小：題數越少，文字與框越大
+        let fontSize = "2.2rem";
+        let boxW = "75px", boxH = "55px";
+        
+        if (count > 30) { fontSize = "1.8rem"; boxW = "65px"; boxH = "45px"; }
+        if (count > 50) { fontSize = "1.4rem"; boxW = "55px"; boxH = "38px"; }
+        if (count > 80) { fontSize = "1.1rem"; boxW = "45px"; boxH = "30px"; }
+
+        const qGrid = document.getElementById('q-grid');
+        const aGrid = document.getElementById('a-grid');
+        
+        // 設定 Grid：Rows 使用 1fr 讓每一列自動平分垂直空間
+        qGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        qGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        aGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        aGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+        let rawPool = [];
+        for(let i=10; i<=98; i+=2) rawPool.push({q: i, a: i/2});
+
+        let selected = [];
+        while(selected.length < count) {
+            let temp = [...rawPool];
+            temp.sort(() => Math.random() - 0.5);
+            selected = selected.concat(temp);
+        }
+        selected = selected.slice(0, count);
+
+        let qHtml = '', aHtml = '';
+        selected.forEach((item, i) => {
+            const template = `
+                <div class="q-item">
+                    <div class="q-text" style="font-size: ${fontSize}">
+                        <span class="q-num">${i+1}</span>${item.q}÷2=
+                    </div>
+                    <div class="ans-box" style="width:${boxW}; height:${boxH};">##ANS##</div>
+                </div>`;
+            qHtml += template.replace('##ANS##', '');
+            aHtml += template.replace('##ANS##', `<span style="font-size:${fontSize}">${item.a}</span>`);
+        });
+
+        qGrid.innerHTML = qHtml;
+        aGrid.innerHTML = aHtml;
+    }
+    window.onload = generate;
+</script>
+</body>
+</html>
