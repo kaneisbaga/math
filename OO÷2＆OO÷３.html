@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>難易度平衡版 - 2 & 3 綜合</title>
+    <style>
+        :root { --bg: #fff; --accent: #d32f2f; }
+        html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; font-family: "Microsoft JhengHei", sans-serif; background-color: #444; overflow: hidden; }
+        .no-print { height: 50px; background: #222; color: white; display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 100; position: relative; }
+        input { padding: 5px; width: 60px; border-radius: 4px; border: none; text-align: center; }
+        button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; background: #e67e22; color: white; }
+        .page-container { background: white; width: 210mm; height: 297mm; margin: 0 auto; padding: 10mm 12mm; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .header { text-align: center; height: 35px; }
+        .info-bar { display: flex; justify-content: space-between; border-bottom: 3px solid #000; padding: 5px; margin-bottom: 10px; font-size: 16px; font-weight: bold; }
+        .quiz-grid { display: grid; column-gap: 20px; row-gap: 0; flex: 1; min-height: 0; }
+        .q-item { display: flex; align-items: center; justify-content: flex-start; border-bottom: 1px dashed #ddd; height: 100%; }
+        .q-text { font-weight: bold; white-space: nowrap; display: flex; align-items: center; }
+        .q-num { color: #888; font-size: 0.6em; width: 28px; }
+        .ans-box { border: 2.5px solid #000; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; flex-shrink: 0; }
+        .answer-sheet { display: none; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; overflow: visible; }
+            .page-container { margin: 0; width: 210mm; height: 297mm; box-shadow: none; display: flex !important; page-break-after: always; }
+            .answer-sheet { display: flex !important; }
+            .ans-box { border-color: var(--accent); color: var(--accent); }
+            .info-bar { border-color: var(--accent); color: var(--accent); }
+            .header { color: var(--accent); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <label>題數：</label>
+    <input type="number" id="inputCount" value="40" min="4" max="100">
+    <button onclick="generate()">⚡ 難易度 & 題型平衡出題</button>
+    <button onclick="window.print()" style="background: #27ae60;">🖨️ 列印 A4</button>
+</div>
+
+<div class="page-container">
+    <div class="header"><h2 id="title-text" style="margin:0;">除法綜合挑戰 (難易度平衡版)</h2></div>
+    <div class="info-bar">
+        <span>姓名：__________</span>
+        <span id="date-str"></span>
+        <span>得分：__________</span>
+    </div>
+    <div class="quiz-grid" id="q-grid"></div>
+</div>
+
+<div class="page-container answer-sheet">
+    <div class="header"><h2 style="margin:0;">【答案卷】對照批改</h2></div>
+    <div class="info-bar"><span>(已按 1:1 題型與難度比例分配)</span></div>
+    <div class="quiz-grid" id="a-grid"></div>
+</div>
+
+<script>
+    function generate() {
+        let count = parseInt(document.getElementById('inputCount').value);
+        if (count <= 0) return;
+        // 強制湊成 4 的倍數以利平均分配 (2種題型 x 2種難度)
+        while (count % 4 !== 0) count++; 
+
+        document.getElementById('date-str').innerText = `日期：${new Date().toLocaleDateString()}`;
+        document.getElementById('title-text').innerText = `兩位數除以 2 & 3 (${count}題)`;
+
+        let cols = (count > 45) ? 4 : (count > 20 ? 3 : 2);
+        const rows = Math.ceil(count / cols);
+        
+        let fontSize = count > 80 ? "1.1rem" : (count > 50 ? "1.4rem" : (count > 30 ? "1.8rem" : "2.2rem"));
+        let boxW = count > 80 ? "45px" : (count > 50 ? "55px" : (count > 30 ? "65px" : "75px"));
+        let boxH = count > 80 ? "30px" : (count > 50 ? "38px" : (count > 30 ? "45px" : "55px"));
+
+        const qGrid = document.getElementById('q-grid');
+        const aGrid = document.getElementById('a-grid');
+        [qGrid, aGrid].forEach(g => {
+            g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            g.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        });
+
+        // --- 難易度分層邏輯 ---
+        const getPool = (divisor, min, max) => {
+            let p = [];
+            for(let i=min; i<=max; i++) { if(i % divisor === 0) p.push({q: `${i}÷${divisor}`, a: i/divisor}); }
+            return p;
+        };
+
+        // 分為：除2簡單(10-50), 除2困難(52-98), 除3簡單(10-51), 除3困難(54-99)
+        let pools = [
+            getPool(2, 10, 50), getPool(2, 52, 98),
+            getPool(3, 10, 51), getPool(3, 54, 99)
+        ];
+
+        let selected = [];
+        const perPool = count / 4;
+
+        pools.forEach(p => {
+            let temp = [];
+            while(temp.length < perPool) {
+                p.sort(() => Math.random() - 0.5);
+                temp = temp.concat(p);
+            }
+            selected = selected.concat(temp.slice(0, perPool));
+        });
+
+        selected.sort(() => Math.random() - 0.5); // 全體大洗牌
+
+        let qHtml = '', aHtml = '';
+        selected.forEach((item, i) => {
+            const template = `
+                <div class="q-item">
+                    <div class="q-text" style="font-size: ${fontSize}">
+                        <span class="q-num">${i+1}</span>${item.q}=
+                    </div>
+                    <div class="ans-box" style="width:${boxW}; height:${boxH};">##ANS##</div>
+                </div>`;
+            qHtml += template.replace('##ANS##', '');
+            aHtml += template.replace('##ANS##', `<span style="font-size:${fontSize}">${item.a}</span>`);
+        });
+
+        qGrid.innerHTML = qHtml;
+        aGrid.innerHTML = aHtml;
+    }
+    window.onload = generate;
+</script>
+</body>
+</html>
