@@ -2,35 +2,30 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Math Hero: A4 四項運算版</title>
+    <title>Math Hero: 國小四則運算 Pro</title>
     <style>
         :root { --bg: #ffffff; --text: #000000; --primary: #1976d2; }
-        [data-theme="dark"] { --bg: #1a1a1a; --text: #f0f0f0; --primary: #90caf9; }
         
         body { 
-            font-family: "Microsoft JhengHei", sans-serif; 
-            background-color: var(--bg); color: var(--text);
+            font-family: "Microsoft JhengHei", Arial, sans-serif; 
             margin: 0; padding: 0;
         }
 
-        /* 控制區 */
         .controls {
-            position: sticky; top: 0; background: var(--bg);
+            position: sticky; top: 0; background: #f0f0f0;
             padding: 15px; z-index: 100; border-bottom: 1px solid #ccc;
-            display: flex; gap: 10px; align-items: center;
+            display: flex; gap: 12px; align-items: center;
         }
 
-        /* 列印規範：強制分頁 */
         @media print {
             .no-print { display: none !important; }
             .page-container { 
                 width: 210mm; height: 297mm; 
                 page-break-after: always; 
                 margin: 0 auto;
-                padding: 1cm;
+                padding: 1.5cm 1cm;
                 box-sizing: border-box;
             }
-            body { overflow: visible; }
         }
 
         .page-container {
@@ -40,113 +35,125 @@
             display: flex; flex-direction: column;
         }
 
-        .header-title { text-align: center; font-size: 24px; margin-bottom: 10px; }
+        .header-title { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
         .info-bar { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 20px; }
 
-        /* 題目網格 */
         #quiz-grid { 
             display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 15px; flex-grow: 1;
+            grid-template-columns: 1fr 1fr; 
+            column-gap: 20px; row-gap: 2px;
+            flex-grow: 1;
         }
 
+        /* 關鍵修改：讓內容靠左對齊，緊貼等號 */
         .q-item { 
-            display: flex; align-items: center; justify-content: space-between;
-            height: 60px; border-bottom: 1px dashed #bbb; padding: 0 10px;
+            display: flex; align-items: center; justify-content: flex-start;
+            height: 52px; border-bottom: 1px dashed #eee;
         }
-        .q-text { font-size: 16px; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
-        .ans-box { width: 50px; height: 30px; border: 1px solid #000; border-radius: 3px; }
+
+        /* 關鍵修改：消除字母間距，確保數字與符號無縫隙 */
+        .q-text { 
+            font-size: 18px; 
+            font-family: Arial, sans-serif; 
+            letter-spacing: 0px; 
+            margin: 0;
+            padding: 0;
+        }
+
+        .ans-box { 
+            width: 60px; height: 32px; 
+            border: 1.2px solid #000; 
+            border-radius: 2px; 
+            margin-left: 2px; /* 這裡控制等號與框框的極微小距離，可設為 0 */
+        }
     </style>
 </head>
-<body data-theme="light">
+<body>
 
 <div class="controls no-print">
-    <button onclick="toggleTheme()">☀️/🌙 模式</button>
-    <label>題目總數：</label>
+    <strong>題數：</strong>
     <input type="number" id="qCount" value="40" style="width: 60px;">
-    <button onclick="init()" style="background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">重新生成題目</button>
-    <button onclick="window.print()">🖨️ 列印 A4 (自動分頁)</button>
-    <span style="font-size: 12px; color: #666;">* 每頁固定顯示 40 題以符合列印格式</span>
+    <button onclick="init()" style="background: #2e7d32; color: white; border: none; padding: 6px 12px; cursor: pointer;">生成題目</button>
+    <button onclick="window.print()" style="background: #1976d2; color: white; border: none; padding: 6px 12px; cursor: pointer;">列印 A4</button>
 </div>
 
-<div id="main-content">
-    </div>
+<div id="main-content"></div>
 
 <script>
-    function toggleTheme() {
-        const body = document.body;
-        body.setAttribute('data-theme', body.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
-    }
-
     const ops = ['+', '-', '*', '/'];
 
     function r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-    // 核心邏輯：驗證算式是否符合國小生規則（不超過99, 無負數, 除法整除）
-    function isValid(expression) {
+    // 檢查過程是否合法（0-99, 無負數, 除法整除）
+    function checkStepByStep(expr) {
         try {
-            // 檢查是否包含除以 0
-            if (expression.includes('/0')) return false;
-            
-            // 逐步拆解運算過程檢查
-            // 使用簡單的 parser 模擬運算順序
-            const tokens = expression.match(/(\d+|\+|\-|\*|\/|\(|\))/g);
-            
-            // 這裡使用 eval 獲取最終結果，但為了檢查過程，我們需要簡單驗證
-            const result = eval(expression);
-            
-            if (result < 0 || result > 99 || !Number.isInteger(result)) return false;
-            
-            // 檢查過程中的中間值（例如括號內）
-            // 簡單處理：尋找括號內容
-            const bracketMatch = expression.match(/\(([^)]+)\)/);
+            let tempExpr = expr;
+            // 1. 檢查括號內
+            const bracketMatch = tempExpr.match(/\(([^)]+)\)/);
             if (bracketMatch) {
                 const subRes = eval(bracketMatch[1]);
                 if (subRes < 0 || subRes > 99 || !Number.isInteger(subRes)) return false;
+                tempExpr = tempExpr.replace(bracketMatch[0], subRes);
             }
+
+            // 2. 檢查乘除運算項
+            const mulDivParts = expr.split(/[\+\-]/);
+            for(let part of mulDivParts) {
+                if(part.includes('*') || part.includes('/')) {
+                    const pRes = eval(part);
+                    if(pRes < 0 || pRes > 99 || !Number.isInteger(pRes)) return false;
+                }
+            }
+
+            // 3. 檢查最終結果
+            const finalRes = eval(expr);
+            if (finalRes < 0 || finalRes > 99 || !Number.isInteger(finalRes)) return false;
 
             return true;
         } catch (e) { return false; }
     }
 
-    function generateStrictProblem() {
+    function generateProblem() {
         let attempts = 0;
-        while (attempts < 500) {
-            let nums = [r(1, 20), r(1, 20), r(1, 20), r(1, 20)];
-            let selectedOps = [ops[r(0,3)], ops[r(0,3)], ops[r(0,3)]];
+        while (attempts < 2000) {
+            let n = [r(1, 40), r(1, 20), r(1, 15), r(1, 10)];
+            n = n.sort(() => Math.random() - 0.5);
+            let s = [ops[r(0,3)], ops[r(0,3)], ops[r(0,3)]];
             
-            // 隨機組合模式
-            let formats = [
-                `${nums[0]}${selectedOps[0]}${nums[1]}${selectedOps[1]}${nums[2]}${selectedOps[2]}${nums[3]}`,
-                `(${nums[0]}${selectedOps[0]}${nums[1]})${selectedOps[1]}${nums[2]}${selectedOps[2]}${nums[3]}`,
-                `${nums[0]}${selectedOps[0]}(${nums[1]}${selectedOps[1]}${nums[2]})${selectedOps[2]}${nums[3]}`,
-                `${nums[0]}${selectedOps[0]}${nums[1]}${selectedOps[1]}(${nums[2]}${selectedOps[2]}${nums[3]})`
+            let forms = [
+                `${n[0]}${s[0]}${n[1]}${s[1]}${n[2]}${s[2]}${n[3]}`,
+                `(${n[0]}${s[0]}${n[1]})${s[1]}${n[2]}${s[2]}${n[3]}`,
+                `${n[0]}${s[0]}(${n[1]}${s[1]}${n[2]})${s[2]}${n[3]}`,
+                `${n[0]}${s[0]}${n[1]}${s[1]}(${n[2]}${s[2]}${n[3]})`
             ];
             
-            let expr = formats[r(0, formats.length - 1)];
-            if (isValid(expr)) return expr;
+            let expr = forms[r(0, forms.length - 1)];
+            if (expr.includes('/0')) continue;
+            if (checkStepByStep(expr)) return expr;
             attempts++;
         }
-        return "1+1+1+1"; // 保底
+        return "1+1+1+1"; 
     }
 
-    function createPage(pageNum, questions) {
+    function createPageHTML(pageNum, questions) {
         const d = new Date();
-        const dateStr = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-        
-        let quizHtml = questions.map(q => `
-            <div class="q-item">
-                <span class="q-text">${q.replace(/\*/g,'×').replace(/\//g,'÷')} =</span>
-                <div class="ans-box"></div>
-            </div>
-        `).join('');
+        const quizHtml = questions.map(q => {
+            // 確保生成字串時沒有任何空格
+            const cleanExpr = q.replace(/\*/g,'×').replace(/\//g,'÷').replace(/\s+/g, '');
+            return `
+                <div class="q-item">
+                    <span class="q-text">${cleanExpr}=</span>
+                    <div class="ans-box"></div>
+                </div>
+            `;
+        }).join('');
 
         return `
             <div class="page-container">
-                <div class="header-title">四則運算強化練習 (P.${pageNum})</div>
+                <div class="header-title">四則運算練習卷</div>
                 <div class="info-bar">
                     <span>姓名：__________ 分數：______</span>
-                    <span>日期：${dateStr}</span>
+                    <span>P.${pageNum} | ${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}</span>
                 </div>
                 <div id="quiz-grid">${quizHtml}</div>
             </div>
@@ -155,18 +162,18 @@
 
     function init() {
         const container = document.getElementById('main-content');
-        const totalCount = parseInt(document.getElementById('qCount').value) || 40;
+        const total = parseInt(document.getElementById('qCount').value) || 40;
         container.innerHTML = '';
         
-        const perPage = 40; // 為了列印美觀，每頁固定40題
-        const pageCount = Math.ceil(totalCount / perPage);
+        const perPage = 40; 
+        const pageTotal = Math.ceil(total / perPage);
 
-        for (let p = 1; p <= pageCount; p++) {
+        for (let i = 1; i <= pageTotal; i++) {
             let questions = [];
-            for (let i = 0; i < perPage && (questions.length + (p-1)*perPage) < totalCount; i++) {
-                questions.push(generateStrictProblem());
+            for (let j = 0; j < perPage && (questions.length + (i-1)*perPage) < total; j++) {
+                questions.push(generateProblem());
             }
-            container.insertAdjacentHTML('beforeend', createPage(p, questions));
+            container.insertAdjacentHTML('beforeend', createPageHTML(i, questions));
         }
     }
 
