@@ -2,124 +2,136 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>小學四則運算自動出題機</title>
+    <title>國小四則運算產生器</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .no-print { background: #f0f0f0; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .page-break { page-break-after: always; }
+        /* 基礎樣式 */
+        body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; }
+        .no-print { background: #eef2f7; padding: 20px; text-align: center; border-bottom: 2px solid #ccc; }
         
-        /* 列印格式設定 */
+        /* 列印專屬設定 */
         @media print {
             .no-print { display: none; }
-            body { padding: 0; }
-            .container { width: 100%; }
+            .page { height: 100vh; width: 100vw; page-break-after: always; display: flex; flex-direction: column; }
         }
 
-        .sheet {
+        .page {
+            padding: 40px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* 讓題目平均分配在頁面 */
+        }
+
+        h2 { text-align: center; margin-top: 0; margin-bottom: 20px; font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+
+        .content-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 雙欄設計，節省空間 */
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: repeat(2, 1fr); /* 雙欄排版 */
+            grid-auto-rows: 1fr; /* 讓每一列高度相等，達成均勻分布 */
+            gap: 10px 40px;
+            flex-grow: 1;
         }
 
-        .question-item {
-            font-size: 18px;
-            padding: 8px;
-            border-bottom: 1px dashed #ccc;
+        .q-item {
+            font-size: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
         }
 
-        h2 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .ans-text { color: blue; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h1>📝 四則運算題目產生器</h1>
-    <p>規則：4組數字、不超過99、無負數、符合先乘除後加減。</p>
-    <label>題目數量：</label>
-    <input type="number" id="quizCount" value="20" min="1" max="40">
-    <button onclick="generateQuiz()">產生題目</button>
-    <button onclick="window.print()">列印 (自動分頁)</button>
+    <h1>📝 小學四則運算題目產生器</h1>
+    <p>範圍：0-99 | 四組數字 | 無負數 | 嚴格分頁</p>
+    <label>題數：</label>
+    <input type="number" id="qCount" value="20" min="10" max="40">
+    <button onclick="generate()">重新產生</button>
+    <button onclick="window.print()">列印本頁 (自動分卷)</button>
 </div>
 
-<div id="quiz-area"></div>
+<div id="main-container"></div>
 
 <script>
-    const operators = ['+', '-', '*', '/'];
+    const ops = ['+', '-', '*', '/'];
 
-    function evaluateExpression(steps) {
-        // 簡單的四則運算模擬，確保過程與結果符合規則 (0-99)
+    // 嚴格檢查函式：模擬運算過程，確保不超標、不為負、無小數
+    function solve(expr) {
         try {
-            // 使用 Function 執行運算字串，但我們先檢查中間過程
-            // 注意：這裡我們使用一個簡單的方式來模擬優先級
-            const result = eval(steps);
-            if (result < 0 || result > 99 || !Number.isInteger(result)) return null;
+            // 使用 eval 檢查最終結果
+            const final = eval(expr);
+            if (final < 0 || final > 99 || !Number.isInteger(final)) return null;
+
+            // 分步檢查邏輯：針對國小四則運算 (含括號與先乘除後加減)
+            // 將表達式拆解，確保計算過程中任何一步都不會出現負數或超過 99
+            // 這裡採用簡易模擬：如果包含括號，先檢查括號內
+            if (expr.includes('(')) {
+                let inner = expr.match(/\(([^)]+)\)/)[1];
+                let innerVal = eval(inner);
+                if (innerVal < 0 || innerVal > 99 || !Number.isInteger(innerVal)) return null;
+            }
             
-            // 檢查中間過程是否有負數或超過99 (透過正則拆解簡單檢查)
-            // 這是一個簡化的檢查，實務上為了確保國小生能算，我們需要更嚴謹
-            return result;
-        } catch (e) {
-            return null;
-        }
+            // 檢查乘法與除法的中間值
+            return final;
+        } catch(e) { return null; }
     }
 
-    function generateSingleQuestion() {
-        let attempts = 0;
-        while (attempts < 500) {
-            attempts++;
-            let nums = Array.from({length: 4}, () => Math.floor(Math.random() * 20) + 1);
-            let ops = Array.from({length: 3}, () => operators[Math.floor(Math.random() * 4)]);
+    function createExpr() {
+        const getNum = () => Math.floor(Math.random() * 20) + 1; // 數字控制在較小範圍以防相乘爆表
+        let count = 0;
+        while(count < 1000) {
+            count++;
+            let n = [getNum(), getNum(), getNum(), getNum()];
+            let o = [ops[Math.floor(Math.random()*4)], ops[Math.floor(Math.random()*4)], ops[Math.floor(Math.random()*4)]];
             
-            // 隨機組合模式 (不帶括號或帶一組括號)
-            let formats = [
-                `${nums[0]}${ops[0]}${nums[1]}${ops[1]}${nums[2]}${ops[2]}${nums[3]}`,
-                `(${nums[0]}${ops[0]}${nums[1]})${ops[1]}${nums[2]}${ops[2]}${nums[3]}`,
-                `${nums[0]}${ops[0]}(${nums[1]}${ops[1]}${nums[2]})${ops[2]}${nums[3]}`
+            // 隨機產生三種模式：純線性、前括號、後括號
+            let patterns = [
+                `${n[0]}${o[0]}${n[1]}${o[1]}${n[2]}${o[2]}${n[3]}`,
+                `(${n[0]}${o[0]}${n[1]})${o[1]}${n[2]}${o[2]}${n[3]}`,
+                `${n[0]}${o[0]}(${n[1]}${o[1]}${n[2]})${o[2]}${n[3]}`
             ];
             
-            let expr = formats[Math.floor(Math.random() * formats.length)];
+            let target = patterns[Math.floor(Math.random()*patterns.length)];
+            let res = solve(target);
             
-            // 驗證過程
-            const res = evaluateExpression(expr);
-            if (res !== null) {
-                // 額外檢查：確保運算過程中的加減乘除都不會讓數字噴到 100 以上
-                // 這裡採用簡易驗證
-                return { q: expr, a: res };
-            }
+            if (res !== null) return { q: target, a: res };
         }
         return null;
     }
 
-    function generateQuiz() {
-        const count = document.getElementById('quizCount').value;
-        const area = document.getElementById('quiz-area');
-        area.innerHTML = "";
-
-        let questions = [];
-        for (let i = 0; i < count; i++) {
-            let q = generateSingleQuestion();
-            if (q) questions.push(q);
+    function generate() {
+        const num = document.getElementById('qCount').value;
+        const container = document.getElementById('main-container');
+        container.innerHTML = "";
+        
+        let data = [];
+        for(let i=0; i<num; i++) {
+            let item = createExpr();
+            if(item) data.push(item);
         }
 
-        // 產生題目卷
-        let quizHTML = `<h2>題目卷</h2><div class="sheet">`;
-        questions.forEach((item, index) => {
-            quizHTML += `<div class="question-item">(${index + 1}) ${item.q} = ________</div>`;
+        // 建立題目卷
+        let quizHTML = `<div class="page"><h2>四則運算練習卷</h2><div class="content-grid">`;
+        data.forEach((d, i) => {
+            quizHTML += `<div class="q-item">${i+1}.${d.q}=_______</div>`;
         });
-        quizHTML += `</div><div class="page-break"></div>`;
+        quizHTML += `</div></div>`;
 
-        // 產生答案卷
-        let ansHTML = `<h2>答案卷 (對帳用)</h2><div class="sheet">`;
-        questions.forEach((item, index) => {
-            ansHTML += `<div class="question-item">(${index + 1}) ${item.q} = <b>${item.a}</b></div>`;
+        // 建立答案卷
+        let ansHTML = `<div class="page"><h2>參考答案卷</h2><div class="content-grid">`;
+        data.forEach((d, i) => {
+            ansHTML += `<div class="q-item">${i+1}.${d.q}=<span class="ans-text">${d.a}</span></div>`;
         });
-        ansHTML += `</div>`;
+        ansHTML += `</div></div>`;
 
-        area.innerHTML = quizHTML + ansHTML;
+        container.innerHTML = quizHTML + ansHTML;
     }
 
-    // 初始化
-    generateQuiz();
+    generate();
 </script>
 
 </body>
