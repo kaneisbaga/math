@@ -2,9 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>國小四則運算練習器</title>
+    <title>國小四則運算練習器 v4</title>
     <style>
-        /* 基礎樣式與列印設定 */
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; }
         .no-print { background: #f4f7f9; padding: 20px; text-align: center; border-bottom: 2px solid #ccc; }
         
@@ -28,14 +27,9 @@
         }
 
         .q-item { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 5px 0; }
-        
-        /* 題號縮小 */
         .q-num { font-size: 14px; color: #888; width: 30px; text-align: left; }
-        
-        /* 題目放大並加粗 */
         .q-text { font-size: 26px; font-weight: 900; color: #000; display: flex; align-items: center; letter-spacing: -1px; }
 
-        /* 長方形方框作答區 */
         .answer-box {
             display: inline-block;
             width: 80px; 
@@ -52,9 +46,9 @@
 <body>
 
 <div class="no-print">
-    <h1>📝 國小四則運算自動出題</h1>
-    <p>移除移項 | 四組數字 | 全程 0-99 | 無負數 | 雙欄 A4</p>
-    <label>題數 (建議 20-30)：</label>
+    <h1>📝 國小四則運算 (強化括號版)</h1>
+    <p>保證含括號題 | 全程 0-99 | 無負數 | 四組數字</p>
+    <label>題數：</label>
     <input type="number" id="qCount" value="20" min="10" max="40">
     <button onclick="generate()">重新產生題目</button>
     <button onclick="window.print()">列印考卷與答案</button>
@@ -69,35 +63,30 @@
         return expr.replaceAll('*', 'x').replaceAll('/', '÷');
     }
 
-    // 模擬學生計算過程，確保每一步都符合國小規則
+    // 嚴格檢核邏輯
     function validateAndSolve(expr) {
         try {
-            // 1. 處理括號內的優先計算
-            let currentExpr = expr;
+            // 1. 檢查括號內
             if (expr.includes('(')) {
                 let innerMatch = expr.match(/\(([^)]+)\)/);
                 if (innerMatch) {
                     let innerVal = eval(innerMatch[1]);
-                    // 括號內結果必須是 0-99 正整數
                     if (innerVal < 0 || innerVal > 99 || !Number.isInteger(innerVal)) return null;
-                    currentExpr = expr.replace(innerMatch[0], innerVal);
                 }
             }
 
-            // 2. 模擬整串算式的順序檢查
-            // 這裡必須考慮先乘除後加減，且中間步驟不得為負或超過 99
-            // 我們利用簡易分段模擬
+            // 2. 檢查整體最終結果
             let finalResult = eval(expr);
             if (finalResult < 0 || finalResult > 99 || !Number.isInteger(finalResult)) return null;
 
-            // 3. 額外檢查：模擬從左到右的「加減連算」中途是否有負數
-            // 例如 10-20+30 即使結果是 20，但在算 10-20 時孩子會卡住
-            let steps = expr.split(/([\+\-\*\/])/);
-            // 這裡只針對簡單線性情境做基礎防範
-            let checkVal = eval(steps[0]);
-            for(let i=1; i<steps.length; i+=2) {
-                let op = steps[i];
-                let next = eval(steps[i+1]);
+            // 3. 模擬計算過程中的每一個步驟 (考慮運算優先級)
+            // 這裡簡單化處理：如果是加減，從左到右不能有負或破百
+            // 由於括號已經獨立檢查過，這裡主要針對排除 10-20+30 這類中間負數
+            let parts = expr.replace(/\(|\)/g, '').split(/([\+\-\*\/])/);
+            let checkVal = eval(parts[0]);
+            for(let i=1; i<parts.length; i+=2) {
+                let op = parts[i];
+                let next = eval(parts[i+1]);
                 checkVal = eval(`${checkVal}${op}${next}`);
                 if (checkVal < 0 || checkVal > 99) return null;
             }
@@ -106,18 +95,24 @@
         } catch(e) { return null; }
     }
 
-    function createSingleQuestion() {
+    function createSingleQuestion(forceParentheses) {
         let attempts = 0;
-        while(attempts < 2000) {
+        while(attempts < 3000) {
             attempts++;
-            let n = Array.from({length: 4}, () => Math.floor(Math.random() * 25) + 1);
+            let n = Array.from({length: 4}, () => Math.floor(Math.random() * 20) + 1);
             let o = Array.from({length: 3}, () => ops[Math.floor(Math.random()*4)]);
             
-            let patterns = [
-                `${n[0]}${o[0]}${n[1]}${o[1]}${n[2]}${o[2]}${n[3]}`,
-                `(${n[0]}${o[0]}${n[1]})${o[1]}${n[2]}${o[2]}${n[3]}`,
-                `${n[0]}${o[0]}(${n[1]}${o[1]}${n[2]})${o[2]}${n[3]}`
-            ];
+            let patterns = [];
+            if (forceParentheses) {
+                // 強制產生帶括號的模式
+                patterns = [
+                    `(${n[0]}${o[0]}${n[1]})${o[1]}${n[2]}${o[2]}${n[3]}`,
+                    `${n[0]}${o[0]}(${n[1]}${o[1]}${n[2]})${o[2]}${n[3]}`,
+                    `${n[0]}${o[0]}${n[1]}${o[1]}(${n[2]}${o[2]}${n[3]})`
+                ];
+            } else {
+                patterns = [`${n[0]}${o[0]}${n[1]}${o[1]}${n[2]}${o[2]}${n[3]}`];
+            }
             
             let target = patterns[Math.floor(Math.random()*patterns.length)];
             let result = validateAndSolve(target);
@@ -133,7 +128,12 @@
         const container = document.getElementById('main-container');
         container.innerHTML = "";
         let data = [];
-        for(let i=0; i<num; i++) data.push(createSingleQuestion());
+        
+        for(let i=0; i<num; i++) {
+            // 設定約 50% 的題目必須帶有括號
+            let shouldHaveParentheses = (i % 2 === 0); 
+            data.push(createSingleQuestion(shouldHaveParentheses));
+        }
 
         const today = new Date().toLocaleDateString('zh-TW');
         const getHeader = (title) => `
@@ -148,14 +148,12 @@
                 <div class="content-grid">
         `;
 
-        // 題目卷
         let qHtml = getHeader("四則運算練習卷");
         data.forEach((d, i) => {
             qHtml += `<div class="q-item"><span class="q-num">${i+1}.</span><span class="q-text">${d.q}=<div class="answer-box"></div></span></div>`;
         });
         qHtml += `</div></div>`;
 
-        // 答案卷
         let aHtml = getHeader("參考答案卷");
         data.forEach((d, i) => {
             aHtml += `<div class="q-item"><span class="q-num">${i+1}.</span><span class="q-text">${d.q}=<div class="answer-box"><span class="ans-value">${d.a}</span></div></span></div>`;
