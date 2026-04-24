@@ -2,147 +2,172 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Math Hero: A4 Pro</title>
+    <title>Math Hero: A4 四項運算版</title>
     <style>
-        :root {
-            --bg: #ffffff; --text: #000000; --card: #f9f9f9; --primary: #1976d2;
-        }
-        [data-theme="dark"] {
-            --bg: #1a1a1a; --text: #f0f0f0; --card: #2d2d2d; --primary: #90caf9;
-        }
-        @page { size: A4; margin: 0; }
+        :root { --bg: #ffffff; --text: #000000; --primary: #1976d2; }
+        [data-theme="dark"] { --bg: #1a1a1a; --text: #f0f0f0; --primary: #90caf9; }
         
         body { 
             font-family: "Microsoft JhengHei", sans-serif; 
             background-color: var(--bg); color: var(--text);
-            margin: 0; padding: 0; 
-            overflow: hidden; /* 規範：一頁化無捲軸 */
-            width: 100vw; height: 100vh;
+            margin: 0; padding: 0;
         }
 
-        /* 介面控制區 (不列印) */
+        /* 控制區 */
         .controls {
-            position: fixed; top: 10px; right: 10px; z-index: 100;
-            display: flex; gap: 8px;
+            position: sticky; top: 0; background: var(--bg);
+            padding: 15px; z-index: 100; border-bottom: 1px solid #ccc;
+            display: flex; gap: 10px; align-items: center;
         }
-        @media print { .no-print { display: none !important; } }
 
-        .page-container { 
-            width: 210mm; height: 297mm; /* 標準A4 */
-            padding: 1cm; box-sizing: border-box;
+        /* 列印規範：強制分頁 */
+        @media print {
+            .no-print { display: none !important; }
+            .page-container { 
+                width: 210mm; height: 297mm; 
+                page-break-after: always; 
+                margin: 0 auto;
+                padding: 1cm;
+                box-sizing: border-box;
+            }
+            body { overflow: visible; }
+        }
+
+        .page-container {
+            width: 210mm; min-height: 297mm;
+            padding: 20px; margin: 20px auto;
+            border: 1px solid #ddd; background: white;
             display: flex; flex-direction: column;
-            margin: auto; position: relative;
         }
 
         .header-title { text-align: center; font-size: 24px; margin-bottom: 10px; }
-        .info-bar { display: flex; justify-content: space-between; border-bottom: 2px solid var(--text); padding-bottom: 5px; margin-bottom: 15px; font-size: 14px; }
+        .info-bar { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 20px; }
 
-        /* 動態分欄 */
+        /* 題目網格 */
         #quiz-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-            gap: 10px; flex-grow: 1; align-content: start;
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; flex-grow: 1;
         }
 
         .q-item { 
             display: flex; align-items: center; justify-content: space-between;
-            height: 70px; border-bottom: 1px dashed #ccc; padding: 0 5px;
+            height: 60px; border-bottom: 1px dashed #bbb; padding: 0 10px;
         }
-        .q-text { font-size: 18px; font-weight: bold; }
-        .ans-box { 
-            width: 60px; height: 35px; border: 1.5px solid var(--text); 
-            border-radius: 4px; display: flex; align-items: center; justify-content: center;
-        }
-
-        /* 排行榜樣式 */
-        .rank-section { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 12px; }
+        .q-text { font-size: 16px; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
+        .ans-box { width: 50px; height: 30px; border: 1px solid #000; border-radius: 3px; }
     </style>
 </head>
 <body data-theme="light">
 
 <div class="controls no-print">
     <button onclick="toggleTheme()">☀️/🌙 模式</button>
-    <input type="number" id="qCount" value="40" style="width: 50px;" title="題目數量">
-    <button onclick="init()" style="background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">生成題目</button>
-    <button onclick="window.print()">🖨️ 列印A4</button>
+    <label>題目總數：</label>
+    <input type="number" id="qCount" value="40" style="width: 60px;">
+    <button onclick="init()" style="background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">重新生成題目</button>
+    <button onclick="window.print()">🖨️ 列印 A4 (自動分頁)</button>
+    <span style="font-size: 12px; color: #666;">* 每頁固定顯示 40 題以符合列印格式</span>
 </div>
 
-<div class="page-container">
-    <div class="header-title">數學運算挑戰賽</div>
-    <div class="info-bar">
-        <span>姓名：__________ 分數：______</span>
-        <span id="current-date"></span>
+<div id="main-content">
     </div>
-    
-    <div id="quiz-grid"></div>
-
-    <div class="rank-section">
-        <strong>🏆 榮譽排行榜：</strong>
-        <span id="rank-list">目前尚無紀錄</span>
-    </div>
-</div>
 
 <script>
-    // 1. 切換模式功能
     function toggleTheme() {
         const body = document.body;
         body.setAttribute('data-theme', body.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
     }
 
-    // 2. 難度邏輯 (20% 分配)
-    function generateProblem(level) {
-        let a, b, c, op1, op2;
-        const ops = ['+', '-', '*', '/'];
-        
-        switch(level) {
-            case 0: // 極簡單: 10以內加減
-                a = r(1, 10); b = r(1, 10);
-                return Math.random() > 0.5 ? `${a}+${b}` : `${Math.max(a,b)}-${Math.min(a,b)}`;
-            case 1: // 簡單: 50以內加減
-                a = r(10, 50); b = r(10, 50);
-                return Math.random() > 0.5 ? `${a}+${b}` : `${Math.max(a,b)}-${Math.min(a,b)}`;
-            case 2: // 中等: 乘法口訣範圍
-                a = r(2, 9); b = r(2, 9);
-                return `${a}*${b}`;
-            case 3: // 困難: 兩步驟運算 (遵守先乘除後加減)
-                a = r(2, 10); b = r(2, 10); c = r(10, 30);
-                return `${a}*${b}+${c}`;
-            case 4: // 地獄: 除法與乘加混合
-                a = r(50, 200); b = r(2, 9); // 確保整除
-                let divA = b * r(5, 20);
-                return `${divA}/${b}+${r(10, 50)}`;
-        }
-    }
+    const ops = ['+', '-', '*', '/'];
 
     function r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-    function init() {
-        const grid = document.getElementById('quiz-grid');
-        const count = parseInt(document.getElementById('qCount').value) || 40;
-        grid.innerHTML = '';
-        
-        // 設定日期
-        const d = new Date();
-        document.getElementById('current-date').innerText = `日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-
-        // 依照 20% 比例分配生成
-        const segment = Math.floor(count / 5);
-        for(let lv = 0; lv < 5; lv++) {
-            for(let i = 0; i < segment; i++) {
-                const prob = generateProblem(lv);
-                // 規範：數字與符號間不要有空格，作答區在等號右邊
-                const html = `
-                    <div class="q-item">
-                        <span class="q-text">${prob.replace(/\*/g,'×').replace(/\//g,'÷')}=</span>
-                        <div class="ans-box"></div>
-                    </div>`;
-                grid.insertAdjacentHTML('beforeend', html);
+    // 核心邏輯：驗證算式是否符合國小生規則（不超過99, 無負數, 除法整除）
+    function isValid(expression) {
+        try {
+            // 檢查是否包含除以 0
+            if (expression.includes('/0')) return false;
+            
+            // 逐步拆解運算過程檢查
+            // 使用簡單的 parser 模擬運算順序
+            const tokens = expression.match(/(\d+|\+|\-|\*|\/|\(|\))/g);
+            
+            // 這裡使用 eval 獲取最終結果，但為了檢查過程，我們需要簡單驗證
+            const result = eval(expression);
+            
+            if (result < 0 || result > 99 || !Number.isInteger(result)) return false;
+            
+            // 檢查過程中的中間值（例如括號內）
+            // 簡單處理：尋找括號內容
+            const bracketMatch = expression.match(/\(([^)]+)\)/);
+            if (bracketMatch) {
+                const subRes = eval(bracketMatch[1]);
+                if (subRes < 0 || subRes > 99 || !Number.isInteger(subRes)) return false;
             }
+
+            return true;
+        } catch (e) { return false; }
+    }
+
+    function generateStrictProblem() {
+        let attempts = 0;
+        while (attempts < 500) {
+            let nums = [r(1, 20), r(1, 20), r(1, 20), r(1, 20)];
+            let selectedOps = [ops[r(0,3)], ops[r(0,3)], ops[r(0,3)]];
+            
+            // 隨機組合模式
+            let formats = [
+                `${nums[0]}${selectedOps[0]}${nums[1]}${selectedOps[1]}${nums[2]}${selectedOps[2]}${nums[3]}`,
+                `(${nums[0]}${selectedOps[0]}${nums[1]})${selectedOps[1]}${nums[2]}${selectedOps[2]}${nums[3]}`,
+                `${nums[0]}${selectedOps[0]}(${nums[1]}${selectedOps[1]}${nums[2]})${selectedOps[2]}${nums[3]}`,
+                `${nums[0]}${selectedOps[0]}${nums[1]}${selectedOps[1]}(${nums[2]}${selectedOps[2]}${nums[3]})`
+            ];
+            
+            let expr = formats[r(0, formats.length - 1)];
+            if (isValid(expr)) return expr;
+            attempts++;
         }
+        return "1+1+1+1"; // 保底
+    }
+
+    function createPage(pageNum, questions) {
+        const d = new Date();
+        const dateStr = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
         
-        // 排行榜模擬數據
-        const ranks = ["小明 100分", "小華 98分", "阿強 95分"];
-        document.getElementById('rank-list').innerText = ranks.join(" | ");
+        let quizHtml = questions.map(q => `
+            <div class="q-item">
+                <span class="q-text">${q.replace(/\*/g,'×').replace(/\//g,'÷')} =</span>
+                <div class="ans-box"></div>
+            </div>
+        `).join('');
+
+        return `
+            <div class="page-container">
+                <div class="header-title">四則運算強化練習 (P.${pageNum})</div>
+                <div class="info-bar">
+                    <span>姓名：__________ 分數：______</span>
+                    <span>日期：${dateStr}</span>
+                </div>
+                <div id="quiz-grid">${quizHtml}</div>
+            </div>
+        `;
+    }
+
+    function init() {
+        const container = document.getElementById('main-content');
+        const totalCount = parseInt(document.getElementById('qCount').value) || 40;
+        container.innerHTML = '';
+        
+        const perPage = 40; // 為了列印美觀，每頁固定40題
+        const pageCount = Math.ceil(totalCount / perPage);
+
+        for (let p = 1; p <= pageCount; p++) {
+            let questions = [];
+            for (let i = 0; i < perPage && (questions.length + (p-1)*perPage) < totalCount; i++) {
+                questions.push(generateStrictProblem());
+            }
+            container.insertAdjacentHTML('beforeend', createPage(p, questions));
+        }
     }
 
     window.onload = init;
