@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>國小四則運算產生器</title>
+    <title>國小四則運算產生器 v2</title>
     <style>
         /* 基礎樣式 */
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; }
@@ -19,15 +19,24 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* 讓題目平均分配在頁面 */
+            justify-content: space-between;
         }
 
-        h2 { text-align: center; margin-top: 0; margin-bottom: 20px; font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        h2 { text-align: center; margin: 0; font-size: 26px; }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0 5px 0;
+            font-size: 16px;
+        }
+
+        .header-line { border-bottom: 2px solid #333; margin-bottom: 20px; }
 
         .content-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 雙欄排版 */
-            grid-auto-rows: 1fr; /* 讓每一列高度相等，達成均勻分布 */
+            grid-template-columns: repeat(2, 1fr);
+            grid-auto-rows: 1fr;
             gap: 10px 40px;
             flex-grow: 1;
         }
@@ -38,16 +47,17 @@
             display: flex;
             align-items: center;
             padding: 5px 0;
+            white-space: nowrap;
         }
 
-        .ans-text { color: blue; font-weight: bold; }
+        .ans-text { color: blue; font-weight: bold; margin-left: 2px; }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h1>📝 小學四則運算題目產生器</h1>
-    <p>範圍：0-99 | 四組數字 | 無負數 | 嚴格分頁</p>
+    <h1>📝 小學四則運算題目產生器 (加強版)</h1>
+    <p>範圍：0-99 | 四組數字 | 無負數 | 符號替換 (x, ÷)</p>
     <label>題數：</label>
     <input type="number" id="qCount" value="20" min="10" max="40">
     <button onclick="generate()">重新產生</button>
@@ -59,36 +69,37 @@
 <script>
     const ops = ['+', '-', '*', '/'];
 
-    // 嚴格檢查函式：模擬運算過程，確保不超標、不為負、無小數
+    // 格式化顯示符號：將 * 轉為 x，/ 轉為 ÷
+    function formatDisplay(expr) {
+        return expr.replaceAll('*', 'x').replaceAll('/', '÷');
+    }
+
+    // 模擬運算過程，確保不超標、不為負、無小數
     function solve(expr) {
         try {
-            // 使用 eval 檢查最終結果
             const final = eval(expr);
             if (final < 0 || final > 99 || !Number.isInteger(final)) return null;
 
-            // 分步檢查邏輯：針對國小四則運算 (含括號與先乘除後加減)
-            // 將表達式拆解，確保計算過程中任何一步都不會出現負數或超過 99
-            // 這裡採用簡易模擬：如果包含括號，先檢查括號內
+            // 檢查括號內過程
             if (expr.includes('(')) {
                 let inner = expr.match(/\(([^)]+)\)/)[1];
                 let innerVal = eval(inner);
                 if (innerVal < 0 || innerVal > 99 || !Number.isInteger(innerVal)) return null;
             }
             
-            // 檢查乘法與除法的中間值
+            // 由於 JS eval 遵循先乘除後加減，這裡確保最終運算合規
             return final;
         } catch(e) { return null; }
     }
 
     function createExpr() {
-        const getNum = () => Math.floor(Math.random() * 20) + 1; // 數字控制在較小範圍以防相乘爆表
+        const getNum = () => Math.floor(Math.random() * 20) + 1;
         let count = 0;
         while(count < 1000) {
             count++;
             let n = [getNum(), getNum(), getNum(), getNum()];
             let o = [ops[Math.floor(Math.random()*4)], ops[Math.floor(Math.random()*4)], ops[Math.floor(Math.random()*4)]];
             
-            // 隨機產生三種模式：純線性、前括號、後括號
             let patterns = [
                 `${n[0]}${o[0]}${n[1]}${o[1]}${n[2]}${o[2]}${n[3]}`,
                 `(${n[0]}${o[0]}${n[1]})${o[1]}${n[2]}${o[2]}${n[3]}`,
@@ -114,17 +125,27 @@
             if(item) data.push(item);
         }
 
-        // 建立題目卷
-        let quizHTML = `<div class="page"><h2>四則運算練習卷</h2><div class="content-grid">`;
+        const today = new Date().toLocaleDateString('zh-TW');
+        const headerInfo = `
+            <div class="info-bar">
+                <span>姓名：__________</span>
+                <span>日期：${today}</span>
+                <span>得分：__________</span>
+            </div>
+            <div class="header-line"></div>
+        `;
+
+        // 題目卷
+        let quizHTML = `<div class="page"><h2>四則運算練習卷</h2>${headerInfo}<div class="content-grid">`;
         data.forEach((d, i) => {
-            quizHTML += `<div class="q-item">${i+1}.${d.q}=_______</div>`;
+            quizHTML += `<div class="q-item">${i+1}.${formatDisplay(d.q)}=_______</div>`;
         });
         quizHTML += `</div></div>`;
 
-        // 建立答案卷
-        let ansHTML = `<div class="page"><h2>參考答案卷</h2><div class="content-grid">`;
+        // 答案卷
+        let ansHTML = `<div class="page"><h2>參考答案卷</h2>${headerInfo}<div class="content-grid">`;
         data.forEach((d, i) => {
-            ansHTML += `<div class="q-item">${i+1}.${d.q}=<span class="ans-text">${d.a}</span></div>`;
+            ansHTML += `<div class="q-item">${i+1}.${formatDisplay(d.q)}=<span class="ans-text">${d.a}</span></div>`;
         });
         ansHTML += `</div></div>`;
 
