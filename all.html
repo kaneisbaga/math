@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>萬用數學出題產生器 - 混合運算版</title>
+    <title>萬用數學出題產生器 - 進階不重複版</title>
     <style>
         :root { --bg: #fff; --accent: #d32f2f; }
         html, body { 
@@ -75,7 +75,7 @@
     <section>
         <label>運算模式：</label>
         <select id="opType" onchange="toggleRem()">
-            <option value="mixed">混合隨機 (綜合成績)</option>
+            <option value="mixed">混合隨機 (不含1,2)</option>
             <option value="+">純加法 (+)</option>
             <option value="-">純減法 (-)</option>
             <option value="×">純乘法 (×)</option>
@@ -84,7 +84,7 @@
     </section>
     
     <section>
-        <input type="number" id="digit1" class="num-in" value="2"> <label>位數</label>
+        <input type="number" id="digit1" class="num-in" value="1"> <label>位數</label>
         <span>對</span>
         <input type="number" id="digit2" class="num-in" value="1"> <label>位數</label>
     </section>
@@ -121,14 +121,31 @@
 <script>
     function toggleRem() {
         const op = document.getElementById('opType').value;
-        // 混合模式或純除法模式下都顯示餘數開關
         document.getElementById('remSection').style.display = (op === '÷' || op === 'mixed') ? 'block' : 'none';
     }
 
-    function getRandomByDigit(digit) {
+    // 獲取該位數中所有排除 1 和 2 的數字清單
+    function getNumbersByDigit(digit) {
         const min = Math.pow(10, digit - 1);
         const max = Math.pow(10, digit) - 1;
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+        let nums = [];
+        for (let i = min; i <= max; i++) {
+            // 排除包含 1 或 2 的規則可改為：數字本身不為 1 或 2
+            // 這裡採用「數字本身不是 1 且不是 2」
+            if (i !== 1 && i !== 2) {
+                nums.push(i);
+            }
+        }
+        return nums;
+    }
+
+    // 洗牌演算法
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
     }
 
     function generate() {
@@ -144,56 +161,67 @@
         let displayTitle = selectedOp === 'mixed' ? `數學混合運算挑戰` : `${d1}位數對${d2}位數的${selectedOp}法練習`;
         document.getElementById('title-text').innerText = `${displayTitle} (${count}題)`;
 
-        // 佈局計算
-        let cols = 2;
-        if (count > 20) cols = 3;
-        if (count > 45) cols = 4;
-        const rows = Math.ceil(count / cols);
+        // 準備數字池
+        const pool1 = getNumbersByDigit(d1);
+        const pool2 = getNumbersByDigit(d2);
+        const ops = selectedOp === 'mixed' ? ['+', '-', '×', '÷'] : [selectedOp];
 
-        let fontSize = "2.2rem";
-        let boxW = "75px", boxH = "55px";
-        if (count > 30) { fontSize = "1.8rem"; boxW = "65px"; boxH = "45px"; }
-        if (count > 50) { fontSize = "1.4rem"; boxW = "55px"; boxH = "38px"; }
-        if (count > 80) { fontSize = "1.1rem"; boxW = "45px"; boxH = "30px"; }
+        // 建立所有可能的題目組合池
+        let allPossibleQuestions = [];
+        ops.forEach(op => {
+            pool1.forEach(n1 => {
+                pool2.forEach(n2 => {
+                    allPossibleQuestions.push({ n1, n2, op });
+                });
+            });
+        });
+
+        // 洗牌
+        shuffle(allPossibleQuestions);
+
+        let questions = [];
+        for (let i = 0; i < count; i++) {
+            // 如果題數需求大於池子，就循環取用
+            let baseQ = allPossibleQuestions[i % allPossibleQuestions.length];
+            let { n1, n2, op } = baseQ;
+            let ans = "";
+            let finalN1 = n1;
+            let finalN2 = n2;
+
+            if (op === '+') {
+                ans = finalN1 + finalN2;
+            } else if (op === '-') {
+                if (finalN1 < finalN2) [finalN1, finalN2] = [finalN2, finalN1];
+                ans = finalN1 - finalN2;
+            } else if (op === '×') {
+                ans = finalN1 * finalN2;
+            } else if (op === '÷') {
+                if (!allowRem) {
+                    // 整除模式：用 n2 * 一個隨機數來當被除數
+                    // 這裡為了確保不出現1,2，隨機倍數也從3開始
+                    let factor = Math.floor(Math.random() * 10) + 3; 
+                    finalN1 = finalN2 * factor;
+                    ans = factor;
+                } else {
+                    let quotient = Math.floor(finalN1 / finalN2);
+                    let remainder = finalN1 % finalN2;
+                    ans = remainder === 0 ? quotient : `${quotient}...${remainder}`;
+                }
+            }
+            questions.push({ q: `${finalN1}${op}${finalN2}=`, a: ans });
+        }
+
+        // 佈局計算與渲染 (維持原樣)
+        let cols = count > 45 ? 4 : (count > 20 ? 3 : 2);
+        const rows = Math.ceil(count / cols);
+        let fontSize = count > 80 ? "1.1rem" : (count > 50 ? "1.4rem" : (count > 30 ? "1.8rem" : "2.2rem"));
+        let boxW = count > 80 ? "45px" : (count > 50 ? "55px" : (count > 30 ? "65px" : "75px"));
+        let boxH = count > 80 ? "30px" : (count > 50 ? "38px" : (count > 30 ? "45px" : "55px"));
 
         const qGrid = document.getElementById('q-grid');
         const aGrid = document.getElementById('a-grid');
         qGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-        qGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
         aGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-        aGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-
-        let questions = [];
-        const ops = ['+', '-', '×', '÷'];
-
-        for(let i=0; i<count; i++) {
-            let currentOp = selectedOp === 'mixed' ? ops[Math.floor(Math.random() * ops.length)] : selectedOp;
-            let num1 = getRandomByDigit(d1);
-            let num2 = getRandomByDigit(d2);
-            let ans = "";
-
-            if (currentOp === '+') {
-                ans = num1 + num2;
-            } else if (currentOp === '-') {
-                if (num1 < num2) [num1, num2] = [num2, num1];
-                ans = num1 - num2;
-            } else if (currentOp === '×') {
-                ans = num1 * num2;
-            } else if (currentOp === '÷') {
-                if (!allowRem) {
-                    // 為了美觀，強制產生能整除的題目
-                    let tempAns = Math.floor(Math.random() * (Math.pow(10, d1)/num2)) + 1;
-                    if (tempAns === 0) tempAns = 1;
-                    num1 = num2 * tempAns;
-                    ans = num1 / num2;
-                } else {
-                    let quotient = Math.floor(num1 / num2);
-                    let remainder = num1 % num2;
-                    ans = remainder === 0 ? quotient : `${quotient}...${remainder}`;
-                }
-            }
-            questions.push({q: `${num1}${currentOp}${num2}=`, a: ans});
-        }
 
         let qHtml = '', aHtml = '';
         questions.forEach((item, i) => {
@@ -202,7 +230,7 @@
                     <div class="q-text" style="font-size: ${fontSize}">
                         <span class="q-num">${i+1}</span>${item.q}
                     </div>
-                    <div class="ans-box" style="width:${boxW}; height:${boxH}; font-size:${fontSize.replace('rem','')*0.6}rem">##ANS##</div>
+                    <div class="ans-box" style="width:${boxW}; height:${boxH}; font-size:${parseFloat(fontSize)*0.6}rem">##ANS##</div>
                 </div>`;
             qHtml += template.replace('##ANS##', '');
             aHtml += template.replace('##ANS##', item.a);
