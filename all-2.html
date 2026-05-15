@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>ultimate_training_math_generator_v5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --qsize:20px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  padding:16px;
+  background:#d9d9d9;
+  font-family:"Microsoft JhengHei",sans-serif;
+}
+
+.toolbar{
+  background:#111;
+  color:white;
+  border-radius:14px;
+  padding:12px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.block{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:110px;
+}
+
+.block label{
+  font-size:12px;
+}
+
+input,select{
+  border:none;
+  border-radius:8px;
+  padding:6px;
+}
+
+.check-row{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+button{
+  border:none;
+  border-radius:10px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.generate-btn{
+  background:#4caf50;
+  color:white;
+}
+
+.print-btn{
+  background:#2196f3;
+  color:white;
+}
+
+.paper{
+  width:210mm;
+  height:297mm;
+  background:white;
+  margin:auto auto 20px auto;
+  padding:8mm;
+  box-shadow:0 0 10px rgba(0,0,0,.2);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.question-paper{
+  break-after:page;
+  page-break-after:always;
+}
+
+.answer-paper{
+  break-after:auto;
+  page-break-after:auto;
+}
+
+.title{
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+  font-size:12px;
+}
+
+.question-grid{
+  flex:1;
+  display:grid;
+  gap:2px 10px;
+  align-content:stretch;
+  height:100%;
+}
+
+.question{
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid #ccc;
+  min-height:20px;
+}
+
+.qnum{
+  width:18px;
+  font-size:9px;
+  color:#666;
+  flex-shrink:0;
+}
+
+.qtext{
+  font-size:var(--qsize);
+  font-weight:bold;
+  white-space:nowrap;
+  line-height:1;
+}
+
+.answer-box{
+  width:52px;
+  height:22px;
+  border:2px solid #000;
+  margin-left:2px;
+  flex-shrink:0;
+}
+
+.answer-box.answer{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:bold;
+}
+
+@media print{
+
+  @page{
+    size:A4;
+    margin:0;
+  }
+
+  body{
+    background:white;
+    padding:0;
+  }
+
+  .toolbar{
+    display:none;
+  }
+
+  .paper{
+    margin:0;
+    width:210mm;
+    height:297mm;
+    box-shadow:none;
+  }
+
+  .question-paper{
+    break-after:page;
+    page-break-after:always;
+  }
+
+  .answer-paper{
+    break-after:auto;
+    page-break-after:auto;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="toolbar">
+
+<div class="block">
+<label>題目數量(1~100)</label>
+<input id="questionCount" type="number" min="1" max="100" value="40">
+</div>
+
+<div class="block">
+<label>固定運算</label>
+<select id="operatorMode">
+<option value="mixed">混合</option>
+<option value="+">加法</option>
+<option value="-">減法</option>
+<option value="×">乘法</option>
+<option value="÷">除法</option>
+</select>
+</div>
+
+<div class="block">
+<label>混合運算</label>
+<div class="check-row">
+<label><input type="checkbox" class="mix" value="+" checked>+</label>
+<label><input type="checkbox" class="mix" value="-" checked>-</label>
+<label><input type="checkbox" class="mix" value="×" checked>×</label>
+<label><input type="checkbox" class="mix" value="÷" checked>÷</label>
+</div>
+</div>
+
+<div class="block">
+<label>第一數規則</label>
+<input id="maskA" value="***">
+</div>
+
+<div class="block">
+<label>第二數規則</label>
+<input id="maskB" value="**">
+</div>
+
+<div class="block">
+<label>避免負數</label>
+<select id="negativeMode">
+<option value="yes">是</option>
+<option value="no">否</option>
+</select>
+</div>
+
+<div class="block">
+<label>除法模式</label>
+<select id="divisionMode">
+<option value="integer">整除</option>
+<option value="remainder">餘數</option>
+<option value="mixed">混合</option>
+</select>
+</div>
+
+<div class="block">
+<label>借位/進位</label>
+<select id="carryMode">
+<option value="mixed">一半需要一半不要</option>
+<option value="need">全部需要</option>
+<option value="none">全部不要</option>
+</select>
+</div>
+
+<div class="block">
+<button class="generate-btn" onclick="generateWorksheet()">產生題目</button>
+</div>
+
+<div class="block">
+<button class="print-btn" onclick="window.print()">列印</button>
+</div>
+
+</div>
+
+<div class="paper question-paper">
+
+<div class="title">數學訓練卷</div>
+
+<div class="info-row">
+<div>姓名：____________</div>
+<div id="date1"></div>
+<div>分數：____________</div>
+</div>
+
+<div id="questionGrid" class="question-grid"></div>
+
+</div>
+
+<div class="paper answer-paper">
+
+<div class="title">答案卷</div>
+
+<div class="info-row">
+<div>姓名：____________</div>
+<div id="date2"></div>
+<div>分數：____________</div>
+</div>
+
+<div id="answerGrid" class="question-grid"></div>
+
+</div>
+
+<script>
+
+const usedQuestions = new Set();
+
+const today = new Date();
+const formattedDate =
+today.getFullYear() + '/' +
+String(today.getMonth()+1).padStart(2,'0') + '/' +
+String(today.getDate()).padStart(2,'0');
+
+document.getElementById('date1').textContent = '日期：' + formattedDate;
+document.getElementById('date2').textContent = '日期：' + formattedDate;
+
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function parseMask(mask){
+
+  mask = mask.trim();
+
+  if(/^\d+$/.test(mask)){
+    return parseInt(mask);
+  }
+
+  let output='';
+
+  for(let i=0;i<mask.length;i++){
+
+    const c = mask[i];
+
+    if(c==='*'){
+
+      if(i===0){
+        output += rand(1,9);
+      }else{
+        output += rand(0,9);
+      }
+
+    }else{
+      output += c;
+    }
+  }
+
+  const num = parseInt(output);
+
+  if(String(num).length !== mask.length){
+    return parseMask(mask);
+  }
+
+  return num;
+}
+
+function getSelectedOperators(){
+
+  const list =
+  [...document.querySelectorAll('.mix:checked')]
+  .map(v=>v.value);
+
+  return list.length ? list : ['+'];
+}
+
+function chooseOperator(){
+
+  const fixed =
+  document.getElementById('operatorMode').value;
+
+  if(fixed !== 'mixed'){
+    return fixed;
+  }
+
+  const list = getSelectedOperators();
+
+  return list[rand(0,list.length-1)];
+}
+
+function uglyNumber(n){
+
+  return [
+    '111','222','333','444','555',
+    '666','777','888','999',
+    '123','321'
+  ].includes(String(n));
+}
+
+function hasCarry(a,b){
+
+  const aa = String(a).split('').reverse();
+  const bb = String(b).split('').reverse();
+
+  for(let i=0;i<Math.max(aa.length,bb.length);i++){
+
+    const x = parseInt(aa[i]||0);
+    const y = parseInt(bb[i]||0);
+
+    if(x+y>=10){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasBorrow(a,b){
+
+  const aa = String(a).split('').reverse();
+  const bb = String(b).split('').reverse();
+
+  for(let i=0;i<aa.length;i++){
+
+    const x = parseInt(aa[i]||0);
+    const y = parseInt(bb[i]||0);
+
+    if(x<y){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function badQuestion(a,b,op){
+
+  if(a===0 || b===0) return true;
+
+  if(op==='×' && (a===1 || b===1)) return true;
+
+  if(op==='÷' && (a===1 || b===1)) return true;
+
+  if(uglyNumber(a) || uglyNumber(b)) return true;
+
+  return false;
+}
+
+function calculate(a,b,op){
+
+  switch(op){
+
+    case '+':
+      return a+b;
+
+    case '-':
+      return a-b;
+
+    case '×':
+      return a*b;
+
+    case '÷':
+
+      const mode =
+      document.getElementById('divisionMode').value;
+
+      if(mode==='remainder'){
+
+        return `${Math.floor(a/b)}...${a%b}`;
+      }
+
+      return a/b;
+  }
+}
+
+function buildQuestion(){
+
+  const op = chooseOperator();
+
+  let a,b;
+  let guard = 0;
+
+  do{
+
+    a = parseMask(
+      document.getElementById('maskA').value
+    );
+
+    b = parseMask(
+      document.getElementById('maskB').value
+    );
+
+    if(op==='-'){
+
+      if(
+        document.getElementById('negativeMode').value
+        === 'yes'
+      ){
+
+        if(a<b){
+          [a,b] = [b,a];
+        }
+      }
+    }
+
+    if(op==='÷'){
+
+      if(b===0){
+        b=2;
+      }
+
+      const mode =
+      document.getElementById('divisionMode').value;
+
+      if(mode==='integer'){
+
+        a = a-(a%b);
+      }
+
+      if(mode==='mixed' && Math.random()<0.5){
+
+        a = a-(a%b);
+      }
+    }
+
+    guard++;
+
+  }while(
+    badQuestion(a,b,op) &&
+    guard<500
+  );
+
+  const carryMode =
+  document.getElementById('carryMode').value;
+
+  if(op==='+'){
+
+    const carry = hasCarry(a,b);
+
+    if(carryMode==='need' && !carry){
+      return buildQuestion();
+    }
+
+    if(carryMode==='none' && carry){
+      return buildQuestion();
+    }
+  }
+
+  if(op==='-'){
+
+    const borrow = hasBorrow(a,b);
+
+    if(carryMode==='need' && !borrow){
+      return buildQuestion();
+    }
+
+    if(carryMode==='none' && borrow){
+      return buildQuestion();
+    }
+  }
+
+  return {
+    text:`${a}${op}${b}=`,
+    answer:calculate(a,b,op)
+  };
+}
+
+function autoLayout(total){
+
+  const qGrid =
+  document.getElementById('questionGrid');
+
+  const aGrid =
+  document.getElementById('answerGrid');
+
+  let columns = 2;
+
+  if(total>30) columns=3;
+  if(total>55) columns=4;
+  if(total>80) columns=5;
+
+  qGrid.style.gridTemplateColumns =
+  `repeat(${columns},1fr)`;
+
+  aGrid.style.gridTemplateColumns =
+  `repeat(${columns},1fr)`;
+
+  const rows = Math.ceil(total/columns);
+
+  qGrid.style.gridTemplateRows =
+  `repeat(${rows},1fr)`;
+
+  aGrid.style.gridTemplateRows =
+  `repeat(${rows},1fr)`;
+
+  const size =
+  Math.max(10,24-(columns*2));
+
+  document.documentElement
+  .style
+  .setProperty('--qsize',size+'px');
+}
+
+function createQuestionHTML(
+  i,
+  text,
+  isAnswer=false,
+  answer=''
+){
+
+  if(isAnswer){
+
+    return `
+    <div class="question">
+      <div class="qnum">${i}.</div>
+      <div class="qtext">${text}</div>
+      <div class="answer-box answer">${answer}</div>
+    </div>`;
+  }
+
+  return `
+  <div class="question">
+    <div class="qnum">${i}.</div>
+    <div class="qtext">${text}</div>
+    <div class="answer-box"></div>
+  </div>`;
+}
+
+function generateWorksheet(){
+
+  usedQuestions.clear();
+
+  const total =
+  Math.max(
+    1,
+    Math.min(
+      100,
+      parseInt(
+        document.getElementById('questionCount').value
+      ) || 40
+    )
+  );
+
+  autoLayout(total);
+
+  const qGrid =
+  document.getElementById('questionGrid');
+
+  const aGrid =
+  document.getElementById('answerGrid');
+
+  qGrid.innerHTML='';
+  aGrid.innerHTML='';
+
+  for(let i=1;i<=total;i++){
+
+    let q;
+    let guard=0;
+
+    do{
+
+      q = buildQuestion();
+
+      guard++;
+
+    }while(
+      usedQuestions.has(q.text) &&
+      guard<500
+    );
+
+    usedQuestions.add(q.text);
+
+    qGrid.innerHTML +=
+    createQuestionHTML(i,q.text,false);
+
+    aGrid.innerHTML +=
+    createQuestionHTML(i,q.text,true,q.answer);
+  }
+}
+
+generateWorksheet();
+
+</script>
+
+</body>
+</html>
