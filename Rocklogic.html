@@ -1,0 +1,451 @@
+# index.html
+
+```html
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>猜拳邏輯訓練卷</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+:root{
+  --qsize:28px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  padding:16px;
+  background:#d9d9d9;
+  font-family:"Microsoft JhengHei",sans-serif;
+}
+
+.toolbar{
+  background:#111;
+  color:white;
+  border-radius:14px;
+  padding:12px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.block{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+input{
+  border:none;
+  border-radius:8px;
+  padding:8px;
+  width:120px;
+}
+
+button{
+  border:none;
+  border-radius:10px;
+  padding:10px 16px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.generate-btn{
+  background:#4caf50;
+  color:white;
+}
+
+.print-btn{
+  background:#2196f3;
+  color:white;
+}
+
+.paper{
+  width:210mm;
+  height:297mm;
+  background:white;
+  margin:auto auto 20px auto;
+  padding:8mm;
+  box-shadow:0 0 10px rgba(0,0,0,.2);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.question-paper{
+  break-after:page;
+  page-break-after:always;
+}
+
+.answer-paper{
+  break-after:auto;
+  page-break-after:auto;
+}
+
+.title{
+  text-align:center;
+  font-size:30px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+  font-size:14px;
+}
+
+.rule-box{
+  border:3px solid #000;
+  border-radius:14px;
+  padding:10px;
+  margin-bottom:12px;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  line-height:1.8;
+}
+
+.question-grid{
+  flex:1;
+  display:grid;
+  grid-auto-flow:column;
+  gap:4px 10px;
+}
+
+.question{
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid #ccc;
+  min-height:42px;
+}
+
+.qnum{
+  width:26px;
+  font-size:12px;
+  color:#666;
+  flex-shrink:0;
+}
+
+.qtext{
+  font-size:var(--qsize);
+  font-weight:bold;
+  white-space:nowrap;
+  line-height:1;
+}
+
+.answer-box{
+  width:42px;
+  height:32px;
+  border:2px solid #000;
+  margin-left:6px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:bold;
+}
+
+@media print{
+
+  @page{
+    size:A4;
+    margin:0;
+  }
+
+  body{
+    background:white;
+    padding:0;
+  }
+
+  .toolbar{
+    display:none;
+  }
+
+  .paper{
+    margin:0;
+    width:210mm;
+    height:297mm;
+    box-shadow:none;
+  }
+
+  .question-paper{
+    break-after:page;
+    page-break-after:always;
+  }
+
+  .answer-paper{
+    break-after:auto;
+    page-break-after:auto;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="toolbar">
+
+  <div class="block">
+    <label>題目數量</label>
+    <input id="questionCount" type="number" min="1" max="120" value="50">
+  </div>
+
+  <div class="block">
+    <button class="generate-btn" onclick="generateWorksheet()">
+      產生題目
+    </button>
+  </div>
+
+  <div class="block">
+    <button class="print-btn" onclick="window.print()">
+      列印
+    </button>
+  </div>
+
+</div>
+
+<!-- 題目頁 -->
+
+<div class="paper question-paper">
+
+  <div class="title">猜拳邏輯訓練卷</div>
+
+  <div class="info-row">
+    <div>姓名：____________</div>
+    <div id="dateText1"></div>
+    <div>分數：____________</div>
+  </div>
+
+  <div class="rule-box">
+    ✌️ = 1　
+    👊 = 2　
+    ✋ = 3
+    <br>
+    👊 ＞ ✌️　
+    ✌️ ＞ ✋　
+    ✋ ＞ 👊
+  </div>
+
+  <div id="questionGrid" class="question-grid"></div>
+
+</div>
+
+<!-- 答案頁 -->
+
+<div class="paper answer-paper">
+
+  <div class="title">答案卷</div>
+
+  <div class="info-row">
+    <div>姓名：____________</div>
+    <div id="dateText2"></div>
+    <div>分數：____________</div>
+  </div>
+
+  <div class="rule-box">
+    ✌️ = 1　
+    👊 = 2　
+    ✋ = 3
+    <br>
+    👊 ＞ ✌️　
+    ✌️ ＞ ✋　
+    ✋ ＞ 👊
+  </div>
+
+  <div id="answerGrid" class="question-grid"></div>
+
+</div>
+
+<script>
+
+const symbols = [
+  { icon:"✌️", num:1 },
+  { icon:"👊", num:2 },
+  { icon:"✋", num:3 }
+];
+
+const losesTo = {
+  "✌️":"👊",
+  "✋":"✌️",
+  "👊":"✋"
+};
+
+const today = new Date();
+
+const formattedDate =
+  today.getFullYear() + "/" +
+  (today.getMonth()+1) + "/" +
+  today.getDate();
+
+document.getElementById("dateText1").textContent =
+  "日期：" + formattedDate;
+
+document.getElementById("dateText2").textContent =
+  "日期：" + formattedDate;
+
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function getRandomSymbol(){
+  return symbols[rand(0,2)];
+}
+
+function getNumber(icon){
+
+  for(let s of symbols){
+
+    if(s.icon===icon){
+      return s.num;
+    }
+  }
+}
+
+function createQuestion(){
+
+  const mode = rand(0,1);
+
+  const target = getRandomSymbol();
+
+  let text = "";
+  let answer = "";
+
+  if(mode===0){
+
+    const correct = losesTo[target.icon];
+
+    text = `□ ＞ ${target.icon}`;
+
+    answer = getNumber(correct);
+  }
+
+  else{
+
+    const correct = losesTo[target.icon];
+
+    text = `${target.icon} ＜ □`;
+
+    answer = getNumber(correct);
+  }
+
+  return {
+    text,
+    answer
+  };
+}
+
+function autoColumns(total){
+
+  const qGrid =
+    document.getElementById("questionGrid");
+
+  const aGrid =
+    document.getElementById("answerGrid");
+
+  let cols = 3;
+
+  if(total>72) cols=4;
+  if(total>96) cols=5;
+
+  qGrid.style.gridTemplateColumns =
+    `repeat(${cols},1fr)`;
+
+  aGrid.style.gridTemplateColumns =
+    `repeat(${cols},1fr)`;
+
+  const rows = Math.ceil(total / cols);
+
+  qGrid.style.gridTemplateRows =
+    `repeat(${rows},1fr)`;
+
+  aGrid.style.gridTemplateRows =
+    `repeat(${rows},1fr)`;
+
+  const size =
+    Math.max(18,30-(cols*2));
+
+  document.documentElement
+    .style
+    .setProperty("--qsize",size+"px");
+}
+
+function generateWorksheet(){
+
+  const total =
+    Math.max(
+      1,
+      Math.min(
+        120,
+        parseInt(
+          document.getElementById("questionCount").value
+        ) || 60
+      )
+    );
+
+  autoColumns(total);
+
+  const questionGrid =
+    document.getElementById("questionGrid");
+
+  const answerGrid =
+    document.getElementById("answerGrid");
+
+  questionGrid.innerHTML = "";
+  answerGrid.innerHTML = "";
+
+  let lastQuestion = "";
+
+  for(let i=1;i<=total;i++){
+
+    let q;
+    let guard = 0;
+
+    do{
+
+      q = createQuestion();
+
+      guard++;
+
+    }while(
+      q.text === lastQuestion &&
+      guard < 100
+    );
+
+    lastQuestion = q.text;
+
+    questionGrid.innerHTML += `
+      <div class="question">
+        <div class="qnum">${i}.</div>
+        <div class="qtext">${q.text}</div>
+        <div class="answer-box"></div>
+      </div>
+    `;
+
+    answerGrid.innerHTML += `
+      <div class="question">
+        <div class="qnum">${i}.</div>
+        <div class="qtext">${q.text}</div>
+        <div class="answer-box">${q.answer}</div>
+      </div>
+    `;
+  }
+}
+
+generateWorksheet();
+
+</script>
+
+</body>
+</html>
+```
