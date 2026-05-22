@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>重量比較訓練卷</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+:root{
+  --qsize:48px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  padding:8px;
+  background:#d9d9d9;
+  font-family:"Microsoft JhengHei",sans-serif;
+}
+
+.toolbar{
+  background:#111;
+  color:white;
+  border-radius:12px;
+  padding:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.block{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+input{
+  border:none;
+  border-radius:8px;
+  padding:6px;
+  width:100px;
+  font-size:15px;
+}
+
+button{
+  border:none;
+  border-radius:8px;
+  padding:8px 12px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:15px;
+}
+
+.generate-btn{
+  background:#4caf50;
+  color:white;
+}
+
+.print-btn{
+  background:#2196f3;
+  color:white;
+}
+
+.paper{
+  width:210mm;
+  height:297mm;
+  background:white;
+  margin:auto auto 10px auto;
+  padding:4mm;
+  box-shadow:0 0 10px rgba(0,0,0,.2);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.question-paper{
+  break-after:page;
+  page-break-after:always;
+}
+
+.answer-paper{
+  break-after:auto;
+  page-break-after:auto;
+}
+
+.title{
+  text-align:center;
+  font-size:28px;
+  font-weight:bold;
+  margin-bottom:2px;
+}
+
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:2px;
+  font-size:12px;
+}
+
+.rule-box{
+  border:2px solid #000;
+  border-radius:8px;
+  padding:2px 6px;
+  margin-bottom:4px;
+  text-align:center;
+  font-size:18px;
+  font-weight:bold;
+  line-height:1.1;
+}
+
+.question-grid{
+  flex:1;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:0 10px;
+}
+
+.question{
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid #eee;
+  min-height:44px;
+  line-height:1;
+}
+
+.qnum{
+  width:24px;
+  font-size:11px;
+  color:#666;
+  flex-shrink:0;
+}
+
+.qtext{
+  font-size:var(--qsize);
+  font-weight:bold;
+  white-space:nowrap;
+  line-height:0.95;
+}
+
+.answer-box{
+  width:52px;
+  height:36px;
+  border:2px solid #000;
+  border-radius:6px;
+  margin-left:6px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  font-weight:bold;
+}
+
+@media print{
+
+  @page{
+    size:A4;
+    margin:0;
+  }
+
+  body{
+    background:white;
+    padding:0;
+  }
+
+  .toolbar{
+    display:none;
+  }
+
+  .paper{
+    width:210mm;
+    height:297mm;
+    margin:0;
+    box-shadow:none;
+  }
+
+  .question-paper{
+    break-after:page;
+    page-break-after:always;
+  }
+
+  .answer-paper{
+    break-after:auto;
+    page-break-after:auto;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="toolbar">
+
+  <div class="block">
+    <label>題目數量</label>
+    <input id="questionCount" type="number" min="1" max="80" value="40">
+  </div>
+
+  <div class="block">
+    <button class="generate-btn" onclick="generateWorksheet()">
+      產生題目
+    </button>
+  </div>
+
+  <div class="block">
+    <button class="print-btn" onclick="window.print()">
+      列印
+    </button>
+  </div>
+
+</div>
+
+<div class="paper question-paper">
+
+  <div class="title">重量比較訓練卷</div>
+
+  <div class="info-row">
+    <div>姓名：________</div>
+    <div id="dateText1"></div>
+    <div>分數：________</div>
+  </div>
+
+  <div class="rule-box">
+    🐘 ＞ 🐔　🚗 ＞ 🚲　🍉 ＞ 🍎
+  </div>
+
+  <div id="questionGrid" class="question-grid"></div>
+
+</div>
+
+<div class="paper answer-paper">
+
+  <div class="title">答案卷</div>
+
+  <div class="info-row">
+    <div>姓名：________</div>
+    <div id="dateText2"></div>
+    <div>分數：________</div>
+  </div>
+
+  <div class="rule-box">
+    ⭕ = 正確　❌ = 錯誤
+  </div>
+
+  <div id="answerGrid" class="question-grid"></div>
+
+</div>
+
+<script>
+
+const items = [
+  { icon:"🍎", weight:1 },
+  { icon:"⚽", weight:2 },
+  { icon:"🍉", weight:3 },
+  { icon:"🐔", weight:4 },
+  { icon:"🚲", weight:5 },
+  { icon:"🐕", weight:6 },
+  { icon:"🏍️", weight:7 },
+  { icon:"🚗", weight:8 },
+  { icon:"🐄", weight:9 },
+  { icon:"🐘", weight:10 }
+];
+
+const today = new Date();
+
+const formattedDate =
+  today.getFullYear() + "/" +
+  (today.getMonth()+1) + "/" +
+  today.getDate();
+
+document.getElementById("dateText1").textContent =
+  "日期：" + formattedDate;
+
+document.getElementById("dateText2").textContent =
+  "日期：" + formattedDate;
+
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function getRandomItem(){
+  return items[rand(0,items.length-1)];
+}
+
+function createQuestion(forceWrong=false){
+
+  let left;
+  let right;
+
+  do{
+
+    left = getRandomItem();
+    right = getRandomItem();
+
+  }while(
+    left.weight === right.weight ||
+    Math.abs(left.weight-right.weight) < 2
+  );
+
+  const correctSymbol =
+    left.weight > right.weight ? "＞" : "＜";
+
+  let displaySymbol = correctSymbol;
+  let answer = "⭕";
+
+  if(forceWrong){
+
+    displaySymbol =
+      correctSymbol === "＞" ? "＜" : "＞";
+
+    answer = "❌";
+  }
+
+  return {
+    text:`${left.icon} ${displaySymbol} ${right.icon}`,
+    answer
+  };
+}
+
+function shuffle(array){
+
+  for(let i=array.length-1;i>0;i--){
+
+    const j = Math.floor(Math.random()*(i+1));
+
+    [array[i],array[j]] =
+    [array[j],array[i]];
+  }
+
+  return array;
+}
+
+function generateWorksheet(){
+
+  const total =
+    Math.max(
+      1,
+      Math.min(
+        80,
+        parseInt(
+          document.getElementById("questionCount").value
+        ) || 40
+      )
+    );
+
+  const questionGrid =
+    document.getElementById("questionGrid");
+
+  const answerGrid =
+    document.getElementById("answerGrid");
+
+  questionGrid.innerHTML = "";
+  answerGrid.innerHTML = "";
+
+  const answerPattern = [];
+
+  for(let i=0;i<Math.floor(total/2);i++){
+    answerPattern.push(true);
+  }
+
+  while(answerPattern.length < total){
+    answerPattern.push(false);
+  }
+
+  shuffle(answerPattern);
+
+  let lastQuestion = "";
+
+  for(let i=1;i<=total;i++){
+
+    let q;
+    let guard = 0;
+
+    do{
+
+      q = createQuestion(answerPattern[i-1]);
+
+      guard++;
+
+    }while(
+      q.text === lastQuestion &&
+      guard < 100
+    );
+
+    lastQuestion = q.text;
+
+    questionGrid.innerHTML += `
+      <div class="question">
+        <div class="qnum">${i}.</div>
+        <div class="qtext">${q.text}</div>
+        <div class="answer-box"></div>
+      </div>
+    `;
+
+    answerGrid.innerHTML += `
+      <div class="question">
+        <div class="qnum">${i}.</div>
+        <div class="qtext">${q.text}</div>
+        <div class="answer-box">${q.answer}</div>
+      </div>
+    `;
+  }
+}
+
+generateWorksheet();
+
+</script>
+
+</body>
+</html>
