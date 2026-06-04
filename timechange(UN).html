@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時間換算題庫產生器 V1 - 國小數學互動練習與學習單產生器</title>
+  <!-- Link Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       CSS Variables & Theme Setup
+       ========================================================================== */
+    :root {
+      /* Light Mode Palette */
+      --bg-gradient-start: #f4f3ff;
+      --bg-gradient-end: #eae8ff;
+      --panel-bg: rgba(255, 255, 255, 0.75);
+      --panel-border: rgba(139, 92, 246, 0.12);
+      --text-main: #1e1b4b;
+      --text-muted: #475569;
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --primary-light: rgba(124, 58, 237, 0.1);
+      --accent-cyan: #0891b2;
+      --accent-coral: #e11d48;
+      --accent-emerald: #059669;
+      --accent-emerald-light: rgba(5, 150, 105, 0.1);
+      --input-bg: #ffffff;
+      --input-border: #cbd5e1;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 8px 30px rgba(124, 58, 237, 0.08);
+      --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.08);
+      --card-radius: 16px;
+      --btn-radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      /* Dark Mode Palette */
+      --bg-gradient-start: #0a0a16;
+      --bg-gradient-end: #141129;
+      --panel-bg: rgba(28, 24, 54, 0.7);
+      --panel-border: rgba(255, 255, 255, 0.06);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #9f66ff;
+      --primary-hover: #b183ff;
+      --primary-light: rgba(159, 102, 255, 0.15);
+      --accent-cyan: #06b6d4;
+      --accent-coral: #f43f5e;
+      --accent-emerald: #10b981;
+      --accent-emerald-light: rgba(16, 185, 129, 0.15);
+      --input-bg: #110e25;
+      --input-border: rgba(255, 255, 255, 0.15);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ==========================================================================
+       Global Reset & Styles
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+      transition: var(--transition);
+      padding-bottom: 40px;
+    }
+
+    /* Background Canvas for Confetti */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+      flex-grow: 1;
+    }
+
+    /* ==========================================================================
+       Header Layout
+       ========================================================================== */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo svg {
+      width: 38px;
+      height: 38px;
+      fill: var(--primary);
+    }
+
+    .header-title h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ==========================================================================
+       Glassmorphism Panels
+       ========================================================================== */
+    .glass-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow-md);
+      padding: 24px;
+      transition: var(--transition);
+    }
+
+    .glass-panel:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Grid Layout */
+    .app-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .app-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ==========================================================================
+       Configuration Sidebar Components
+       ========================================================================== */
+    .config-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid var(--panel-border);
+      padding-bottom: 10px;
+    }
+
+    .config-section {
+      margin-bottom: 24px;
+    }
+
+    .config-section label.section-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* Segmented Control / Tabs for Modes */
+    .mode-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .mode-tab {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      color: var(--text-main);
+      transition: var(--transition);
+    }
+
+    [data-theme="dark"] .mode-tab {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .mode-tab:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .mode-tab.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    }
+
+    .mode-tab span.badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .mode-tab.active span.badge {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Checklist Styles */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 13.5px;
+      user-select: none;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkmark {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      height: 18px;
+      width: 18px;
+      background-color: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: 5px;
+      transition: var(--transition);
+    }
+
+    .checkbox-container:hover input ~ .checkmark {
+      border-color: var(--primary);
+    }
+
+    .checkbox-container input:checked ~ .checkmark {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+    }
+
+    .checkbox-container input:checked ~ .checkmark:after {
+      display: block;
+    }
+
+    .checkbox-container .checkmark:after {
+      left: 5px;
+      top: 2px;
+      width: 5px;
+      height: 9px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    /* Radio Group (Difficulty) */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .radio-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding-left: 28px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .radio-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .radiomark {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      height: 18px;
+      width: 18px;
+      background-color: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+
+    .radio-container:hover input ~ .radiomark {
+      border-color: var(--primary);
+    }
+
+    .radio-container input:checked ~ .radiomark {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .radiomark:after {
+      content: "";
+      position: absolute;
+      display: none;
+      top: 5px;
+      left: 5px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .radio-container input:checked ~ .radiomark:after {
+      display: block;
+    }
+
+    /* Range and Number Control */
+    .range-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .range-input {
+      flex-grow: 1;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .range-value {
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 8px;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    /* Dynamic Options Section Wrapper */
+    .sub-options-panel {
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.015);
+      border-radius: 10px;
+      border: 1px solid var(--panel-border);
+      margin-top: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: var(--btn-radius);
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--input-border);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: var(--text-main);
+    }
+
+    [data-theme="dark"] .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn-icon {
+      padding: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel-bg);
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .btn-icon:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    /* ==========================================================================
+       Main Display Panel & Tabs
+       ========================================================================== */
+    .display-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .display-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.03);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    [data-theme="dark"] .display-tabs {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .display-tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .display-tab-btn.active {
+      background: var(--input-bg);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .display-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Interactive Quiz Card View */
+    .quiz-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .quiz-card {
+      background: var(--input-bg);
+      border: 1.5px solid var(--panel-border);
+      border-radius: var(--card-radius);
+      padding: 20px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .quiz-card:hover {
+      border-color: var(--primary-hover);
+      box-shadow: var(--shadow-md);
+    }
+
+    .quiz-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .quiz-number {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .quiz-mode-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.04);
+      padding: 2px 8px;
+      border-radius: 5px;
+    }
+
+    [data-theme="dark"] .quiz-mode-tag {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Quiz Question and Inputs styling */
+    .quiz-body {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+    }
+
+    /* Inputs in quiz questions */
+    .quiz-input {
+      border: 1.5px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      width: 90px;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .quiz-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+    }
+
+    .quiz-input.small {
+      width: 70px;
+    }
+
+    .quiz-input.medium {
+      width: 140px;
+    }
+
+    .quiz-select {
+      border: 1.5px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .quiz-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* Grading feedback decoration */
+    .quiz-card.correct {
+      border-color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.02);
+    }
+
+    .quiz-card.incorrect {
+      border-color: var(--accent-coral);
+      background: rgba(244, 63, 94, 0.02);
+    }
+
+    .input-feedback {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 4px;
+    }
+
+    .feedback-icon {
+      font-size: 18px;
+      margin-left: 6px;
+    }
+
+    .feedback-icon.success {
+      color: var(--accent-emerald);
+    }
+
+    .feedback-icon.danger {
+      color: var(--accent-coral);
+    }
+
+    /* Explanation Accordion Card */
+    .explanation-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 13.5px;
+      cursor: pointer;
+      margin-top: 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+
+    .explanation-btn:hover {
+      background: var(--primary-light);
+    }
+
+    .explanation-content {
+      margin-top: 12px;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.015);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      font-size: 14.5px;
+      display: none;
+      animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] .explanation-content {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Correct Answer Overlay in case of failure */
+    .correct-answer-text {
+      margin-top: 8px;
+      font-size: 13.5px;
+      color: var(--accent-emerald);
+      font-weight: 600;
+    }
+
+    /* Grading Banner at the Top/Bottom */
+    .score-banner {
+      background: var(--primary-light);
+      border: 1.5px solid var(--primary);
+      border-radius: var(--card-radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      animation: slideDown 0.4s ease-out;
+      display: none;
+    }
+
+    .score-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .score-text {
+      font-size: 16px;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .actions-row {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      fill: var(--text-muted);
+      opacity: 0.5;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    /* Timer Widget */
+    .timer-widget {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.08);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(6, 182, 212, 0.15);
+    }
+
+    /* ==========================================================================
+       Print / Worksheet View Specific (A4 Page Container Layout)
+       ========================================================================== */
+    .print-only {
+      display: none;
+    }
+
+    #print-worksheet {
+      display: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #print-worksheet.web-preview {
+      display: block !important;
+      background: transparent;
+      box-shadow: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    /* A4 紙張容器 (網頁預覽時) */
+    .page-container {
+      background: #ffffff;
+      width: 210mm;
+      max-width: 100%;
+      min-height: 297mm;
+      margin: 20px auto;
+      padding: 20mm 15mm;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      border-radius: 8px;
+      color: #000000;
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      position: relative;
+    }
+
+    /* 網頁深色模式下，預覽紙本仍為白底黑字 */
+    [data-theme="dark"] .page-container {
+      background: #ffffff !important;
+      color: #000000 !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .print-header {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .print-header h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .print-meta-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 3px solid #000000;
+      padding: 6px 4px;
+      margin-bottom: 20px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .print-quiz-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      column-gap: 28px;
+      row-gap: 0;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* 欄位數量控制 */
+    #print-worksheet.two-columns .print-quiz-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    #print-worksheet.three-columns .print-quiz-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .print-question {
+      font-size: 14px;
+      line-height: 1.8;
+      page-break-inside: avoid;
+      border-bottom: 1px dashed #ddd;
+      padding: 10px 0;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .print-question-num {
+      font-weight: 800;
+      color: var(--primary);
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .print-question-content {
+      flex-grow: 1;
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    /* Separated Answer Key section in print sheet */
+    .print-answers-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      column-gap: 28px;
+      row-gap: 0;
+      margin-top: 15px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #print-worksheet.two-columns .print-answers-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    #print-worksheet.three-columns .print-answers-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .print-answer {
+      page-break-inside: avoid;
+      border-bottom: 1px dashed #ddd;
+      padding: 10px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .print-answer-item-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .print-answer-explanation {
+      font-size: 12.5px;
+      color: #475569;
+      padding-left: 32px;
+      line-height: 1.5;
+    }
+
+    /* Media Print Overrides */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-worksheet, #print-worksheet * {
+        visibility: visible;
+      }
+      #print-worksheet {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        background: transparent;
+      }
+      .glass-panel {
+        box-shadow: none !important;
+      }
+      
+      .page-container {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        margin: 0 auto !important;
+        padding: 15mm 15mm !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-after: always;
+        display: flex !important;
+        box-sizing: border-box !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+
+      .page-container.answer-sheet {
+        page-break-before: always;
+      }
+      
+      .print-header h2 {
+        color: #7c3aed !important;
+      }
+      
+      .print-meta-row {
+        border-color: #7c3aed !important;
+        color: #7c3aed !important;
+      }
+      
+      .print-question-num {
+        color: #7c3aed !important;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="container">
+    <!-- Header Block -->
+    <header>
+      <div class="header-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/>
+          <path d="M13 7h-2v6h6v-2h-4z"/>
+        </svg>
+        <div class="header-title">
+          <h1>時間換算題庫產生器 <span style="font-family:'Fredoka', sans-serif; color:var(--primary); font-size:16px;">V1</span></h1>
+          <p>國小數學「時間」單元出題工具・支援線上互動練習、解答詳解與學習單列印</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <!-- Timer widget (Interactive Mode) -->
+        <div class="timer-widget" id="timer-box" style="display:none;">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+          </svg>
+          <span id="timer-display">00:00</span>
+        </div>
+        <!-- Light/Dark Toggle -->
+        <button class="btn-icon" id="theme-toggle" title="切換深淺色模式">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16" id="theme-sun-icon">
+            <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2a.5.5 0 0 1 .5-.5zM0 8a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2A.5.5 0 0 1 0 8zm13 0a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zM2.343 2.343a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707L2.343 3.05a.5.5 0 0 1 0-.707zm10.9 10.9a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707l-1.414-1.414a.5.5 0 0 1 0-.707zM3.75 11.25a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707l-1.414-1.414a.5.5 0 0 1 0-.707zm10.9-9a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707L13.75 3.15a.5.5 0 0 1 0-.707z"/>
+          </svg>
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16" id="theme-moon-icon" style="display:none;">
+            <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Main Body Layout -->
+    <div class="app-grid">
+      <!-- Sidebar Settings Panel -->
+      <aside class="glass-panel">
+        <h2 class="config-title">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:middle; position:relative; top:-1px;">
+            <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+          </svg>
+          題庫參數設定
+        </h2>
+
+        <!-- Mode Select Tabs -->
+        <div class="config-section">
+          <label class="section-label">出題模式</label>
+          <div class="mode-selector">
+            <button class="mode-tab active" data-mode="mode1">
+              <span>模式 1：單位換算</span>
+              <span class="badge">基本</span>
+            </button>
+            <button class="mode-tab" data-mode="mode2">
+              <span>模式 2：缺少時間求解</span>
+              <span class="badge">進階</span>
+            </button>
+            <button class="mode-tab" data-mode="mode3">
+              <span>模式 3：跨日計算</span>
+              <span class="badge">高難度</span>
+            </button>
+            <button class="mode-tab" data-mode="mode4">
+              <span>模式 4：時制互轉</span>
+              <span class="badge">實用</span>
+            </button>
+            <button class="mode-tab" data-mode="mode5">
+              <span>模式 5：時間應用題</span>
+              <span class="badge">綜合</span>
+            </button>
+            <button class="mode-tab" data-mode="ultimate">
+              <span>終極自由出題模式</span>
+              <span class="badge" style="background:var(--accent-coral); color:white;">🔥</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Options Config Section -->
+        <div class="config-section">
+          <label class="section-label">模式詳細設定</label>
+          <div id="dynamic-mode-options">
+            <!-- Mode 1 Options (Default) -->
+            <div class="sub-options-panel" id="options-mode1">
+              <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">選擇要在題目中出現的單位：</p>
+              <div class="options-grid">
+                <label class="checkbox-container">日
+                  <input type="checkbox" id="m1-unit-day" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">時
+                  <input type="checkbox" id="m1-unit-hour" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">分
+                  <input type="checkbox" id="m1-unit-minute" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">秒
+                  <input type="checkbox" id="m1-unit-second" checked>
+                  <span class="checkmark"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Mode 2 Options (Hidden initially) -->
+            <div class="sub-options-panel" id="options-mode2" style="display:none;">
+              <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">選擇出題題型：</p>
+              <label class="checkbox-container">題型 A (求結束時間)
+                <input type="checkbox" id="m2-type-a" checked>
+                <span class="checkmark"></span>
+              </label>
+              <label class="checkbox-container">題型 B (求經過時間)
+                <input type="checkbox" id="m2-type-b" checked>
+                <span class="checkmark"></span>
+              </label>
+              <label class="checkbox-container">題型 C (求開始時間)
+                <input type="checkbox" id="m2-type-c" checked>
+                <span class="checkmark"></span>
+              </label>
+            </div>
+
+            <!-- Mode 3 Options (Hidden initially) -->
+            <div class="sub-options-panel" id="options-mode3" style="display:none;">
+              <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">選擇跨日難度：</p>
+              <div class="radio-group">
+                <label class="radio-container">初級：跨一天
+                  <input type="radio" name="m3-difficulty" value="easy" checked>
+                  <span class="radiomark"></span>
+                </label>
+                <label class="radio-container">中級：跨 2~3 天
+                  <input type="radio" name="m3-difficulty" value="medium">
+                  <span class="radiomark"></span>
+                </label>
+                <label class="radio-container">高級：跨 7 天以上
+                  <input type="radio" name="m3-difficulty" value="hard">
+                  <span class="radiomark"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Mode 4 Options (Hidden initially) -->
+            <div class="sub-options-panel" id="options-mode4" style="display:none;">
+              <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">選擇時制互轉方向：</p>
+              <label class="checkbox-container">12 時制 ➔ 24 時制
+                <input type="checkbox" id="m4-dir-12-24" checked>
+                <span class="checkmark"></span>
+              </label>
+              <label class="checkbox-container">24 時制 ➔ 12 時制
+                <input type="checkbox" id="m4-dir-24-12" checked>
+                <span class="checkmark"></span>
+              </label>
+              <label class="checkbox-container">包含英制混合格式 (AM/PM)
+                <input type="checkbox" id="m4-mixed" checked>
+                <span class="checkmark"></span>
+              </label>
+            </div>
+
+            <!-- Mode 5 Options (Hidden initially) -->
+            <div class="sub-options-panel" id="options-mode5" style="display:none;">
+              <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">選擇應用題情境：</p>
+              <div class="options-grid">
+                <label class="checkbox-container">電影時間
+                  <input type="checkbox" id="m5-context-movie" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">搭車時間
+                  <input type="checkbox" id="m5-context-ride" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">睡眠長度
+                  <input type="checkbox" id="m5-context-sleep" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">課堂時間
+                  <input type="checkbox" id="m5-context-class" checked>
+                  <span class="checkmark"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Ultimate Free Mode Options (Hidden initially) -->
+            <div class="sub-options-panel" id="options-ultimate" style="display:none;">
+              <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">自由勾選要混合的所有功能：</p>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <label class="checkbox-container">單位換算題
+                  <input type="checkbox" id="u-unit-conv" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">缺少時間求解題
+                  <input type="checkbox" id="u-missing-time" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">跨日計算題
+                  <input type="checkbox" id="u-cross-day" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">12/24小時時制轉換題
+                  <input type="checkbox" id="u-time-format" checked>
+                  <span class="checkmark"></span>
+                </label>
+                <label class="checkbox-container">生活應用題
+                  <input type="checkbox" id="u-word-problems" checked>
+                  <span class="checkmark"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Count Slider -->
+        <div class="config-section">
+          <label class="section-label">出題題目數量</label>
+          <div class="range-control">
+            <input type="range" class="range-input" id="quiz-count-slider" min="5" max="50" step="5" value="10">
+            <span class="range-value" id="quiz-count-val">10</span>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button class="btn btn-primary" id="generate-btn">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+            <path d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+          </svg>
+          產生新題庫
+        </button>
+      </aside>
+
+      <!-- Main Panel Displaying Quizzes -->
+      <main class="glass-panel">
+        <div class="display-header">
+          <!-- Quiz Display Tabs -->
+          <div class="display-tabs">
+            <button class="display-tab-btn active" id="tab-interactive">線上互動練習模式</button>
+            <button class="display-tab-btn" id="tab-print">紙本列印學習單模式</button>
+          </div>
+
+          <div class="display-actions">
+            <!-- Show Answers toggle -->
+            <label class="checkbox-container" style="margin-bottom:0; font-size:13px;" id="show-answers-toggle-box">
+              顯示詳解答案
+              <input type="checkbox" id="toggle-all-answers">
+              <span class="checkmark"></span>
+            </label>
+            <button class="btn btn-secondary" id="print-action-btn" style="padding: 6px 12px; font-size: 13px; width: auto; display: none;">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+              </svg>
+              列印/匯出 PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Grade Summary Banner -->
+        <div class="score-banner" id="grading-banner">
+          <div class="score-title" id="grading-score">得分：0 分</div>
+          <div class="score-text" id="grading-msg">加油！再挑戰一次看看！</div>
+        </div>
+
+        <!-- Quiz List Container -->
+        <div id="quiz-display-wrapper">
+          <!-- Interactive Quiz List -->
+          <div class="quiz-container" id="interactive-quiz-list">
+            <!-- Empty state -->
+            <div class="empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm3-6H4V5h16v2z"/>
+              </svg>
+              <h3>尚未產生題庫</h3>
+              <p>請點擊左側「產生新題庫」按鈕開始出題練習！</p>
+            </div>
+          </div>
+
+          <!-- Bottom Actions inside interactive mode -->
+          <div class="actions-row" id="interactive-actions" style="display:none;">
+            <button class="btn btn-primary" id="grade-quiz-btn" style="flex:1;">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+              </svg>
+              送出答案並批改
+            </button>
+            <button class="btn btn-secondary" id="restart-quiz-btn" style="width:160px;">
+              重置練習
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Print Template Document Area (Invisible in web view)
+       ========================================================================== -->
+  <div id="print-worksheet">
+    <!-- 題目卷 -->
+    <div class="page-container" id="print-question-page">
+      <div class="print-header">
+        <h2 id="print-title-text">國小數學：時間換算練習卷</h2>
+        <div class="print-meta-row">
+          <div>姓名：＿＿＿＿＿＿＿＿</div>
+          <div>日期：＿＿＿＿年＿＿月＿＿日</div>
+          <div>得分：＿＿＿＿＿＿＿＿</div>
+        </div>
+      </div>
+      <!-- Questions list in print format -->
+      <div class="print-quiz-grid" id="print-questions-list">
+        <!-- Generated printed questions will go here -->
+      </div>
+    </div>
+
+    <!-- 答案卷 -->
+    <div class="page-container answer-sheet" id="print-answer-key-section" style="display: none;">
+      <div class="print-header">
+        <h2>【 答案卷與詳解 】</h2>
+        <div class="print-meta-row">
+          <div>批改對照用</div>
+        </div>
+      </div>
+      <div class="print-answers-grid" id="print-answers-list">
+        <!-- Generated answers will go here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       JavaScript Logical Code Block
+       ========================================================================== -->
+  <script>
+    // Global Constants and Lists
+    const MOVIE_NAMES = ['魔法森林', '玩具歷險記', '星際漫遊', '恐龍帝國', '海底總動員', '超人聯盟', '時間旅客', '夢幻城堡', '精靈幻境', '極速賽車'];
+    const VEHICLES = ['高鐵', '火車', '捷運', '遊覽車', '客運', '公車', '飛機'];
+    const PEOPLE = ['小明', '小美', '小華', '大強', '阿珍', '小軒', '婷婷', '小宇', '依依', '冠宇'];
+    const COURSES = ['第一節課', '數學課', '國語課', '英文課', '體育課', '自然課', '美術課', '音樂課', '社會課', '健康課'];
+    const WEEKDAYS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+
+    // Application state variables
+    let currentMode = 'mode1';
+    let generatedQuestions = [];
+    let currentTheme = 'light';
+    let activeTab = 'interactive'; // 'interactive' or 'print'
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let isGraded = false;
+
+    // Element bindings
+    const generateBtn = document.getElementById('generate-btn');
+    const interactiveQuizList = document.getElementById('interactive-quiz-list');
+    const printQuestionsList = document.getElementById('print-questions-list');
+    const printAnswersList = document.getElementById('print-answers-list');
+    const printAnswerKeySection = document.getElementById('print-answer-key-section');
+    const gradeQuizBtn = document.getElementById('grade-quiz-btn');
+    const restartQuizBtn = document.getElementById('restart-quiz-btn');
+    const interactiveActions = document.getElementById('interactive-actions');
+    const gradingBanner = document.getElementById('grading-banner');
+    const gradingScore = document.getElementById('grading-score');
+    const gradingMsg = document.getElementById('grading-msg');
+    const slider = document.getElementById('quiz-count-slider');
+    const sliderVal = document.getElementById('quiz-count-val');
+    const showAnswersToggleBox = document.getElementById('show-answers-toggle-box');
+    const toggleAllAnswers = document.getElementById('toggle-all-answers');
+    const printActionBtn = document.getElementById('print-action-btn');
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('theme-sun-icon');
+    const moonIcon = document.getElementById('theme-moon-icon');
+    const timerBox = document.getElementById('timer-box');
+    const timerDisplay = document.getElementById('timer-display');
+
+    // UI Interactive Event Listeners
+    slider.addEventListener('input', () => {
+      sliderVal.textContent = slider.value;
+    });
+
+    // Theme toggle handler
+    themeToggleBtn.addEventListener('click', () => {
+      if (document.body.getAttribute('data-theme') === 'light') {
+        document.body.setAttribute('data-theme', 'dark');
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+        currentTheme = 'dark';
+      } else {
+        document.body.setAttribute('data-theme', 'light');
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+        currentTheme = 'light';
+      }
+    });
+
+    // Handle switching mode tabs
+    const modeTabs = document.querySelectorAll('.mode-tab');
+    modeTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        modeTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentMode = tab.dataset.mode;
+        
+        // Hide all configurations
+        document.querySelectorAll('.sub-options-panel').forEach(panel => {
+          panel.style.display = 'none';
+        });
+        // Show active configuration panel
+        document.getElementById(`options-${currentMode}`).style.display = 'block';
+      });
+    });
+
+    // Handle switching display tabs (Interactive vs Print)
+    const tabInteractive = document.getElementById('tab-interactive');
+    const tabPrint = document.getElementById('tab-print');
+    
+    tabInteractive.addEventListener('click', () => {
+      tabInteractive.classList.add('active');
+      tabPrint.classList.remove('active');
+      activeTab = 'interactive';
+      printActionBtn.style.display = 'none';
+      interactiveQuizList.style.display = 'flex';
+      document.getElementById('print-worksheet').classList.remove('web-preview');
+      if (generatedQuestions.length > 0) {
+        interactiveActions.style.display = 'flex';
+        timerBox.style.display = 'flex';
+        showAnswersToggleBox.style.display = 'flex';
+        if (isGraded) {
+          gradingBanner.style.display = 'block';
+        }
+      }
+    });
+
+    tabPrint.addEventListener('click', () => {
+      tabPrint.classList.add('active');
+      tabInteractive.classList.remove('active');
+      activeTab = 'print';
+      interactiveQuizList.style.display = 'none';
+      interactiveActions.style.display = 'none';
+      gradingBanner.style.display = 'none';
+      timerBox.style.display = 'none';
+      
+      if (generatedQuestions.length > 0) {
+        printActionBtn.style.display = 'inline-flex';
+        showAnswersToggleBox.style.display = 'flex';
+        document.getElementById('print-worksheet').classList.add('web-preview');
+      }
+    });
+
+    // Print button handler
+    printActionBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    // Global answer reveal toggle
+    toggleAllAnswers.addEventListener('change', () => {
+      const show = toggleAllAnswers.checked;
+      
+      // Update interactive mode explanations
+      document.querySelectorAll('.explanation-content').forEach(el => {
+        el.style.display = show ? 'block' : 'none';
+      });
+      
+      // Update printable worksheet answer sheet section
+      printAnswerKeySection.style.display = show ? 'flex' : 'none';
+    });
+
+    // Generate Button Trigger
+    generateBtn.addEventListener('click', () => {
+      const count = parseInt(slider.value);
+      generateQuiz(count);
+    });
+
+    // Grade Button Trigger
+    gradeQuizBtn.addEventListener('click', gradeQuiz);
+
+    // Restart Button Trigger
+    restartQuizBtn.addEventListener('click', resetQuiz);
+
+    // Keydown listener to submit quiz when Enter is pressed in inputs
+    interactiveQuizList.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        gradeQuiz();
+      }
+    });
+
+    /* ==========================================================================
+       Mathematical Helpers & Converters
+       ========================================================================== */
+    function minutesTo12HourStr(totalMinutes) {
+      let h24 = Math.floor(totalMinutes / 60) % 24;
+      let m = totalMinutes % 60;
+      let prefix = h24 < 12 ? "上午" : "下午";
+      let h12 = h24 % 12;
+      if (h12 === 0) h12 = 12;
+      return `${prefix}${h12}:${m.toString().padStart(2, '0')}`;
+    }
+
+    function formatElapsedTime(totalMinutes) {
+      let h = Math.floor(totalMinutes / 60);
+      let m = totalMinutes % 60;
+      if (h > 0 && m > 0) return `${h}時${m}分`;
+      if (h > 0) return `${h}時`;
+      return `${m}分`;
+    }
+
+    function formatElapsedTimeFull(totalMinutes) {
+      let h = Math.floor(totalMinutes / 60);
+      let m = totalMinutes % 60;
+      if (h > 0 && m > 0) return `${h}小時${m}分鐘`;
+      if (h > 0) return `${h}小時`;
+      return `${m}分鐘`;
+    }
+
+    /* ==========================================================================
+       Core Question Generators
+       ========================================================================== */
+    
+    // Mode 1: Unit Conversion
+    function generateMode1Question() {
+      // Checked units
+      const units = [];
+      if (document.getElementById('m1-unit-day').checked) units.push('d');
+      if (document.getElementById('m1-unit-hour').checked) units.push('h');
+      if (document.getElementById('m1-unit-minute').checked) units.push('m');
+      if (document.getElementById('m1-unit-second').checked) units.push('s');
+
+      if (units.length < 2) {
+        // Fallback to hours and minutes if user unchecked everything
+        units.push('h', 'm');
+      }
+
+      // Randomly pick a conversion template from the supported checked units
+      const templates = [];
+      
+      if (units.includes('h') && units.includes('m')) {
+        templates.push('h_to_m', 'hm_to_m', 'm_to_hm');
+      }
+      if (units.includes('m') && units.includes('s')) {
+        templates.push('m_to_s', 'ms_to_s', 's_to_ms');
+      }
+      if (units.includes('d') && units.includes('h')) {
+        templates.push('d_to_h', 'dh_to_h', 'h_to_dh');
+      }
+      if (units.includes('d') && units.includes('h') && units.includes('m')) {
+        templates.push('dhm_to_m');
+      }
+      if (units.includes('d') && units.includes('h') && units.includes('m') && units.includes('s')) {
+        templates.push('dhms_to_s');
+      }
+
+      if (templates.length === 0) {
+        templates.push('h_to_m', 'hm_to_m', 'm_to_hm');
+      }
+
+      const t = templates[Math.floor(Math.random() * templates.length)];
+      let textInteractive = '';
+      let textPrint = '';
+      let answerObj = {};
+      let explanation = '';
+
+      switch (t) {
+        case 'h_to_m': {
+          const h = 1 + Math.floor(Math.random() * 23);
+          const ans = h * 60;
+          textInteractive = `${h} 時 = <input type="number" class="quiz-input" data-key="m"> 分`;
+          textPrint = `${h} 時 = ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 分`;
+          answerObj = { m: ans };
+          explanation = `因為 1 時 ＝ 60 分，所以 ${h} 時 ＝ ${h} × 60 ＝ ${ans} 分。`;
+          break;
+        }
+        case 'hm_to_m': {
+          const h = 1 + Math.floor(Math.random() * 11);
+          const m = 1 + Math.floor(Math.random() * 59);
+          const ans = h * 60 + m;
+          textInteractive = `${h} 時 ${m} 分 = <input type="number" class="quiz-input" data-key="m"> 分`;
+          textPrint = `${h} 時 ${m} 分 = ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 分`;
+          answerObj = { m: ans };
+          explanation = `步驟 1：因為 1 時 ＝ 60 分，所以 ${h} 時 ＝ ${h} × 60 ＝ ${h * 60} 分。<br>步驟 2：加上餘下的 ${m} 分，得到 ${h * 60} ＋ ${m} ＝ ${ans} 分。`;
+          break;
+        }
+        case 'm_to_hm': {
+          const ansH = 1 + Math.floor(Math.random() * 11);
+          const ansM = 1 + Math.floor(Math.random() * 59);
+          const mins = ansH * 60 + ansM;
+          textInteractive = `${mins} 分 = <input type="number" class="quiz-input small" data-key="h"> 時 <input type="number" class="quiz-input small" data-key="m"> 分`;
+          textPrint = `${mins} 分 = ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分`;
+          answerObj = { h: ansH, m: ansM };
+          explanation = `因為 60 分 ＝ 1 時，我們計算 ${mins} ÷ 60 ＝ ${ansH} 餘 ${ansM}。<br>所以 ${mins} 分等於 ${ansH} 時 ${ansM} 分。`;
+          break;
+        }
+        case 'm_to_s': {
+          const m = 1 + Math.floor(Math.random() * 23);
+          const ans = m * 60;
+          textInteractive = `${m} 分 = <input type="number" class="quiz-input" data-key="s"> 秒`;
+          textPrint = `${m} 分 = ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 秒`;
+          answerObj = { s: ans };
+          explanation = `因為 1 分 ＝ 60 秒，所以 ${m} 分 ＝ ${m} × 60 ＝ ${ans} 秒。`;
+          break;
+        }
+        case 'ms_to_s': {
+          const m = 1 + Math.floor(Math.random() * 11);
+          const s = 1 + Math.floor(Math.random() * 59);
+          const ans = m * 60 + s;
+          textInteractive = `${m} 分 ${s} 秒 = <input type="number" class="quiz-input" data-key="s"> 秒`;
+          textPrint = `${m} 分 ${s} 秒 = ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 秒`;
+          answerObj = { s: ans };
+          explanation = `步驟 1：因為 1 分 ＝ 60 秒，所以 ${m} 分 ＝ ${m} × 60 ＝ ${m * 60} 秒。<br>步驟 2：加上餘下的 ${s} 秒，得到 ${m * 60} ＋ ${s} ＝ ${ans} 秒。`;
+          break;
+        }
+        case 's_to_ms': {
+          const ansM = 1 + Math.floor(Math.random() * 11);
+          const ansS = 1 + Math.floor(Math.random() * 59);
+          const secs = ansM * 60 + ansS;
+          textInteractive = `${secs} 秒 = <input type="number" class="quiz-input small" data-key="m"> 分 <input type="number" class="quiz-input small" data-key="s"> 秒`;
+          textPrint = `${secs} 秒 = ( &nbsp; &nbsp; &nbsp; ) 分 ( &nbsp; &nbsp; &nbsp; ) 秒`;
+          answerObj = { m: ansM, s: ansS };
+          explanation = `因為 60 秒 ＝ 1 分，我們計算 ${secs} ÷ 60 ＝ ${ansM} 餘 ${ansS}。<br>所以 ${secs} 秒等於 ${ansM} 分 ${ansS} 秒。`;
+          break;
+        }
+        case 'd_to_h': {
+          const d = 1 + Math.floor(Math.random() * 9);
+          const ans = d * 24;
+          textInteractive = `${d} 日 = <input type="number" class="quiz-input" data-key="h"> 時`;
+          textPrint = `${d} 日 = ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 時`;
+          answerObj = { h: ans };
+          explanation = `因為 1 日 ＝ 24 時，所以 ${d} 日 ＝ ${d} × 24 ＝ ${ans} 時。`;
+          break;
+        }
+        case 'dh_to_h': {
+          const d = 1 + Math.floor(Math.random() * 5);
+          const h = 1 + Math.floor(Math.random() * 23);
+          const ans = d * 24 + h;
+          textInteractive = `${d} 日 ${h} 時 = <input type="number" class="quiz-input" data-key="h"> 時`;
+          textPrint = `${d} 日 ${h} 時 = ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 時`;
+          answerObj = { h: ans };
+          explanation = `步驟 1：因為 1 日 ＝ 24 時，所以 ${d} 日 ＝ ${d} × 24 ＝ ${d * 24} 時。<br>步驟 2：加上餘下的 ${h} 時，得到 ${d * 24} ＋ ${h} ＝ ${ans} 時。`;
+          break;
+        }
+        case 'h_to_dh': {
+          const ansD = 1 + Math.floor(Math.random() * 5);
+          const ansH = 1 + Math.floor(Math.random() * 23);
+          const hours = ansD * 24 + ansH;
+          textInteractive = `${hours} 時 = <input type="number" class="quiz-input small" data-key="d"> 日 <input type="number" class="quiz-input small" data-key="h"> 時`;
+          textPrint = `${hours} 時 = ( &nbsp; &nbsp; &nbsp; ) 日 ( &nbsp; &nbsp; &nbsp; ) 時`;
+          answerObj = { d: ansD, h: ansH };
+          explanation = `因為 24 時 ＝ 1 日，我們計算 ${hours} ÷ 24 ＝ ${ansD} 餘 ${ansH}。<br>所以 ${hours} 時等於 ${ansD} 日 ${ansH} 時。`;
+          break;
+        }
+        case 'dhm_to_m': {
+          const d = 1 + Math.floor(Math.random() * 2);
+          const h = Math.floor(Math.random() * 24);
+          const m = Math.floor(Math.random() * 60);
+          const ans = d * 1440 + h * 60 + m;
+          textInteractive = `${d} 日 ${h} 時 ${m} 分 = <input type="number" class="quiz-input" data-key="m"> 分`;
+          textPrint = `${d} 日 ${h} 時 ${m} 分 = ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 分`;
+          answerObj = { m: ans };
+          explanation = `步驟 1：將日換算為時：${d} 日 ＝ ${d} × 24 ＝ ${d * 24} 時。<br>步驟 2：加上小時數：${d * 24} ＋ ${h} ＝ ${d * 24 + h} 時。<br>步驟 3：將小時換算為分：${d * 24 + h} × 60 ＝ ${(d * 24 + h) * 60} 分。<br>步驟 4：再加上餘下的 ${m} 分，得到 ${(d * 24 + h) * 60} ＋ ${m} ＝ ${ans} 分。`;
+          break;
+        }
+        case 'dhms_to_s': {
+          const d = 1;
+          const h = Math.floor(Math.random() * 12);
+          const m = Math.floor(Math.random() * 60);
+          const s = Math.floor(Math.random() * 60);
+          const ans = d * 86400 + h * 3600 + m * 60 + s;
+          textInteractive = `${d} 日 ${h} 時 ${m} 分 ${s} 秒 = <input type="number" class="quiz-input" data-key="s"> 秒`;
+          textPrint = `${d} 日 ${h} 時 ${m} 分 ${s} 秒 = ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 秒`;
+          answerObj = { s: ans };
+          explanation = `步驟 1：日換算為秒：${d} 日 ＝ ${d} × 86400 ＝ ${d * 86400} 秒。<br>步驟 2：時換算為秒：${h} 時 ＝ ${h} × 3600 ＝ ${h * 3600} 秒。<br>步驟 3：分換算為秒：${m} 分 ＝ ${m} × 60 ＝ ${m * 60} 秒。<br>步驟 4：全部相加：${d * 86400} ＋ ${h * 3600} ＋ ${m * 60} ＋ ${s} ＝ ${ans} 秒。`;
+          break;
+        }
+      }
+
+      return {
+        modeName: '單位換算',
+        textInteractive,
+        textPrint,
+        answerObj,
+        explanation
+      };
+    }
+
+    // Mode 2: Missing Time Solving (缺少時間求解)
+    function generateMode2Question() {
+      const types = [];
+      if (document.getElementById('m2-type-a').checked) types.push('A');
+      if (document.getElementById('m2-type-b').checked) types.push('B');
+      if (document.getElementById('m2-type-c').checked) types.push('C');
+      
+      if (types.length === 0) types.push('A', 'B', 'C'); // fallback
+
+      const selectedType = types[Math.floor(Math.random() * types.length)];
+      
+      // Make sure start time + elapsed time is within one day [0, 1439]
+      let startMins = 0;
+      let elapsedMins = 0;
+      let endMins = 0;
+      
+      while (true) {
+        startMins = 420 + Math.floor(Math.random() * 600); // 7:00 AM to 5:00 PM
+        elapsedMins = 30 + Math.floor(Math.random() * 240); // 30 mins to 4 hours
+        endMins = startMins + elapsedMins;
+        if (endMins < 1440) break; // within same day
+      }
+
+      const startStr = minutesTo12HourStr(startMins);
+      const endStr = minutesTo12HourStr(endMins);
+      const elapsedStr = formatElapsedTime(elapsedMins);
+
+      let textInteractive = '';
+      let textPrint = '';
+      let answerObj = {};
+      let explanation = '';
+
+      if (selectedType === 'A') {
+        // Start + Elapsed = [End]
+        // E.g., 上午8:15 經過2時30分 = ______
+        let endH24 = Math.floor(endMins / 60) % 24;
+        let endH12 = endH24 % 12;
+        if (endH12 === 0) endH12 = 12;
+        let endM = endMins % 60;
+        let endAmpm = endH24 < 12 ? '上午' : '下午';
+
+        textInteractive = `${startStr} 經過 ${elapsedStr} = <select class="quiz-select" data-key="ampm"><option value="上午">上午</option><option value="下午">下午</option></select> <input type="number" class="quiz-input small" data-key="h"> 時 <input type="number" class="quiz-input small" data-key="m"> 分`;
+        textPrint = `${startStr} 經過 ${elapsedStr} = ( &nbsp; &nbsp; &nbsp; &nbsp; ) ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分`;
+        answerObj = { ampm: endAmpm, h: endH12, m: endM };
+        
+        explanation = `這是「開始時間 ＋ 經過時間 ＝ 結束時間」的題型。<br>步驟 1：將開始時間 ${startStr} 的小時與分鐘，加上經過的 ${Math.floor(elapsedMins/60)} 小時 ${elapsedMins%60} 分。<br>步驟 2：分鐘相加：${startMins%60} ＋ ${elapsedMins%60} ＝ ${(startMins%60)+(elapsedMins%60)} 分。<br>步驟 3：小時相加：${Math.floor(startMins/60)%12} ＋ ${Math.floor(elapsedMins/60)} ＝ ${Math.floor(startMins/60)%12 + Math.floor(elapsedMins/60)} 時。<br>步驟 4：判斷是否過中午：總分鐘為 ${endMins}，換算為 12 時制為${endStr}。`;
+      } else if (selectedType === 'B') {
+        // [Elapsed] = End - Start
+        // E.g., 從上午8:15 到 上午11:40 經過 ______
+        let elapH = Math.floor(elapsedMins / 60);
+        let elapM = elapsedMins % 60;
+
+        textInteractive = `從 ${startStr} 到 ${endStr} 經過 <input type="number" class="quiz-input small" data-key="h"> 時 <input type="number" class="quiz-input small" data-key="m"> 分`;
+        textPrint = `從 ${startStr} 到 ${endStr} 經過 ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分`;
+        answerObj = { h: elapH, m: elapM };
+
+        explanation = `這是「結束時間 － 開始時間 ＝ 經過時間」的題型。<br>步驟 1：為了方便計算，先把時間換算成 24 時制。<br>開始時間 ${startStr} ＝ ${Math.floor(startMins/60)}:${(startMins%60).toString().padStart(2,'0')}，結束時間 ${endStr} ＝ ${Math.floor(endMins/60)}:${(endMins%60).toString().padStart(2,'0')}。<br>步驟 2：進行減法算式 ${Math.floor(endMins/60)}時${endMins%60}分 減去 ${Math.floor(startMins/60)}時${startMins%60}分。<br>步驟 3：分鐘減法：若不夠減則向小時借 1 當 60。經過計算，得到經過時間為 ${elapH} 時 ${elapM} 分。`;
+      } else {
+        // [Start] = End - Elapsed
+        // E.g., 知道下午5:30結束，經過3時20分，開始時間 ______
+        let startH24 = Math.floor(startMins / 60) % 24;
+        let startH12 = startH24 % 12;
+        if (startH12 === 0) startH12 = 12;
+        let startM = startMins % 60;
+        let startAmpm = startH24 < 12 ? '上午' : '下午';
+
+        textInteractive = `知道在 ${endStr} 結束，經過 ${elapsedStr}，開始時間是 <select class="quiz-select" data-key="ampm"><option value="上午">上午</option><option value="下午">下午</option></select> <input type="number" class="quiz-input small" data-key="h"> 時 <input type="number" class="quiz-input small" data-key="m"> 分`;
+        textPrint = `知道在 ${endStr} 結束，經過 ${elapsedStr}，開始時間是 ( &nbsp; &nbsp; &nbsp; &nbsp; ) ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分`;
+        answerObj = { ampm: startAmpm, h: startH12, m: startM };
+
+        explanation = `這是「結束時間 － 經過時間 ＝ 開始時間」的題型。<br>步驟 1：先將結束時間 ${endStr} 轉為 24 時制 ＝ ${Math.floor(endMins/60)}:${(endMins%60).toString().padStart(2,'0')}。<br>步驟 2：減去經過時間 ${Math.floor(elapsedMins/60)} 時 ${elapsedMins%60} 分。<br>步驟 3：若分鐘不夠減則向小時借位。最後將答案 ${Math.floor(startMins/60)}:${(startMins%60).toString().padStart(2,'0')} 轉換回 12 時制，即為 ${startStr}。`;
+      }
+
+      return {
+        modeName: '缺少時間求解',
+        textInteractive,
+        textPrint,
+        answerObj,
+        explanation
+      };
+    }
+
+    // Mode 3: Multi-day Calculation (跨日計算)
+    function generateMode3Question() {
+      const difficulty = document.querySelector('input[name="m3-difficulty"]:checked').value;
+      
+      let textInteractive = '';
+      let textPrint = '';
+      let answerObj = {};
+      let explanation = '';
+
+      if (difficulty === 'easy') {
+        // Cross exactly 1 day (today PM to tomorrow AM)
+        let startHour = 13 + Math.floor(Math.random() * 10); // 1:00 PM to 10:00 PM (13:00 to 22:00)
+        let startMin = Math.floor(Math.random() * 12) * 5;
+        let startMins = startHour * 60 + startMin;
+        
+        let endHour = 1 + Math.floor(Math.random() * 10); // 1:00 AM to 10:00 AM (1:00 to 10:00)
+        let endMin = Math.floor(Math.random() * 12) * 5;
+        let endMins = endHour * 60 + endMin;
+
+        // Calculate
+        let totalMins = (1440 - startMins) + endMins;
+        let ansH = Math.floor(totalMins / 60);
+        let ansM = totalMins % 60;
+
+        let startStr = minutesTo12HourStr(startMins).replace('今天', '');
+        let endStr = minutesTo12HourStr(endMins).replace('今天', '');
+
+        // Determine if we ask for hours, minutes or both
+        if (ansM === 0) {
+          textInteractive = `今天${startStr} 到隔天${endStr}，共經過 <input type="number" class="quiz-input small" data-key="h"> 小時`;
+          textPrint = `今天${startStr} 到隔天${endStr}，共經過 ( &nbsp; &nbsp; &nbsp; ) 小時`;
+          answerObj = { h: ansH };
+        } else if (ansH === 0) {
+          textInteractive = `今天${startStr} 到隔天${endStr}，共經過 <input type="number" class="quiz-input small" data-key="m"> 分鐘`;
+          textPrint = `今天${startStr} 到隔天${endStr}，共經過 ( &nbsp; &nbsp; &nbsp; ) 分鐘`;
+          answerObj = { m: ansM };
+        } else {
+          textInteractive = `今天${startStr} 到隔天${endStr}，共經過 <input type="number" class="quiz-input small" data-key="h"> 小時 <input type="number" class="quiz-input small" data-key="m"> 分鐘`;
+          textPrint = `今天${startStr} 到隔天${endStr}，共經過 ( &nbsp; &nbsp; &nbsp; ) 小時 ( &nbsp; &nbsp; &nbsp; ) 分鐘`;
+          answerObj = { h: ansH, m: ansM };
+        }
+
+        explanation = `步驟 1：跨日計算可以把時間分成「第一天剩餘時間」與「第二天經過時間」。<br>步驟 2：第一天從 ${startStr} (24時制為 ${startHour}:${startMin.toString().padStart(2,'0')}) 到午夜 12:00 (24:00)，經過了 24時 － ${startHour}時${startMin}分 ＝ ${Math.floor((1440-startMins)/60)}小時${(1440-startMins)%60}分。<br>步驟 3：第二天從午夜 12:00 (0:00) 到 ${endStr}，經過了 ${endHour}小時${endMin}分。<br>步驟 4：兩段時間相加：${Math.floor((1440-startMins)/60)}時${(1440-startMins)%60}分 ＋ ${endHour}時${endMin}分 ＝ ${ansH} 小時 ${ansM} 分鐘。`;
+      } 
+      else if (difficulty === 'medium') {
+        // Cross 2 to 3 days (Weekdays)
+        const startDayIdx = Math.floor(Math.random() * 4); // Mon to Thu
+        const offsetDays = 2 + Math.floor(Math.random() * 2); // 2 or 3 days
+        const endDayIdx = startDayIdx + offsetDays;
+
+        const startDay = WEEKDAYS[startDayIdx];
+        const endDay = WEEKDAYS[endDayIdx];
+
+        let startHour = 7 + Math.floor(Math.random() * 15); // 7:00 to 22:00
+        let startMin = Math.floor(Math.random() * 12) * 5;
+        let startMins = startHour * 60 + startMin;
+
+        let endHour = 7 + Math.floor(Math.random() * 15);
+        let endMin = Math.floor(Math.random() * 12) * 5;
+        let endMins = endHour * 60 + endMin;
+
+        // Calculate total minutes
+        let totalMins = offsetDays * 1440 + endMins - startMins;
+        let ansD = Math.floor(totalMins / 1440);
+        let remainMins = totalMins % 1440;
+        let ansH = Math.floor(remainMins / 60);
+        let ansM = remainMins % 60;
+
+        let startStr = minutesTo12HourStr(startMins);
+        let endStr = minutesTo12HourStr(endMins);
+
+        if (ansM === 0) {
+          textInteractive = `${startDay}${startStr} 到 ${endDay}${endStr}，共經過 <input type="number" class="quiz-input small" data-key="d"> 日 <input type="number" class="quiz-input small" data-key="h"> 小時`;
+          textPrint = `${startDay}${startStr} 到 ${endDay}${endStr}，共經過 ( &nbsp; &nbsp; &nbsp; ) 日 ( &nbsp; &nbsp; &nbsp; ) 小時`;
+          answerObj = { d: ansD, h: ansH };
+        } else {
+          textInteractive = `${startDay}${startStr} 到 ${endDay}${endStr}，共經過 <input type="number" class="quiz-input small" data-key="d"> 日 <input type="number" class="quiz-input small" data-key="h"> 小時 <input type="number" class="quiz-input small" data-key="m"> 分`;
+          textPrint = `${startDay}${startStr} 到 ${endDay}${endStr}，共經過 ( &nbsp; &nbsp; &nbsp; ) 日 ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分`;
+          answerObj = { d: ansD, h: ansH, m: ansM };
+        }
+
+        explanation = `步驟 1：先計算整天數。從 ${startDay}${startStr} 到 ${endDay}${startStr}，共有 ${offsetDays} 日。<br>步驟 2：再計算小時與分鐘的差距，從 ${startStr} 到 ${endStr}。<br>若結束時間的分鐘大於或等於開始時間，直接相減；若不足，則需進行借日或借時計算。<br>經過計算，總計經過了 ${ansD} 日 ${ansH} 小時 ${ansM} 分。`;
+      } 
+      else {
+        // Advanced: Cross 7+ days (Calendar Dates)
+        const month = 1 + Math.floor(Math.random() * 12);
+        const startDate = 1 + Math.floor(Math.random() * 15);
+        const offsetDays = 7 + Math.floor(Math.random() * 7); // 7 to 13 days
+        const endDate = startDate + offsetDays;
+
+        let startHour = 7 + Math.floor(Math.random() * 15);
+        let startMin = Math.floor(Math.random() * 12) * 5;
+        let startMins = startHour * 60 + startMin;
+
+        let endHour = 7 + Math.floor(Math.random() * 15);
+        let endMin = Math.floor(Math.random() * 12) * 5;
+        let endMins = endHour * 60 + endMin;
+
+        // Calculate total minutes
+        let totalMins = offsetDays * 1440 + endMins - startMins;
+        let ansD = Math.floor(totalMins / 1440);
+        let remainMins = totalMins % 1440;
+        let ansH = Math.floor(remainMins / 60);
+        let ansM = remainMins % 60;
+
+        let startStr = minutesTo12HourStr(startMins);
+        let endStr = minutesTo12HourStr(endMins);
+
+        if (ansM === 0) {
+          textInteractive = `${month}月${startDate}日${startStr} 到 ${month}月${endDate}日${endStr}，共經過 <input type="number" class="quiz-input small" data-key="d"> 日 <input type="number" class="quiz-input small" data-key="h"> 小時`;
+          textPrint = `${month}月${startDate}日${startStr} 到 ${month}月${endDate}日${endStr}，共經過 ( &nbsp; &nbsp; &nbsp; ) 日 ( &nbsp; &nbsp; &nbsp; ) 小時`;
+          answerObj = { d: ansD, h: ansH };
+        } else {
+          textInteractive = `${month}月${startDate}日${startStr} 到 ${month}月${endDate}日${endStr}，共經過 <input type="number" class="quiz-input small" data-key="d"> 日 <input type="number" class="quiz-input small" data-key="h"> 小時 <input type="number" class="quiz-input small" data-key="m"> 分`;
+          textPrint = `${month}月${startDate}日${startStr} 到 ${month}月${endDate}日${endStr}，共經過 ( &nbsp; &nbsp; &nbsp; ) 日 ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分`;
+          answerObj = { d: ansD, h: ansH, m: ansM };
+        }
+
+        explanation = `步驟 1：計算兩日期間隔的完整天數：${endDate}日 減去 ${startDate}日 ＝ ${offsetDays} 日。<br>步驟 2：再計算時間差異，從 ${startStr} 到 ${endStr}。<br>步驟 3：合併日、時、分，得到共經過 ${ansD} 日 ${ansH} 小時 ${ansM} 分。`;
+      }
+
+      return {
+        modeName: '跨日計算',
+        textInteractive,
+        textPrint,
+        answerObj,
+        explanation
+      };
+    }
+
+    // Mode 4: 12-hour format ↔ 24-hour format (12時制 ↔ 24時制)
+    function generateMode4Question() {
+      const dir12To24 = document.getElementById('m4-dir-12-24').checked;
+      const dir24To12 = document.getElementById('m4-dir-24-12').checked;
+      const enableMixed = document.getElementById('m4-mixed').checked;
+
+      // Directions choices pool
+      const directions = [];
+      if (dir12To24) directions.push('12_to_24');
+      if (dir24To12) directions.push('24_to_12');
+      if (directions.length === 0) directions.push('12_to_24', '24_to_12'); // fallback
+
+      const selectedDir = directions[Math.floor(Math.random() * directions.length)];
+      
+      let textInteractive = '';
+      let textPrint = '';
+      let answerObj = {};
+      let explanation = '';
+
+      const hour = Math.floor(Math.random() * 24);
+      const min = Math.floor(Math.random() * 12) * 5;
+      const minStr = min.toString().padStart(2, '0');
+
+      if (selectedDir === '12_to_24') {
+        // 12-hour format input -> 24-hour format output (HH:MM)
+        let displayStr = '';
+        let notationType = 'zh'; // chinese by default
+        if (enableMixed && Math.random() > 0.5) {
+          notationType = Math.random() > 0.5 ? 'EN' : 'en'; // AM/PM or am/pm
+        }
+
+        if (notationType === 'zh') {
+          let ampm = hour < 12 ? '上午' : '下午';
+          let h12 = hour % 12;
+          if (h12 === 0) h12 = 12;
+          displayStr = `${ampm} ${h12}:${minStr}`;
+        } else if (notationType === 'EN') {
+          let ampm = hour < 12 ? 'AM' : 'PM';
+          let h12 = hour % 12;
+          if (h12 === 0) h12 = 12;
+          displayStr = `${ampm} ${h12}:${minStr}`;
+        } else {
+          let ampm = hour < 12 ? 'am' : 'pm';
+          let h12 = hour % 12;
+          if (h12 === 0) h12 = 12;
+          displayStr = `${h12}:${minStr} ${ampm}`;
+        }
+
+        textInteractive = `${displayStr} = <input type="number" class="quiz-input small" data-key="h"> : <input type="number" class="quiz-input small" data-key="m"> (用 24 時制表示)`;
+        textPrint = `${displayStr} = ( &nbsp; &nbsp; &nbsp; ) : ( &nbsp; &nbsp; &nbsp; ) &nbsp;(用 24 時制表示)`;
+        answerObj = { h: hour, m: min };
+
+        let ampmExplain = hour < 12 ? '上午 (AM)' : '下午 (PM)';
+        explanation = `因為輸入為 ${displayStr}，屬於 ${ampmExplain}。<br>${hour >= 12 ? `下午時間轉換為 24 時制需要加上 12 小時 (12點除外)：${hour % 12} ＋ 12 ＝ ${hour}。` : `上午時間轉換為 24 時制，數值維持不變 (12點轉為0點除外)：即為 ${hour} 點。`}<br>所以 24 時制答案是 ${hour.toString().padStart(2,'0')}:${minStr}。`;
+      } 
+      else {
+        // 24-hour format input -> 12-hour format output
+        let displayStr = `${hour.toString().padStart(2,'0')}:${minStr}`;
+        
+        let targetAmpm = hour < 12 ? '上午' : '下午';
+        let targetH12 = hour % 12;
+        if (targetH12 === 0) targetH12 = 12;
+
+        textInteractive = `${displayStr} = <select class="quiz-select" data-key="ampm"><option value="上午">上午</option><option value="下午">下午</option></select> <input type="number" class="quiz-input small" data-key="h"> 時 <input type="number" class="quiz-input small" data-key="m"> 分 (用 12 時制表示)`;
+        textPrint = `${displayStr} = ( &nbsp; &nbsp; &nbsp; &nbsp; ) ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分 &nbsp;(用 12 時制表示)`;
+        answerObj = { ampm: targetAmpm, h: targetH12, m: min };
+
+        let hourExplain = '';
+        if (hour >= 12) {
+          if (hour === 12) {
+            hourExplain = `小時為 12，在 12 時制中代表中午，應標記為『下午』，小時維持不變：即為 下午 12 點。`;
+          } else {
+            hourExplain = `小時大於 12，應標記為『下午』，且小時應減去 12：${hour} － 12 ＝ 下午 ${targetH12}。`;
+          }
+        } else if (hour === 0) {
+          hourExplain = `小時為 0，在 12 時制中代表午夜，應標記為『上午 12 點』：0:00 ＝ 上午 12:00。`;
+        } else {
+          hourExplain = `小時小於 12，應標記為『上午』，小時數值維持不變：即為 ${targetH12} 點。`;
+        }
+        explanation = `24 時制時間為 ${displayStr}。<br>${hourExplain}<br>所以 12 時制答案是 ${targetAmpm} ${targetH12} 時 ${min} 分。`;
+      }
+
+      return {
+        modeName: '時制互轉',
+        textInteractive,
+        textPrint,
+        answerObj,
+        explanation
+      };
+    }
+
+    // Mode 5: Time Word Problems (時間應用題)
+    function generateMode5Question() {
+      const contexts = [];
+      if (document.getElementById('m5-context-movie').checked) contexts.push('movie');
+      if (document.getElementById('m5-context-ride').checked) contexts.push('ride');
+      if (document.getElementById('m5-context-sleep').checked) contexts.push('sleep');
+      if (document.getElementById('m5-context-class').checked) contexts.push('class');
+      
+      if (contexts.length === 0) contexts.push('movie', 'ride', 'sleep', 'class'); // fallback
+
+      const selectedContext = contexts[Math.floor(Math.random() * contexts.length)];
+      
+      let textInteractive = '';
+      let textPrint = '';
+      let answerObj = {};
+      let explanation = '';
+
+      switch (selectedContext) {
+        case 'movie': {
+          // Movie Template
+          const movieName = MOVIE_NAMES[Math.floor(Math.random() * MOVIE_NAMES.length)];
+          const startHour = 12 + Math.floor(Math.random() * 8); // 12:00 to 19:00 (12h 下午 12:00 to 下午 7:00)
+          const startMin = Math.floor(Math.random() * 12) * 5;
+          const startMStr = startMin.toString().padStart(2, '0');
+          const durH = 1 + Math.floor(Math.random() * 2);
+          const durM = 10 + Math.floor(Math.random() * 10) * 5;
+
+          const startTotalMins = startHour * 60 + startMin;
+          const endTotalMins = startTotalMins + durH * 60 + durM;
+          
+          let endH24 = Math.floor(endTotalMins / 60) % 24;
+          let endH12 = endH24 % 12;
+          if (endH12 === 0) endH12 = 12;
+          let endM = endTotalMins % 60;
+          let endAmpm = endH24 < 12 ? '上午' : '下午';
+
+          let startH12 = startHour === 12 ? 12 : startHour - 12;
+
+          textInteractive = `《${movieName}》電影在下午 ${startH12}:${startMStr} 開始播放，片長共 ${durH} 小時 ${durM} 分鐘。請問這部電影會在什麼時間播放結束？<br>答：在 <select class="quiz-select" data-key="ampm"><option value="上午">上午</option><option value="下午">下午</option></select> <input type="number" class="quiz-input small" data-key="h"> 時 <input type="number" class="quiz-input small" data-key="m"> 分`;
+          textPrint = `《${movieName}》電影在下午 ${startH12}:${startMStr} 開始播放，片長共 ${durH} 小時 ${durM} 分鐘。請問這部電影會在什麼時間播放結束？<br>答：在 ( &nbsp; &nbsp; &nbsp; &nbsp; ) ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分`;
+          answerObj = { ampm: endAmpm, h: endH12, m: endM };
+
+          explanation = `這是「開始時間 ＋ 經過時間 ＝ 結束時間」的題型。<br>步驟 1：開始時間為下午 ${startH12} 時 ${startMin} 分，加上經過時間 ${durH} 小時 ${durM} 分。<br>步驟 2：分鐘相加：${startMin} ＋ ${durM} ＝ ${startMin + durM} 分。因為滿 60 分鐘進位 1 小時，餘 ${(startMin + durM) % 60} 分。<br>步驟 3：小時相加：${startH12} ＋ ${durH} ＋ 1 (進位) ＝ ${startH12 + durH + 1} 時。<br>步驟 4：因為下午過後若超過 12 點 (或轉為24小時制判斷)，結束時間為 ${endAmpm} ${endH12} 時 ${endM} 分。`;
+          break;
+        }
+        case 'ride': {
+          // Ride Template
+          const vehicle = VEHICLES[Math.floor(Math.random() * VEHICLES.length)];
+          const person = PEOPLE[Math.floor(Math.random() * PEOPLE.length)];
+          const startMins = 480 + Math.floor(Math.random() * 240); // 8:00 AM to 12:00 PM (上午)
+          const durMins = 90 + Math.floor(Math.random() * 300); // 1.5 to 6.5 hours
+          const endMins = startMins + durMins;
+
+          const startStr = minutesTo12HourStr(startMins);
+          const endStr = minutesTo12HourStr(endMins);
+
+          const ansH = Math.floor(durMins / 60);
+          const ansM = durMins % 60;
+
+          textInteractive = `${person}搭乘${vehicle}出發旅行，在${startStr}開車，並於同日${endStr}到站。請問共搭乘了多少時間？<br>答：共搭乘了 <input type="number" class="quiz-input small" data-key="h"> 小時 <input type="number" class="quiz-input small" data-key="m"> 分鐘`;
+          textPrint = `${person}搭乘${vehicle}出發旅行，在${startStr}開車，並於同日${endStr}到站。請問共搭乘了多少時間？<br>答：共搭乘了 ( &nbsp; &nbsp; &nbsp; ) 小時 ( &nbsp; &nbsp; &nbsp; ) 分鐘`;
+          answerObj = { h: ansH, m: ansM };
+
+          explanation = `這是「結束時間 － 開始時間 ＝ 經過時間」的題型。<br>步驟 1：轉換成 24 時制。出發時間 ${startStr} ＝ ${Math.floor(startMins/60)}:${(startMins%60).toString().padStart(2,'0')}，到站時間 ${endStr} ＝ ${Math.floor(endMins/60)}:${(endMins%60).toString().padStart(2,'0')}。<br>步驟 2：進行減法算式：${Math.floor(endMins/60)} 時 ${endMins%60} 分 減去 ${Math.floor(startMins/60)} 時 ${startMins%60} 分。<br>步驟 3：得到經過時間為 ${ansH} 小時 ${ansM} 分鐘。`;
+          break;
+        }
+        case 'sleep': {
+          // Sleep Template
+          const person = PEOPLE[Math.floor(Math.random() * PEOPLE.length)];
+          const sleepHour = 21 + Math.floor(Math.random() * 3); // 9:00 PM to 11:00 PM
+          const sleepMin = Math.floor(Math.random() * 12) * 5;
+          const sleepMStr = sleepMin.toString().padStart(2, '0');
+          const sleepMins = sleepHour * 60 + sleepMin;
+
+          const wakeHour = 6 + Math.floor(Math.random() * 3); // 6:00 AM to 8:00 AM
+          const wakeMin = Math.floor(Math.random() * 12) * 5;
+          const wakeMStr = wakeMin.toString().padStart(2, '0');
+          const wakeMins = wakeHour * 60 + wakeMin;
+
+          const totalSleepMins = (1440 - sleepMins) + wakeMins;
+          const ansH = Math.floor(totalSleepMins / 60);
+          const ansM = totalSleepMins % 60;
+
+          textInteractive = `${person}在下午 ${sleepHour-12}:${sleepMStr} 睡覺，隔天上午 ${wakeHour}:${wakeMStr} 起床。請問${person}一共睡了多少時間？<br>答：一共睡了 <input type="number" class="quiz-input small" data-key="h"> 小時 <input type="number" class="quiz-input small" data-key="m"> 分鐘`;
+          textPrint = `${person}在下午 ${sleepHour-12}:${sleepMStr} 睡覺，隔天上午 ${wakeHour}:${wakeMStr} 起床。請問${person}一共睡了多少時間？<br>答：一共睡了 ( &nbsp; &nbsp; &nbsp; ) 小時 ( &nbsp; &nbsp; &nbsp; ) 分鐘`;
+          answerObj = { h: ansH, m: ansM };
+
+          explanation = `這是「跨日經過時間」的題型。<br>步驟 1：先算出第一天睡了多久。今天晚上 ${sleepHour-12}:${sleepMStr} (24時制為 ${sleepHour}:${sleepMStr}) 到午夜 12:00 (24:00)：24:00 － ${sleepHour}:${sleepMStr} ＝ ${Math.floor((1440-sleepMins)/60)} 小時 ${(1440-sleepMins)%60} 分。<br>步驟 2：加上隔天早上起床的時間：${wakeHour} 小時 ${wakeMStr} 分。<br>步驟 3：進行相加：${Math.floor((1440-sleepMins)/60)}小時${(1440-sleepMins)%60}分 ＋ ${wakeHour}小時${wakeMStr}分 ＝ ${ansH} 小時 ${ansM} 分鐘。`;
+          break;
+        }
+        case 'class': {
+          // Class Template
+          const course = COURSES[Math.floor(Math.random() * COURSES.length)];
+          const startHour = 8 + Math.floor(Math.random() * 6); // 8:00 AM to 1:00 PM
+          const startMin = Math.floor(Math.random() * 12) * 5;
+          const startMStr = startMin.toString().padStart(2, '0');
+          const duration = 40 + Math.floor(Math.random() * 3) * 10; // 40, 50, 60 mins
+
+          const startTotalMins = startHour * 60 + startMin;
+          const endTotalMins = startTotalMins + duration;
+
+          let endH24 = Math.floor(endTotalMins / 60) % 24;
+          let endH12 = endH24 % 12;
+          if (endH12 === 0) endH12 = 12;
+          let endM = endTotalMins % 60;
+          let endAmpm = endH24 < 12 ? '上午' : '下午';
+
+          let startAmpm = startHour < 12 ? '上午' : '下午';
+          let startH12 = startHour % 12;
+          if (startH12 === 0) startH12 = 12;
+
+          textInteractive = `學校的${course}在${startAmpm} ${startH12}:${startMStr} 開始上課，一節課進行 ${duration} 分鐘。請問下課時間是幾點幾分？<br>答：下課時間是 <select class="quiz-select" data-key="ampm"><option value="上午">上午</option><option value="下午">下午</option></select> <input type="number" class="quiz-input small" data-key="h"> 時 <input type="number" class="quiz-input small" data-key="m"> 分`;
+          textPrint = `學校的${course}在${startAmpm} ${startH12}:${startMStr} 開始上課，一節課進行 ${duration} 分鐘。請問下課時間是幾點幾分？<br>答：下課時間是 ( &nbsp; &nbsp; &nbsp; &nbsp; ) ( &nbsp; &nbsp; &nbsp; ) 時 ( &nbsp; &nbsp; &nbsp; ) 分`;
+          answerObj = { ampm: endAmpm, h: endH12, m: endM };
+
+          explanation = `這是「開始時間 ＋ 經過時間 ＝ 結束時間」的題型。<br>步驟 1：開始時間為 ${startAmpm} ${startH12} 時 ${startMin} 分，加上上課的 ${duration} 分鐘。<br>步驟 2：分鐘相加：${startMin} ＋ ${duration} ＝ ${startMin + duration} 分。<br>步驟 3：滿 60 分鐘向小時進位 1。計算後得到下課時間為 ${endAmpm} ${endH12} 時 ${endM} 分。`;
+          break;
+        }
+      }
+
+      return {
+        modeName: '時間應用題',
+        textInteractive,
+        textPrint,
+        answerObj,
+        explanation
+      };
+    }
+
+    // Ultimate Mode (Generates questions mixed randomly from active checkboxes)
+    function generateUltimateQuestion() {
+      const enabledModes = [];
+      if (document.getElementById('u-unit-conv').checked) enabledModes.push('mode1');
+      if (document.getElementById('u-missing-time').checked) enabledModes.push('mode2');
+      if (document.getElementById('u-cross-day').checked) enabledModes.push('mode3');
+      if (document.getElementById('u-time-format').checked) enabledModes.push('mode4');
+      if (document.getElementById('u-word-problems').checked) enabledModes.push('mode5');
+
+      if (enabledModes.length === 0) {
+        // Fallback to mode 1
+        return generateMode1Question();
+      }
+
+      const pickedMode = enabledModes[Math.floor(Math.random() * enabledModes.length)];
+
+      switch (pickedMode) {
+        case 'mode1': return generateMode1Question();
+        case 'mode2': return generateMode2Question();
+        case 'mode3': return generateMode3Question();
+        case 'mode4': return generateMode4Question();
+        case 'mode5': return generateMode5Question();
+      }
+    }
+
+    /* ==========================================================================
+       Quiz Assembly & View Rendering
+       ========================================================================== */
+    function generateQuiz(numQuestions) {
+      // Clean previous state
+      clearInterval(timerInterval);
+      secondsElapsed = 0;
+      isGraded = false;
+      gradingBanner.style.display = 'none';
+      toggleAllAnswers.checked = false;
+      printAnswerKeySection.style.display = 'none';
+
+      generatedQuestions = [];
+
+      for (let i = 0; i < numQuestions; i++) {
+        let q = null;
+        if (currentMode === 'ultimate') {
+          q = generateUltimateQuestion();
+        } else if (currentMode === 'mode1') {
+          q = generateMode1Question();
+        } else if (currentMode === 'mode2') {
+          q = generateMode2Question();
+        } else if (currentMode === 'mode3') {
+          q = generateMode3Question();
+        } else if (currentMode === 'mode4') {
+          q = generateMode4Question();
+        } else if (currentMode === 'mode5') {
+          q = generateMode5Question();
+        }
+        
+        q.id = i + 1;
+        generatedQuestions.push(q);
+      }
+
+      // Render the quiz list in interactive and print layouts
+      renderInteractiveQuiz();
+      renderPrintQuiz();
+
+      if (activeTab === 'print') {
+        printActionBtn.style.display = 'inline-flex';
+        showAnswersToggleBox.style.display = 'flex';
+        document.getElementById('print-worksheet').classList.add('web-preview');
+        interactiveQuizList.style.display = 'none';
+        interactiveActions.style.display = 'none';
+        timerBox.style.display = 'none';
+      } else {
+        // Show action buttons
+        interactiveActions.style.display = 'flex';
+        showAnswersToggleBox.style.display = 'flex';
+        interactiveQuizList.style.display = 'flex';
+        document.getElementById('print-worksheet').classList.remove('web-preview');
+      }
+
+      // Start the stopwatch timer
+      startTimer();
+    }
+
+    // Render interactive view list
+    function renderInteractiveQuiz() {
+      interactiveQuizList.innerHTML = '';
+
+      generatedQuestions.forEach(q => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        card.id = `quiz-card-${q.id}`;
+
+        card.innerHTML = `
+          <div class="quiz-card-header">
+            <span class="quiz-number">第 ${q.id} 題</span>
+            <span class="quiz-mode-tag">${q.modeName}</span>
+          </div>
+          <div class="quiz-body" id="quiz-body-${q.id}">
+            ${q.textInteractive}
+            <span class="input-feedback" id="feedback-icon-box-${q.id}"></span>
+          </div>
+          <div class="correct-answer-text" id="correct-ans-box-${q.id}" style="display:none;"></div>
+          <button class="explanation-btn" id="explain-btn-${q.id}" style="display:none;" onclick="toggleExplanation(${q.id})">
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+            </svg>
+            顯示解題步驟
+          </button>
+          <div class="explanation-content" id="explanation-${q.id}">
+            ${q.explanation}
+          </div>
+        `;
+
+        interactiveQuizList.appendChild(card);
+      });
+    }
+
+    // Render print worksheet layout
+    function renderPrintQuiz() {
+      printQuestionsList.innerHTML = '';
+      printAnswersList.innerHTML = '';
+
+      // Update paper title based on the selected mode
+      let modeText = '時間換算練習卷';
+      if (currentMode === 'mode1') modeText = '時間換算練習卷 (模式一：單位換算)';
+      else if (currentMode === 'mode2') modeText = '時間換算練習卷 (模式二：缺少時間求解)';
+      else if (currentMode === 'mode3') modeText = '時間換算練習卷 (模式三：跨日計算)';
+      else if (currentMode === 'mode4') modeText = '時間換算練習卷 (模式四：12與24時制互轉)';
+      else if (currentMode === 'mode5') modeText = '時間換算練習卷 (模式五：時間生活應用題)';
+      else if (currentMode === 'ultimate') modeText = '時間換算練習卷 (終極綜合自由練習)';
+      
+      document.getElementById('print-title-text').textContent = modeText;
+
+      // Apply dynamic columns based on question count and mode to save space (Mode 1 & Mode 4)
+      const count = generatedQuestions.length;
+      const printWorksheet = document.getElementById('print-worksheet');
+      printWorksheet.classList.remove('two-columns', 'three-columns');
+      if (currentMode === 'mode1' || currentMode === 'mode4') {
+        if (count > 30) {
+          printWorksheet.classList.add('three-columns');
+        } else {
+          printWorksheet.classList.add('two-columns');
+        }
+      }
+
+      generatedQuestions.forEach(q => {
+        // Question list item
+        const qItem = document.createElement('div');
+        qItem.className = 'print-question';
+        qItem.innerHTML = `
+          <span class="print-question-num">(${q.id})</span>
+          <div class="print-question-content">${q.textPrint}</div>
+        `;
+        printQuestionsList.appendChild(qItem);
+
+        // Answer key item
+        const aItem = document.createElement('div');
+        aItem.className = 'print-answer';
+
+        let ansStr = '';
+        const keys = Object.keys(q.answerObj);
+        if (q.modeName === '時制互轉' && !keys.includes('ampm')) {
+          ansStr = `${q.answerObj.h} : ${q.answerObj.m.toString().padStart(2, '0')}`;
+        } else {
+          if (keys.includes('ampm')) {
+            ansStr += q.answerObj.ampm + ' ';
+          }
+          if (keys.includes('d')) {
+            ansStr += q.answerObj.d + '日 ';
+          }
+          if (keys.includes('h')) {
+            ansStr += q.answerObj.h + (keys.includes('m') ? '時' : (keys.includes('ampm') ? '時' : '小時'));
+          }
+          if (keys.includes('m')) {
+            ansStr += q.answerObj.m + (keys.includes('h') ? '分' : '分鐘');
+          }
+          if (keys.includes('s')) {
+            ansStr += q.answerObj.s + (keys.includes('m') ? '秒' : '秒');
+          }
+        }
+
+        aItem.innerHTML = `
+          <div class="print-answer-item-header">
+            <span class="print-question-num">(${q.id})</span>
+            <strong>解答：${ansStr}</strong>
+          </div>
+          <div class="print-answer-explanation">詳解：${q.explanation}</div>
+        `;
+        printAnswersList.appendChild(aItem);
+      });
+    }
+
+    // Toggle single question explanation inline
+    window.toggleExplanation = function(qid) {
+      const el = document.getElementById(`explanation-${qid}`);
+      if (el.style.display === 'block') {
+        el.style.display = 'none';
+      } else {
+        el.style.display = 'block';
+      }
+    };
+
+    /* ==========================================================================
+       Interactive Timer logic
+       ========================================================================== */
+    function startTimer() {
+      timerBox.style.display = 'flex';
+      secondsElapsed = 0;
+      timerDisplay.textContent = '00:00';
+      
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        let m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+        let s = (secondsElapsed % 60).toString().padStart(2, '0');
+        timerDisplay.textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    /* ==========================================================================
+       Grading and Scoring Algorithm
+       ========================================================================== */
+    function gradeQuiz() {
+      clearInterval(timerInterval);
+      isGraded = true;
+      let correctCount = 0;
+
+      generatedQuestions.forEach(q => {
+        const card = document.getElementById(`quiz-card-${q.id}`);
+        const feedbackBox = document.getElementById(`feedback-icon-box-${q.id}`);
+        const correctAnsBox = document.getElementById(`correct-ans-box-${q.id}`);
+        const explainBtn = document.getElementById(`explain-btn-${q.id}`);
+        
+        // Reset previous grading visual states
+        card.classList.remove('correct', 'incorrect');
+        feedbackBox.innerHTML = '';
+        correctAnsBox.style.display = 'none';
+        correctAnsBox.textContent = '';
+        
+        let isQuestionCorrect = true;
+        let answerSummaryStr = '';
+
+        // Read all interactive inputs in this specific question
+        const inputs = card.querySelectorAll('.quiz-input, .quiz-select');
+        
+        inputs.forEach(input => {
+          const key = input.dataset.key;
+          const targetValue = q.answerObj[key];
+          let userValue = input.value;
+
+          if (input.tagName === 'INPUT') {
+            userValue = parseInt(userValue);
+          }
+
+          if (userValue !== targetValue) {
+            isQuestionCorrect = false;
+            input.style.borderColor = 'var(--accent-coral)';
+            input.style.boxShadow = '0 0 0 3px rgba(244, 63, 94, 0.15)';
+          } else {
+            input.style.borderColor = 'var(--accent-emerald)';
+            input.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.15)';
+          }
+        });
+
+        // Format correct answer text for fallback help display
+        const keys = Object.keys(q.answerObj);
+        if (q.modeName === '時制互轉' && !keys.includes('ampm')) {
+          answerSummaryStr = `${q.answerObj.h} : ${q.answerObj.m.toString().padStart(2, '0')}`;
+        } else {
+          if (keys.includes('ampm')) answerSummaryStr += q.answerObj.ampm + ' ';
+          if (keys.includes('d')) answerSummaryStr += q.answerObj.d + '日 ';
+          if (keys.includes('h')) {
+            answerSummaryStr += q.answerObj.h + (keys.includes('m') ? '時' : (keys.includes('ampm') ? '時' : '小時'));
+          }
+          if (keys.includes('m')) {
+            answerSummaryStr += q.answerObj.m + (keys.includes('h') ? '分' : '分鐘');
+          }
+          if (keys.includes('s')) {
+            answerSummaryStr += q.answerObj.s + (keys.includes('m') ? '秒' : '秒');
+          }
+        }
+
+        // Apply visual states to cards
+        if (isQuestionCorrect) {
+          correctCount++;
+          card.classList.add('correct');
+          feedbackBox.innerHTML = '<span class="feedback-icon success">✓ 答對了</span>';
+        } else {
+          card.classList.add('incorrect');
+          feedbackBox.innerHTML = '<span class="feedback-icon danger">✗ 答錯了</span>';
+          correctAnsBox.textContent = `正確答案為：${answerSummaryStr}`;
+          correctAnsBox.style.display = 'block';
+        }
+
+        // Enable show explanation buttons
+        explainBtn.style.display = 'inline-flex';
+      });
+
+      // Calculate score percentages
+      const score = Math.round((correctCount / generatedQuestions.length) * 100);
+      gradingScore.textContent = `得分：${score} 分`;
+
+      let message = '';
+      if (score === 100) {
+        message = `太完美了！你答對了所有題目！🎉 (用時: ${timerDisplay.textContent})`;
+        triggerConfetti();
+      } else if (score >= 80) {
+        message = `非常優秀！差一點就滿分囉，繼續保持！👍 (用時: ${timerDisplay.textContent})`;
+      } else if (score >= 60) {
+        message = `做得好！已經及格了，多練習幾次會更熟練！💪 (用時: ${timerDisplay.textContent})`;
+      } else {
+        message = `加油！多看幾次底下的「解題步驟」，相信你可以做好的！😊 (用時: ${timerDisplay.textContent})`;
+      }
+
+      gradingMsg.textContent = message;
+      gradingBanner.style.display = 'block';
+
+      // Scroll smoothly to score banner
+      gradingBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Reset Quiz to state where user can answer again
+    function resetQuiz() {
+      isGraded = false;
+      gradingBanner.style.display = 'none';
+      toggleAllAnswers.checked = false;
+
+      generatedQuestions.forEach(q => {
+        const card = document.getElementById(`quiz-card-${q.id}`);
+        const feedbackBox = document.getElementById(`feedback-icon-box-${q.id}`);
+        const correctAnsBox = document.getElementById(`correct-ans-box-${q.id}`);
+        const explainBtn = document.getElementById(`explain-btn-${q.id}`);
+        const explanation = document.getElementById(`explanation-${q.id}`);
+
+        card.classList.remove('correct', 'incorrect');
+        feedbackBox.innerHTML = '';
+        correctAnsBox.style.display = 'none';
+        explainBtn.style.display = 'none';
+        explanation.style.display = 'none';
+
+        const inputs = card.querySelectorAll('.quiz-input, .quiz-select');
+        inputs.forEach(input => {
+          if (input.tagName === 'INPUT') input.value = '';
+          else if (input.tagName === 'SELECT') input.selectedIndex = 0;
+          input.style.borderColor = 'var(--input-border)';
+          input.style.boxShadow = 'none';
+        });
+      });
+
+      clearInterval(timerInterval);
+      startTimer();
+    }
+
+    /* ==========================================================================
+       Canvas Confetti Animation Engine
+       ========================================================================== */
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      canvas.style.display = 'block';
+
+      let particles = [];
+      const colors = ['#8b5cf6', '#06b6d4', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
+
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          r: Math.random() * 6 + 4,
+          d: Math.random() * canvas.height,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.random() * 10 - 5,
+          tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+          tiltAngle: 0
+        });
+      }
+
+      let animationFrameId;
+      let startTime = Date.now();
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+
+        particles.forEach((p, idx) => {
+          p.tiltAngle += p.tiltAngleIncremental;
+          p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+          p.x += Math.sin(p.tiltAngle);
+          p.tilt = Math.sin(p.tiltAngle - idx / 3) * 15;
+
+          if (p.y <= canvas.height) {
+            active = true;
+          }
+
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+          ctx.stroke();
+        });
+
+        // Run for 4 seconds maximum
+        if (active && Date.now() - startTime < 4000) {
+          animationFrameId = requestAnimationFrame(draw);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.style.display = 'none';
+          cancelAnimationFrame(animationFrameId);
+        }
+      }
+
+      draw();
+    }
+
+    // Auto-resize canvas on viewport size change
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('confetti-canvas');
+      if (canvas.style.display === 'block') {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    });
+
+  </script>
+</body>
+</html>
