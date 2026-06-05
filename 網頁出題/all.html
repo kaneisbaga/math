@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>萬用數學出題產生器 - 進階不重複版</title>
+    <style>
+        :root { --bg: #fff; --accent: #d32f2f; }
+        html, body { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; 
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #444; overflow-x: hidden;
+        }
+
+        /* 控制列 */
+        .no-print { 
+            background: #222; color: white; padding: 10px;
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px;
+            z-index: 100; position: relative; font-size: 14px;
+        }
+        .no-print section { border-right: 1px solid #555; padding-right: 10px; display: flex; align-items: center; gap: 5px; }
+        input, select { padding: 5px; border-radius: 4px; border: none; text-align: center; }
+        .num-in { width: 45px; }
+        button { padding: 6px 15px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; background: #e67e22; color: white; }
+        button:hover { background: #d35400; }
+
+        /* A4 紙張容器 */
+        .page-container {
+            background: white; width: 210mm; height: 297mm;
+            margin: 10px auto; padding: 10mm 12mm; box-sizing: border-box;
+            display: flex; flex-direction: column; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .header { text-align: center; height: 35px; }
+        .info-bar { 
+            display: flex; justify-content: space-between; 
+            border-bottom: 3px solid #000; padding: 5px; margin-bottom: 10px;
+            font-size: 16px; font-weight: bold;
+        }
+
+        .quiz-grid { 
+            display: grid; column-gap: 20px; row-gap: 0; flex: 1; min-height: 0; 
+        }
+
+        .q-item { 
+            display: flex; align-items: center; justify-content: flex-start;
+            border-bottom: 1px dashed #ddd; height: 100%;
+        }
+
+        .q-text { font-weight: bold; white-space: nowrap; display: flex; align-items: center; }
+        .q-num { color: #888; font-size: 0.6em; width: 30px; }
+
+        .ans-box { 
+            border: 2.5px solid #000; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-left: 8px; flex-shrink: 0;
+        }
+
+        .answer-sheet { display: none; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; overflow: visible; }
+            .page-container { margin: 0; width: 210mm; height: 297mm; box-shadow: none; display: flex !important; page-break-after: always; }
+            .answer-sheet { display: flex !important; }
+            .ans-box { border-color: var(--accent); color: var(--accent); }
+            .info-bar { border-color: var(--accent); color: var(--accent); }
+            .header { color: var(--accent); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <section>
+        <label>運算模式：</label>
+        <select id="opType" onchange="toggleRem()">
+            <option value="mixed">混合隨機 (不含1,2)</option>
+            <option value="+">純加法 (+)</option>
+            <option value="-">純減法 (-)</option>
+            <option value="×">純乘法 (×)</option>
+            <option value="÷">純除法 (÷)</option>
+        </select>
+    </section>
+    
+    <section>
+        <input type="number" id="digit1" class="num-in" value="1"> <label>位數</label>
+        <span>對</span>
+        <input type="number" id="digit2" class="num-in" value="1"> <label>位數</label>
+    </section>
+
+    <section id="remSection">
+        <input type="checkbox" id="allowRem"> <label>允許餘數(除法時)</label>
+    </section>
+
+    <section>
+        <label>題數：</label>
+        <input type="number" id="inputCount" class="num-in" value="40" style="width:55px">
+    </section>
+
+    <button onclick="generate()">⚡ 重新生成題目</button>
+    <button onclick="window.print()" style="background: #27ae60;">🖨️ 列印 A4</button>
+</div>
+
+<div class="page-container">
+    <div class="header"><h2 id="title-text" style="margin:0;">數學混合運算挑戰</h2></div>
+    <div class="info-bar">
+        <span>姓名：__________</span>
+        <span id="date-str"></span>
+        <span>得分：__________</span>
+    </div>
+    <div class="quiz-grid" id="q-grid"></div>
+</div>
+
+<div class="page-container answer-sheet">
+    <div class="header"><h2 style="margin:0;">【答案卷】對照批改</h2></div>
+    <div class="info-bar"><span>批改對照用</span></div>
+    <div class="quiz-grid" id="a-grid"></div>
+</div>
+
+<script>
+    function toggleRem() {
+        const op = document.getElementById('opType').value;
+        document.getElementById('remSection').style.display = (op === '÷' || op === 'mixed') ? 'block' : 'none';
+    }
+
+    // 獲取該位數中所有排除 1 和 2 的數字清單
+    function getNumbersByDigit(digit) {
+        const min = Math.pow(10, digit - 1);
+        const max = Math.pow(10, digit) - 1;
+        let nums = [];
+        for (let i = min; i <= max; i++) {
+            // 排除包含 1 或 2 的規則可改為：數字本身不為 1 或 2
+            // 這裡採用「數字本身不是 1 且不是 2」
+            if (i !== 1 && i !== 2) {
+                nums.push(i);
+            }
+        }
+        return nums;
+    }
+
+    // 洗牌演算法
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function generate() {
+        const count = parseInt(document.getElementById('inputCount').value);
+        const selectedOp = document.getElementById('opType').value;
+        const d1 = parseInt(document.getElementById('digit1').value);
+        const d2 = parseInt(document.getElementById('digit2').value);
+        const allowRem = document.getElementById('allowRem').checked;
+
+        const today = new Date();
+        document.getElementById('date-str').innerText = `日期：${today.getFullYear()}/${today.getMonth()+1}/${today.getDate()}`;
+        
+        let displayTitle = selectedOp === 'mixed' ? `數學混合運算挑戰` : `${d1}位數對${d2}位數的${selectedOp}法練習`;
+        document.getElementById('title-text').innerText = `${displayTitle} (${count}題)`;
+
+        // 準備數字池
+        const pool1 = getNumbersByDigit(d1);
+        const pool2 = getNumbersByDigit(d2);
+        const ops = selectedOp === 'mixed' ? ['+', '-', '×', '÷'] : [selectedOp];
+
+        // 建立所有可能的題目組合池
+        let allPossibleQuestions = [];
+        ops.forEach(op => {
+            pool1.forEach(n1 => {
+                pool2.forEach(n2 => {
+                    allPossibleQuestions.push({ n1, n2, op });
+                });
+            });
+        });
+
+        // 洗牌
+        shuffle(allPossibleQuestions);
+
+        let questions = [];
+        for (let i = 0; i < count; i++) {
+            // 如果題數需求大於池子，就循環取用
+            let baseQ = allPossibleQuestions[i % allPossibleQuestions.length];
+            let { n1, n2, op } = baseQ;
+            let ans = "";
+            let finalN1 = n1;
+            let finalN2 = n2;
+
+            if (op === '+') {
+                ans = finalN1 + finalN2;
+            } else if (op === '-') {
+                if (finalN1 < finalN2) [finalN1, finalN2] = [finalN2, finalN1];
+                ans = finalN1 - finalN2;
+            } else if (op === '×') {
+                ans = finalN1 * finalN2;
+            } else if (op === '÷') {
+                if (!allowRem) {
+                    // 整除模式：用 n2 * 一個隨機數來當被除數
+                    // 這裡為了確保不出現1,2，隨機倍數也從3開始
+                    let factor = Math.floor(Math.random() * 10) + 3; 
+                    finalN1 = finalN2 * factor;
+                    ans = factor;
+                } else {
+                    let quotient = Math.floor(finalN1 / finalN2);
+                    let remainder = finalN1 % finalN2;
+                    ans = remainder === 0 ? quotient : `${quotient}...${remainder}`;
+                }
+            }
+            questions.push({ q: `${finalN1}${op}${finalN2}=`, a: ans });
+        }
+
+        // 佈局計算與渲染 (維持原樣)
+        let cols = count > 45 ? 4 : (count > 20 ? 3 : 2);
+        const rows = Math.ceil(count / cols);
+        let fontSize = count > 80 ? "1.1rem" : (count > 50 ? "1.4rem" : (count > 30 ? "1.8rem" : "2.2rem"));
+        let boxW = count > 80 ? "45px" : (count > 50 ? "55px" : (count > 30 ? "65px" : "75px"));
+        let boxH = count > 80 ? "30px" : (count > 50 ? "38px" : (count > 30 ? "45px" : "55px"));
+
+        const qGrid = document.getElementById('q-grid');
+        const aGrid = document.getElementById('a-grid');
+        qGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        aGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+        let qHtml = '', aHtml = '';
+        questions.forEach((item, i) => {
+            const template = `
+                <div class="q-item">
+                    <div class="q-text" style="font-size: ${fontSize}">
+                        <span class="q-num">${i+1}</span>${item.q}
+                    </div>
+                    <div class="ans-box" style="width:${boxW}; height:${boxH}; font-size:${parseFloat(fontSize)*0.6}rem">##ANS##</div>
+                </div>`;
+            qHtml += template.replace('##ANS##', '');
+            aHtml += template.replace('##ANS##', item.a);
+        });
+
+        qGrid.innerHTML = qHtml;
+        aGrid.innerHTML = aHtml;
+    }
+    window.onload = generate;
+</script>
+</body>
+</html>

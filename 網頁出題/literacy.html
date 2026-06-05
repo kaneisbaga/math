@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國小數學素養閱讀題生成器 - 教師自訂完整版</title>
+<meta name="description" content="自動生成與自訂國小數學素養閱讀連鎖題，支援動態亂數出題、即時數值調校、答案自動連鎖重算與 A4 排版列印。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ========================================================
+   設計令牌與基本樣式
+   ======================================================== */
+:root {
+  --bg-dark: #121214;
+  --bg-panel: #1a1a20;
+  --bg-card: #22222a;
+  --accent: #ff4757;
+  --accent-hover: #ff6b81;
+  --green: #2ed573;
+  --blue: #1e90ff;
+  --text-light: #f1f2f6;
+  --text-muted: #a4b0be;
+  --border: #2f3542;
+  --radius: 10px;
+  --shadow: 0 10px 30px rgba(0,0,0,0.4);
+  --print-accent: #c0392b;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-light);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ========================================================
+   控制面版 Dashboard
+   ======================================================== */
+.dashboard {
+  background: var(--bg-panel);
+  border-bottom: 2px solid var(--accent);
+  padding: 16px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+.dashboard-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-title-group h1 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.control-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+select {
+  background: #09090b;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+select:focus { border-color: var(--accent); }
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.1s, filter 0.2s, background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+}
+.btn:active { transform: scale(0.96); }
+.btn-gen { background: var(--accent); }
+.btn-gen:hover { background: var(--accent-hover); }
+.btn-print { background: var(--green); }
+.btn-print:hover { filter: brightness(1.1); }
+.btn-blue { background: var(--blue); }
+.btn-blue:hover { filter: brightness(1.1); }
+
+/* ========================================================
+   主版面結構 (左右分欄)
+   ======================================================== */
+.main-layout {
+  display: flex;
+  flex: 1;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 側邊參數自訂欄 */
+.config-panel {
+  width: 360px;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  height: fit-content;
+  position: sticky;
+  top: 95px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.config-section-title {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--accent);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.param-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.param-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.param-control {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.param-control input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.param-control input[type="number"] {
+  width: 65px;
+  background: #09090b;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.stats-badge-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stats-badge {
+  background: var(--bg-card);
+  color: var(--text-light);
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-weight: 700;
+}
+
+/* ========================================================
+   A4 紙張排版預覽
+   ======================================================== */
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  flex: 1;
+}
+
+.a4-page {
+  background: #fff;
+  color: #1a1a1a;
+  width: 210mm;
+  height: 297mm;
+  padding: 15mm 15mm;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.page-header h2 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.student-info-bar {
+  display: flex;
+  justify-content: space-between;
+  border-top: 3px solid #1a1a1a;
+  border-bottom: 3px solid #1a1a1a;
+  padding: 6px 4px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* 單位重點提示框 */
+.hint-box {
+  border: 2px dashed #999;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: #222;
+  background: #fdfdfd;
+  display: none;
+}
+.hint-box.show { display: block; }
+.hint-box strong { color: #c0392b; font-weight: 900; }
+
+/* 閱讀文章區塊 */
+.passage-card {
+  border: 2px solid #2d3436;
+  border-radius: 6px;
+  background: #fbfbf8;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  line-height: 1.8;
+  font-size: 0.95rem;
+  text-align: justify;
+}
+.passage-title {
+  font-weight: 900;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  color: #c0392b;
+  border-bottom: 2px solid #c0392b;
+  padding-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 題目區塊 */
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.question-item {
+  border: 1px solid #dfe6e9;
+  border-radius: 6px;
+  padding: 10px 14px;
+  background: #fcfcfc;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.question-text {
+  font-weight: 500;
+}
+.question-label {
+  font-weight: 900;
+  color: #c0392b;
+}
+
+.answer-space {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-top: 1px dashed #dfe6e9;
+  padding-top: 6px;
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+.answer-box {
+  border: 2px solid #1a1a1a;
+  border-radius: 4px;
+  min-width: 140px;
+  height: 28px;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+}
+
+/* 答案卷專屬樣式 */
+.answer-page {
+  display: none;
+}
+.answer-page .answer-box {
+  color: var(--print-accent);
+  border-color: var(--print-accent);
+  font-weight: 900;
+}
+.answer-page .student-info-bar {
+  border-color: var(--print-accent);
+  color: var(--print-accent);
+}
+
+/* ========================================================
+   列印與適應性排版
+   ======================================================== */
+@media (max-width: 1100px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  .config-panel {
+    width: 100%;
+    position: static;
+  }
+}
+
+@media print {
+  .dashboard, .config-panel { display: none !important; }
+  body { background: #fff; overflow: visible; }
+  .main-layout { padding: 0; }
+  .preview-container { padding: 0; gap: 0; }
+  .a4-page {
+    box-shadow: none;
+    margin: 0;
+    width: 210mm;
+    height: 297mm;
+    page-break-after: always;
+  }
+  .answer-page { display: flex !important; }
+  .page-header h2, .question-label, .passage-title { color: var(--print-accent) !important; border-color: var(--print-accent) !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- 控制儀表板 -->
+<div class="dashboard" id="main-dashboard">
+  <div class="dashboard-title-group">
+    <h1>📝 數學素養閱讀題生成器</h1>
+  </div>
+  <div class="controls">
+    <span class="control-label">選擇故事題目：</span>
+    <select id="story-select" onchange="renderStory()">
+      <option value="random">🎲 隨機情境故事</option>
+      <option value="farm">🚜 快樂農場夏日採收</option>
+      <option value="fair">🎪 光明國小愛心園遊會</option>
+      <option value="recycling">♻️ 綠色社區環保回收</option>
+      <option value="bakery">🍞 小林麵包坊烘焙日</option>
+      <option value="camping">⛺ 樂活家族露營記</option>
+      <option value="library">📚 星空圖書館挑戰</option>
+    </select>
+    <button class="btn btn-gen" id="btn-generate" onclick="regenerateCurrent()">⚡ 亂數生成值</button>
+    <button class="btn btn-print" id="btn-print" onclick="window.print()">🖨️ 列印 A4 (題目+答案卷)</button>
+  </div>
+</div>
+
+<!-- 主排版區 -->
+<div class="main-layout">
+  
+  <!-- 側邊自訂面板 -->
+  <div class="config-panel" id="config-panel">
+    <div>
+      <div class="config-section-title">📋 題目資訊</div>
+      <div class="stats-badge-group">
+        <span class="stats-badge" id="badge-grade">年級：-</span>
+        <span class="stats-badge" id="badge-word">字數：-</span>
+      </div>
+      <div class="stats-badge-group" style="margin-top: 8px;">
+        <span class="stats-badge" id="badge-topics" style="background:#1e272e;">單元：-</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="config-section-title">⚙️ 數值微調控制</div>
+      <div id="sliders-container">
+        <!-- 參數控制滑桿動態渲染 -->
+      </div>
+    </div>
+
+    <div>
+      <div class="config-section-title">📁 複製與整合工具</div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn btn-blue" style="font-size:0.8rem; padding: 6px 10px; width:100%;" onclick="copyText('q')">📋 複製題目純文字</button>
+        <button class="btn btn-blue" style="font-size:0.8rem; padding: 6px 10px; width:100%;" onclick="copyText('a')">📋 複製答案純文字</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- A4 預覽區 -->
+  <div class="preview-container">
+    <!-- 題目卷 -->
+    <div class="a4-page" id="question-sheet">
+      <div class="page-header"><h2 id="q-sheet-title">數學素養閱讀挑戰卷</h2></div>
+      <div class="student-info-bar">
+        <span>姓名：___________</span>
+        <span id="date-string">日期：____年____月____日</span>
+        <span>得分：___________</span>
+      </div>
+      <div class="hint-box" id="hint-box"></div>
+      <div class="passage-card" id="q-passage-container"></div>
+      <div class="question-list" id="q-list-container"></div>
+    </div>
+
+    <!-- 答案卷 -->
+    <div class="a4-page answer-page" id="answer-sheet">
+      <div class="page-header"><h2>【答案卷】批改對照用</h2></div>
+      <div class="student-info-bar" style="border-color: var(--print-accent); color: var(--print-accent);">
+        <span>教師批改專用 — 請勿發給學生</span>
+      </div>
+      <div class="passage-card" id="a-passage-container"></div>
+      <div class="question-list" id="a-list-container"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// 常用工具
+function rng(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// 核心故事庫與演算法架構
+const stories = [
+  {
+    id: "farm",
+    title: '快樂農場夏日採收大作戰',
+    grade: '四年級',
+    topics: '公斤與公噸換算、除法整除、淨利平分',
+    wordCount: '約 320 字',
+    unitHint: '<strong>【重點提示】</strong> 1 公噸(t) ＝ 1000 公斤(kg)',
+    paramSchema: [
+      { key: 'workers', label: '工作總人數(人)', min: 3, max: 8, step: 1 },
+      { key: 'boxes', label: '裝箱數量(箱)', min: 30, max: 120, step: 1 },
+      { key: 'box_size', label: '每箱重量(公斤)', min: 5, max: 12, step: 1 },
+      { key: 'damaged', label: '受損蘋果(公斤)', min: 10, max: 60, step: 10 },
+      { key: 'price', label: '每箱售價(元)', min: 200, max: 800, step: 50 },
+      { key: 'cost', label: '肥料包材成本(元)', min: 500, max: 4000, step: 100 }
+    ],
+    params: {},
+    genRandom() {
+      let workers, boxes, box_size, damaged, price, cost;
+      let profit;
+      do {
+        workers = rng(4, 6);
+        box_size = [5, 6, 8, 10][rng(0, 3)];
+        damaged = rng(2, 5) * 10;
+        boxes = rng(40, 90);
+        price = rng(6, 12) * 50;
+        cost = rng(10, 30) * 100;
+        let revenue = boxes * price;
+        profit = revenue - cost;
+      } while (profit <= 0 || profit % workers !== 0);
+      return { workers, boxes, box_size, damaged, price, cost };
+    },
+    getPassage(p) {
+      const total = p.boxes * p.box_size + p.damaged;
+      return `快樂農場座落在陽光明媚的谷地，佔地 6公頃，主要種植各式優質水果。今年夏天，農場主人王伯伯和 ${p.workers - 1}位熱心的員工一起進行大規模採收。統計結果顯示，他們一共採收了 ${total}公斤的好蘋果，但在運送過程中，因為路面顛簸導致有 ${p.damaged}公斤的蘋果碰撞受損無法販售。另外，果園中也採收了 150公斤的梨子與 80公斤的李子，不過這些水果尚未進行整理。王伯伯計劃把能出售的優質蘋果進行整理分裝，每 ${p.box_size}公斤裝成一箱來出貨。今天有一位中盤商林老闆駕駛貨車前來採購，並以每箱 ${p.price}元的價格向王伯伯買下所有裝箱好的蘋果。交易完成後，王伯伯扣除了 ${p.cost}元的肥料與包材包裝成本，決定把剩下的淨利潤平分給包含他自己在內的 ${p.workers}位工作人員作為獎金。請根據上述文章回答下列問題：`;
+    },
+    solve(p) {
+      const net = p.boxes * p.box_size;
+      const revenue = p.boxes * p.price;
+      const profit = revenue - p.cost;
+      const bonus = profit / p.workers;
+      return [
+        { q: '王伯伯採收的蘋果中，可以包裝販售的好蘋果共有多少公斤？', ans: `${net} 公斤` },
+        { q: '承上題，這些優質蘋果一共可以包裝成多少箱？(未滿一箱的蘋果不計)', ans: `${p.boxes} 箱` },
+        { q: '承上題，林老闆買下所有包裝好的蘋果，王伯伯共可收到多少元貨款？', ans: `${revenue} 元` },
+        { q: '承上題，在扣除包裝成本後，平分下來每位工作人員可以分得多少元獎金？', ans: `${bonus.toFixed(1).replace('.0','')} 元` }
+      ];
+    }
+  },
+  {
+    id: "fair",
+    title: '光明國小愛心園遊會',
+    grade: '四年級',
+    topics: '公升與毫升換算、兩步驟除法、利潤分析',
+    wordCount: '約 310 字',
+    unitHint: '<strong>【重點提示】</strong> 1 公升(L) ＝ 1000 毫升(mL)',
+    paramSchema: [
+      { key: 'students', label: '班級人數(人)', min: 15, max: 35, step: 1 },
+      { key: 'tea_L', label: '冬瓜茶量(公升)', min: 10, max: 30, step: 1 },
+      { key: 'lemon_mL', label: '純檸檬汁(毫升)', min: 1000, max: 10000, step: 1000 },
+      { key: 'cup_mL', label: '紙杯容量(毫升)', min: 200, max: 600, step: 50 },
+      { key: 'price', label: '每杯飲料售價(元)', min: 20, max: 60, step: 5 },
+      { key: 'cost', label: '食材與杯具成本(元)', min: 200, max: 1200, step: 50 },
+      { key: 'donation', label: '愛心捐款金額(元)', min: 100, max: 1000, step: 50 }
+    ],
+    params: {},
+    genRandom() {
+      let students, tea_L, lemon_mL, cup_mL, price, cost, donation;
+      let cups, profit;
+      do {
+        students = rng(20, 30);
+        tea_L = rng(10, 25);
+        lemon_mL = rng(2, 8) * 1000;
+        cup_mL = [300, 400, 500][rng(0, 2)];
+        price = rng(6, 10) * 5;
+        cost = rng(8, 16) * 50;
+        donation = rng(4, 10) * 50;
+        let total_mL = tea_L * 1000 + lemon_mL;
+        cups = total_mL / cup_mL;
+        profit = cups * price - cost - donation;
+      } while ((tea_L * 1000 + lemon_mL) % cup_mL !== 0 || profit <= 0);
+      return { students, tea_L, lemon_mL, cup_mL, price, cost, donation };
+    },
+    getPassage(p) {
+      return `光明國小今天舉辦熱鬧的一年一度愛心園遊會，五年二班共有 ${p.students}位同學熱情參與。為了這次園遊會，他們籌劃了「愛心鮮果飲小舖」，主打手工冬瓜檸檬飲。同學們合作準備了 ${p.tea_L}公升的冬瓜茶和 ${p.lemon_mL}毫升的純檸檬汁，調配成黃金比例的冬瓜檸檬飲料（1公升＝1000毫升）。每杯飲料固定使用容量 ${p.cup_mL}毫升的環保紙杯盛裝，每杯的售價是 ${p.price}元。另外，攤位也代售了隔壁班手工茶葉蛋（每顆 15元，已賣出 30顆，但不計入飲料收入）。這場活動的飲料食材與杯具總成本為 ${p.cost}元。下午三點園遊會結束時，調配的飲料全部順利賣完，班長扣除材料成本算出淨利潤，並決定將其中的 ${p.donation}元捐給社區關懷基金，剩下的部分全部存入班級讀書會基金。請回答下列問題：`;
+    },
+    solve(p) {
+      const total_L = p.tea_L + (p.lemon_mL / 1000);
+      const cups = (total_L * 1000) / p.cup_mL;
+      const revenue = cups * p.price;
+      const fund = revenue - p.cost - p.donation;
+      return [
+        { q: '同學們調配出的冬瓜檸檬飲料，全部一共有多少公升？', ans: `${total_L} 公升` },
+        { q: '承上題，這批冬瓜檸檬飲料換算毫升後，總共可以裝滿多少個紙杯？', ans: `${cups} 杯` },
+        { q: '承上題，若裝好的杯裝冬瓜檸檬全部賣完，總收入共有多少元？', ans: `${revenue} 元` },
+        { q: '承上題，扣除材料成本與愛心捐款後，最後可以存入班級讀書會基金多少元？', ans: `${fund} 元` }
+      ];
+    }
+  },
+  {
+    id: "recycling",
+    title: '綠色社區環保回收競賽',
+    grade: '三年級',
+    topics: '加法運算、乘加混合、平分除法、無關資訊過濾',
+    wordCount: '約 300 字',
+    unitHint: '',
+    paramSchema: [
+      { key: 'families', label: '參與家庭戶數(戶)', min: 40, max: 120, step: 5 },
+      { key: 'paper_kg', label: '回收廢報紙(公斤)', min: 200, max: 600, step: 10 },
+      { key: 'pet_kg', label: '回收寶特瓶(公斤)', min: 80, max: 300, step: 10 },
+      { key: 'paper_rate', label: '報紙收購價(元/kg)', min: 3, max: 8, step: 1 },
+      { key: 'pet_rate', label: '寶特瓶收購價(元/kg)', min: 8, max: 18, step: 1 },
+      { key: 'seedlings_cost', label: '購買花苗花費(元)', min: 500, max: 2000, step: 100 },
+      { key: 'neighborhoods', label: '平分最優鄰里(個)', min: 2, max: 5, step: 1 }
+    ],
+    params: {},
+    genRandom() {
+      let families, paper_kg, pet_kg, paper_rate, pet_rate, seedlings_cost, neighborhoods;
+      let revenue, remaining;
+      do {
+        families = rng(50, 100);
+        paper_kg = rng(25, 55) * 10;
+        pet_kg = rng(10, 25) * 10;
+        paper_rate = rng(3, 7);
+        pet_rate = rng(10, 16);
+        seedlings_cost = rng(6, 18) * 100;
+        neighborhoods = [3, 4][rng(0, 1)];
+        revenue = paper_kg * paper_rate + pet_kg * pet_rate;
+        remaining = revenue - seedlings_cost;
+      } while (remaining <= 0 || remaining % neighborhoods !== 0);
+      return { families, paper_kg, pet_kg, paper_rate, pet_rate, seedlings_cost, neighborhoods };
+    },
+    getPassage(p) {
+      return `綠色社區為了倡導綠色生活，在活動中心旁設立資源回收站，舉辦為期一個月的資源回收競賽，吸引了 ${p.families}戶家庭熱烈參與。經過社區志工團志工仔細分類與統計，社區在這個月內一共回收了 ${p.paper_kg}公斤的廢報紙、以及 ${p.pet_kg}公斤的寶特瓶。另外也回收了 60支廢日光燈管，但日光燈管不列入本次重量回收款計算。回收商給予綠色社區的收購回饋價格為：廢報紙每公斤 ${p.paper_rate}元，寶特瓶每公斤 ${p.pet_rate}元。社區發展協會決定從所得的這筆回收總回饋金中，先撥出 ${p.seedlings_cost}元去花市採購花苗以美化中庭，其餘的剩餘資金則平分給在競賽中表現最好的 ${p.neighborhoods}個鄰里，作為他們的環境保護推金。請回答下列問題：`;
+    },
+    solve(p) {
+      const total_wt = p.paper_kg + p.pet_kg;
+      const revenue = p.paper_kg * p.paper_rate + p.pet_kg * p.pet_rate;
+      const remaining = revenue - p.seedlings_cost;
+      const share = remaining / p.neighborhoods;
+      return [
+        { q: '社區在這個月收回的廢報紙與寶特瓶，總重量共是多少公斤？', ans: `${total_wt} 公斤` },
+        { q: '承上題，這批廢報紙與寶特瓶交給回收商後，社區發展協會能得到多少元回饋金？', ans: `${revenue} 元` },
+        { q: '承上題，在買完綠色花苗美化社區中庭後，發展協會還剩下多少元？', ans: `${remaining} 元` },
+        { q: '承上題，將剩餘資金平分發放，最優異的鄰里，每鄰可以分得多少元？', ans: `${share.toFixed(1).replace('.0','')} 元` }
+      ];
+    }
+  },
+  {
+    id: "bakery",
+    title: '小林麵包坊烘焙日',
+    grade: '五年級',
+    topics: '分數與小數乘法、公克/公斤換算、烤箱排程調配',
+    wordCount: '約 290 字',
+    unitHint: '<strong>【重點提示】</strong> 1 公斤(kg) ＝ 1000 公克(g)',
+    paramSchema: [
+      { key: 'loaves', label: '吐司產量(條)', min: 20, max: 120, step: 10 },
+      { key: 'flour_g', label: '單條用麵粉(公克)', min: 200, max: 500, step: 50 },
+      { key: 'sugar_percent', label: '配方糖比例(%)', min: 5, max: 15, step: 1 },
+      { key: 'butter_kg', label: '奶油用量(公斤)', min: 1, max: 6, step: 0.5 },
+      { key: 'butter_price', label: '奶油單價(元/kg)', min: 150, max: 450, step: 50 },
+      { key: 'ovens', label: '烤箱數量(部)', min: 1, max: 4, step: 1 },
+      { key: 'bake_min', label: '單爐時間(分鐘)', min: 20, max: 60, step: 5 }
+    ],
+    params: {},
+    genRandom() {
+      let loaves, flour_g, sugar_percent, butter_kg, butter_price, ovens, bake_min;
+      let total_flour_g, butter_cost;
+      do {
+        ovens = rng(2, 3);
+        loaves = rng(3, 8) * 10;
+        flour_g = [250, 300, 400][rng(0, 2)];
+        sugar_percent = [6, 8, 10, 12][rng(0, 3)];
+        butter_kg = rng(2, 8) * 0.5;
+        butter_price = rng(4, 9) * 50;
+        bake_min = [35, 40, 45, 50][rng(0, 3)];
+        total_flour_g = loaves * flour_g;
+        butter_cost = butter_kg * butter_price;
+      } while (total_flour_g % 1000 !== 0 || butter_cost % 1 !== 0);
+      return { loaves, flour_g, sugar_percent, butter_kg, butter_price, ovens, bake_min };
+    },
+    getPassage(p) {
+      return `小林麵包坊今天預計製作 ${p.loaves}條鮮奶吐司。每條吐司需要 ${p.flour_g}公克的麵粉，而麵粉中糖的配方比例佔了 ${p.sugar_percent}%。另外，製作配方也需要使用優質奶油，今天總共耗費了 ${p.butter_kg}公斤的奶油（每公斤售價 ${p.butter_price}元）。烘焙房內共有 ${p.ovens}部大型烤箱，每部烤箱一次只能烤 10條吐司，烘烤一爐需要花費 ${p.bake_min}分鐘。請根據上述文章回答下列問題：`;
+    },
+    solve(p) {
+      const total_flour_kg = (p.loaves * p.flour_g) / 1000;
+      const sugar_g = (p.loaves * p.flour_g) * (p.sugar_percent / 100);
+      const butter_cost = p.butter_kg * p.butter_price;
+      const rounds = Math.ceil(p.loaves / (p.ovens * 10));
+      const total_time = rounds * p.bake_min;
+      return [
+        { q: '製作所有吐司共需要多少公斤的麵粉？', ans: `${total_flour_kg.toFixed(1).replace('.0','')} 公斤` },
+        { q: '承上題，這些麵粉在製作時，需要加入多少公克的砂糖？', ans: `${sugar_g.toFixed(0)} 公克` },
+        { q: '承上題，今天使用的奶油總共價值多少元？', ans: `${butter_cost.toFixed(0)} 元` },
+        { q: '承上題，如果同時啟動所有烤箱，烤完所有吐司最少需要多少分鐘？', ans: `${total_time} 分鐘` }
+      ];
+    }
+  },
+  {
+    id: "camping",
+    title: '樂活家族露營記',
+    grade: '五年級',
+    topics: '時間與時速、油耗公升與油資、雙程算式、費用均分',
+    wordCount: '約 310 字',
+    unitHint: '',
+    paramSchema: [
+      { key: 'people', label: '參與總人數(人)', min: 3, max: 8, step: 1 },
+      { key: 'distance', label: '單程距離(公里)', min: 80, max: 300, step: 10 },
+      { key: 'speed', label: '平均時速(公里)', min: 50, max: 110, step: 10 },
+      { key: 'fuel_efficiency', label: '汽車油耗(km/L)', min: 8, max: 18, step: 1 },
+      { key: 'gas_price', label: '汽油單價(元/公升)', min: 25, max: 35, step: 1 },
+      { key: 'tent_price', label: '單頂帳篷租金(元)', min: 800, max: 2000, step: 100 },
+      { key: 'food_cost', label: '食材總費用(元)', min: 1000, max: 4000, step: 100 }
+    ],
+    params: {},
+    genRandom() {
+      let people, distance, speed, fuel_efficiency, gas_price, tent_price, food_cost;
+      let drive_time, fuel_used, total_cost;
+      do {
+        people = rng(4, 6);
+        speed = [60, 80, 90][rng(0, 2)];
+        drive_time = rng(2, 4);
+        distance = speed * drive_time;
+        fuel_efficiency = [10, 12, 15][rng(0, 2)];
+        gas_price = rng(28, 32);
+        tent_price = rng(10, 15) * 100;
+        food_cost = rng(12, 24) * 100;
+        fuel_used = distance / fuel_efficiency;
+        let gas_cost = fuel_used * gas_price;
+        total_cost = (2 * tent_price) + food_cost + (gas_cost * 2);
+      } while (distance % fuel_efficiency !== 0 || total_cost % people !== 0);
+      return { people, distance, speed, fuel_efficiency, gas_price, tent_price, food_cost };
+    },
+    getPassage(p) {
+      return `樂活家族趁著連假開車去山區露營，一行共有 ${p.people}個人參加。他們從家裡開車出發，以平均時速 ${p.speed}公里行駛，開往距離 ${p.distance}公里遠的森林露營地。已知他們駕駛的汽車平均每公升汽油可以跑 ${p.fuel_efficiency}公里，目前汽油的價格是每公升 ${p.gas_price}元。這次露營他們租用了 2頂相同的豪華帳篷（每頂租金 ${p.tent_price}元），並購買了 ${p.food_cost}元的烤肉食材。最後，全家人決定將「帳篷租金」、「食材費用」與「來回雙程油錢」三項花費加總後，平均分攤給在場的 ${p.people}個人。請回答下列問題：`;
+    },
+    solve(p) {
+      const drive_hr = p.distance / p.speed;
+      const fuel = p.distance / p.fuel_efficiency;
+      const gas_cost = fuel * p.gas_price;
+      const total_cost = (2 * p.tent_price) + p.food_cost + (gas_cost * 2);
+      const share = total_cost / p.people;
+      return [
+        { q: `汽車以平均時速 ${p.speed}公里行駛，抵達營地需要幾小時？`, ans: `${drive_hr.toFixed(1).replace('.0','')} 小時` },
+        { q: '承上題，單程去營地需要用掉多少公升汽油？', ans: `${fuel.toFixed(1).replace('.0','')} 公升` },
+        { q: '承上題，單程的油錢是多少元？', ans: `${gas_cost.toFixed(0)} 元` },
+        { q: '承上題，這次露營總花費平分給所有人，每人應分攤多少元？', ans: `${share.toFixed(1).replace('.0','')} 元` }
+      ];
+    }
+  },
+  {
+    id: "library",
+    title: '星空圖書館挑戰',
+    grade: '六年級',
+    topics: '百分率換算、乘法總合、平均與天數估算',
+    wordCount: '約 310 字',
+    unitHint: '',
+    paramSchema: [
+      { key: 'students', label: '班級人數(人)', min: 10, max: 40, step: 5 },
+      { key: 'completed_pct', label: '完全達標率(%)', min: 50, max: 100, step: 10 },
+      { key: 'books_per_student', label: '每人讀書量(本)', min: 3, max: 10, step: 1 },
+      { key: 'avg_pages', label: '每本書平均頁數', min: 100, max: 300, step: 10 },
+      { key: 'pages_per_day', label: '小美每天讀頁數', min: 10, max: 50, step: 5 },
+      { key: 'target_books', label: '班級設定總目標(本)', min: 100, max: 300, step: 10 }
+    ],
+    params: {},
+    genRandom() {
+      let students, completed_pct, books_per_student, avg_pages, pages_per_day, target_books;
+      let achievers;
+      do {
+        students = [20, 25, 30, 40][rng(0, 3)];
+        completed_pct = [50, 60, 75, 80, 90][rng(0, 4)];
+        books_per_student = rng(4, 8);
+        avg_pages = [120, 150, 180, 200, 250][rng(0, 4)];
+        pages_per_day = [15, 20, 25, 30][rng(0, 3)];
+        target_books = students * books_per_student + rng(10, 40);
+        achievers = students * (completed_pct / 100);
+      } while (achievers % 1 !== 0 || (books_per_student * avg_pages) % pages_per_day !== 0);
+      return { students, completed_pct, books_per_student, avg_pages, pages_per_day, target_books };
+    },
+    getPassage(p) {
+      return `星空圖書館舉辦為期 4週的閱讀挑戰賽，五年一班共有 ${p.students}位同學參加，全班設定的總閱讀目標是 ${p.target_books}本書。活動截止時，全班共有 ${p.completed_pct}% 的同學「完全達成」個人目標。已知完全達標的同學，平均每人讀了 ${p.books_per_student}本書。每本書平均有 ${p.avg_pages}頁。圖書館規定每讀完一頁可獲得 3個點數以兌換精美文具（點數不影響本書統計）。小美也是完全達標的同學之一，她預計以每天固定閱讀 ${p.pages_per_day}頁的速度讀完她的這些挑戰書籍。請回答下列問題：`;
+    },
+    solve(p) {
+      const achievers = Math.round(p.students * (p.completed_pct / 100));
+      const total_books = achievers * p.books_per_student;
+      const total_pages = total_books * p.avg_pages;
+      const my_pages = p.books_per_student * p.avg_pages;
+      const days = my_pages / p.pages_per_day;
+      return [
+        { q: '五年一班完全達標的同學共有多少人？', ans: `${achievers} 人` },
+        { q: '承上題，這些完全達標的同學，一共讀了多少本書？', ans: `${total_books} 本` },
+        { q: `承上題，如果每人讀的書平均每本有 ${p.avg_pages}頁，達標同學讀的書總共有多少頁？`, ans: `${total_pages} 頁` },
+        { q: `承上題，小美若每天固定讀 ${p.pages_per_day}頁，她需要花多少天才能讀完她的挑戰書籍？`, ans: `${days} 天` }
+      ];
+    }
+  }
+];
+
+let currentStory = null;
+
+// 初始化渲染
+function renderStory() {
+  const selectVal = document.getElementById('story-select').value;
+  
+  if (selectVal === 'random') {
+    const idx = Math.floor(Math.random() * stories.length);
+    currentStory = stories[idx];
+  } else {
+    currentStory = stories.find(s => s.id === selectVal);
+  }
+
+  if (!currentStory) return;
+
+  // 隨機生成符合條件的參數
+  currentStory.params = currentStory.genRandom();
+
+  // 更新左側題目資訊
+  document.getElementById('badge-grade').textContent = `建議年級：${currentStory.grade}`;
+  document.getElementById('badge-word').textContent = `字數：${currentStory.wordCount}`;
+  document.getElementById('badge-topics').textContent = `核心概念：${currentStory.topics}`;
+
+  // 渲染微調控制滑桿
+  renderSliders();
+
+  // 渲染 A4 內容
+  updateA4Content();
+}
+
+// 亂數重置數值
+function regenerateCurrent() {
+  if (!currentStory) return;
+  currentStory.params = currentStory.genRandom();
+  renderSliders();
+  updateA4Content();
+}
+
+// 動態渲染滑桿
+function renderSliders() {
+  const container = document.getElementById('sliders-container');
+  container.innerHTML = '';
+
+  currentStory.paramSchema.forEach(schema => {
+    const val = currentStory.params[schema.key];
+    const wrapper = document.createElement('div');
+    wrapper.className = 'param-item';
+
+    wrapper.innerHTML = `
+      <div class="param-info">
+        <span>${schema.label}</span>
+        <span id="val-${schema.key}" style="color:var(--accent); font-family:monospace;">${val}</span>
+      </div>
+      <div class="param-control">
+        <input type="range" id="slide-${schema.key}" min="${schema.min}" max="${schema.max}" step="${schema.step}" value="${val}">
+        <input type="number" id="num-${schema.key}" min="${schema.min}" max="${schema.max}" step="${schema.step}" value="${val}">
+      </div>
+    `;
+
+    container.appendChild(wrapper);
+
+    // 監聽事件雙向連動
+    const slider = wrapper.querySelector(`#slide-${schema.key}`);
+    const number = wrapper.querySelector(`#num-${schema.key}`);
+    const displayVal = wrapper.querySelector(`#val-${schema.key}`);
+
+    const updateVal = (newVal) => {
+      displayVal.textContent = newVal;
+      slider.value = newVal;
+      number.value = newVal;
+      currentStory.params[schema.key] = newVal;
+      updateA4Content();
+    };
+
+    slider.oninput = (e) => {
+      updateVal(parseFloat(e.target.value));
+    };
+
+    number.oninput = (e) => {
+      let val = parseFloat(e.target.value);
+      if (!isNaN(val)) {
+        if (val < schema.min) val = schema.min;
+        if (val > schema.max) val = schema.max;
+        updateVal(val);
+      }
+    };
+  });
+}
+
+// 渲染 A4 預覽畫面與答案連鎖重算
+function updateA4Content() {
+  if (!currentStory) return;
+
+  // 設定日期
+  const today = new Date();
+  document.getElementById('date-string').textContent = `日期：${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+
+  // 設定標題
+  const titleText = `數學素養閱讀挑戰卷 - ${currentStory.title}`;
+  document.getElementById('q-sheet-title').textContent = titleText;
+
+  // 單位提示
+  const hintBox = document.getElementById('hint-box');
+  if (currentStory.unitHint) {
+    hintBox.innerHTML = currentStory.unitHint;
+    hintBox.className = 'hint-box show';
+  } else {
+    hintBox.className = 'hint-box';
+  }
+
+  // 取得最新計算後的故事本文與連鎖題解
+  const passage = currentStory.getPassage(currentStory.params);
+  const solvedQuestions = currentStory.solve(currentStory.params);
+
+  // 渲染文章
+  const passageHtml = `<div class="passage-title">📖 閱讀主題：${currentStory.title}</div><div>${passage}</div>`;
+  document.getElementById('q-passage-container').innerHTML = passageHtml;
+  document.getElementById('a-passage-container').innerHTML = passageHtml;
+
+  // 渲染問題列表
+  let qHtml = '';
+  let aHtml = '';
+
+  solvedQuestions.forEach((item, index) => {
+    qHtml += `
+      <div class="question-item">
+        <div class="question-text"><span class="question-label">問題 ${index + 1}：</span>${item.q}</div>
+        <div class="answer-space">答：<div class="answer-box"></div></div>
+      </div>`;
+
+    aHtml += `
+      <div class="question-item">
+        <div class="question-text"><span class="question-label">問題 ${index + 1}：</span>${item.q}</div>
+        <div class="answer-space">答：<div class="answer-box">${item.ans}</div></div>
+      </div>`;
+  });
+
+  document.getElementById('q-list-container').innerHTML = qHtml;
+  document.getElementById('a-list-container').innerHTML = aHtml;
+}
+
+// 複製剪貼簿工具
+function copyText(type) {
+  if (!currentStory) return;
+  
+  let text = '';
+  const passage = currentStory.getPassage(currentStory.params);
+  const solvedQuestions = currentStory.solve(currentStory.params);
+
+  if (type === 'q') {
+    text += `【題目卷】數學素養閱讀挑戰 - ${currentStory.title}\n\n`;
+    text += `文章閱讀：\n${passage}\n\n`;
+    solvedQuestions.forEach((item, i) => {
+      text += `問題 ${i + 1}：${item.q}\n答：__________________\n\n`;
+    });
+  } else {
+    text += `【答案卷】數學素養閱讀挑戰 - ${currentStory.title}\n\n`;
+    solvedQuestions.forEach((item, i) => {
+      text += `問題 ${i + 1}：${item.q}\n答：${item.ans}\n\n`;
+    });
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert('複製成功！可以直接貼入 Word 或其他編輯軟體中。');
+  }).catch(() => {
+    alert('瀏覽器不支援一鍵複製，請手動複製網頁內容。');
+  });
+}
+
+// 頁面載入時自動初始化
+window.onload = renderStory;
+</script>
+</body>
+</html>

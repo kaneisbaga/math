@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國小數學練習卷生成系統 V1 - 智慧排版版</title>
+<meta name="description" content="國小數學練習卷生成器，支援加減乘除、分數、小數、百分率、時間、金錢、換算、幾何與素養連鎖題，智慧無縫適應 A4 排版。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ========================================================
+   設計令牌 Design Tokens
+======================================================== */
+:root {
+  --bg-dark:    #1a1a2e;
+  --bg-panel:   #16213e;
+  --accent:     #e94560;
+  --accent-hover: #ff5e7e;
+  --gold:       #f5a623;
+  --green:      #27ae60;
+  --text-light: #eaeaea;
+  --text-muted: #999;
+  --border:     #2a2a4a;
+  --radius:     8px;
+  --shadow:     0 4px 20px rgba(0,0,0,0.4);
+  --print-accent: #c0392b;
+}
+
+/* ========================================================
+   重置 & 全域
+======================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-light);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ========================================================
+   控制列 Control Bar
+======================================================== */
+.control-bar {
+  background: var(--bg-panel);
+  border-bottom: 3px solid var(--accent);
+  padding: 12px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: var(--shadow);
+}
+
+.control-bar h1 {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--accent);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  align-self: center;
+}
+
+.cb-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid var(--border);
+  padding-right: 12px;
+}
+.cb-group:last-of-type { border-right: none; }
+
+.cb-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.cb-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+select, input[type="number"], input[type="text"] {
+  background: #0d1117;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+select:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(233,69,96,0.25); }
+
+input[type="number"].w40 { width: 55px; text-align: center; }
+input[type="number"].w60 { width: 70px; text-align: center; }
+input[type="number"].w80 { width: 90px; text-align: center; }
+
+select.w130 { min-width: 130px; }
+select.w110 { min-width: 110px; }
+select.w90  { min-width: 90px; }
+
+label.inline { font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: transform 0.1s, filter 0.2s, background-color 0.2s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.btn:active { transform: scale(0.96); }
+.btn-gen { background: var(--accent); color: #fff; }
+.btn-gen:hover { background: var(--accent-hover); }
+.btn-print { background: var(--green); color: #fff; }
+.btn-print:hover { filter: brightness(1.1); }
+.btn-save { background: var(--gold); color: #111; }
+.btn-save:hover { filter: brightness(1.1); }
+.btn-danger { background: #c0392b; color: white; padding: 6px 10px; font-size: 0.75rem; }
+
+/* ========================================================
+   主內容與 A4 預覽
+======================================================== */
+.print-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 60px;
+  gap: 24px;
+}
+
+/* ========================================================
+   A4 紙張容器
+======================================================== */
+.page-container {
+  background: #fff;
+  color: #111;
+  width: 210mm;
+  height: 297mm;
+  min-height: 297mm;
+  max-height: 297mm;
+  margin: 0 auto;
+  padding: 10mm 12mm;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0,0,0,0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 溢出警告 */
+.page-container.overflow-warn::after {
+  content: '⚠ 內容已超出 A4 一頁範圍！請減少題數或修改設定。';
+  position: absolute;
+  bottom: 4px; left: 0; right: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(192, 57, 43, 0.9);
+  padding: 4px;
+  z-index: 100;
+}
+
+.page-header { text-align: center; margin-bottom: 6px; }
+.page-header h2 { font-size: 1.25rem; font-weight: 900; color: #111; margin: 0; line-height: 1.2; letter-spacing: 0.05em; }
+
+.info-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 3px solid #111;
+  border-bottom: 3px solid #111;
+  padding: 5px 4px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 12px;
+}
+.info-bar span { white-space: nowrap; }
+
+/* 重點說明框 */
+.hint-box {
+  border: 2px dashed #999;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: #222;
+  background: #fdfdfd;
+  display: none;
+}
+.hint-box.show { display: block; }
+.hint-box strong { color: #c0392b; font-weight: 900; }
+
+/* 題目網格 - 智慧縮放核心 */
+.quiz-grid {
+  display: grid;
+  column-gap: 24px;
+  row-gap: 0;
+  flex: 1;
+  min-height: 0;
+  align-content: stretch;
+}
+
+/* 題目單元 */
+.q-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-bottom: 1px dashed #ddd;
+  height: var(--row-h, 42px);
+  min-height: 0;
+  font-size: var(--font-size, 16px);
+  padding: 2px 0;
+}
+.q-text {
+  font-weight: 700;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+.q-num {
+  color: #999;
+  font-size: 0.6em;
+  margin-right: 8px;
+  font-weight: 400;
+  width: 22px;
+  display: inline-block;
+  text-align: right;
+}
+
+.ans-box {
+  border: 2px solid #222;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--box-h, 28px);
+  width: var(--box-w, 52px);
+  font-size: calc(var(--font-size, 16px) * 0.65);
+  font-weight: 900;
+  margin-left: 8px;
+  flex-shrink: 0;
+  background: #fafafa;
+}
+
+/* 分數渲染 */
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 3px;
+  line-height: 1.05;
+}
+.frac .fn { border-bottom: 1.8px solid currentColor; padding: 0 3px; font-size: 0.82em; font-weight: 700; }
+.frac .fd { padding: 0 3px; font-size: 0.82em; font-weight: 700; }
+
+/* 應用題單元 */
+.word-item {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: #fcfcfc;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.word-item .q-label { font-weight: 900; color: #c0392b; }
+.word-item .ans-line {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-top: 1px dashed #e2e2e2;
+  padding-top: 6px;
+  margin-top: 4px;
+}
+
+/* 素養題閱讀文章 */
+.passage-box {
+  border: 2px solid #444;
+  background: #fbfbf8;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: #222;
+  text-align: justify;
+}
+.passage-title {
+  font-weight: 900;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  color: #c0392b;
+  border-bottom: 2px solid #c0392b;
+  padding-bottom: 4px;
+}
+
+/* 答案卷 */
+.answer-sheet { display: none; }
+
+/* ========================================================
+   列印樣式
+======================================================== */
+@media print {
+  .control-bar, #msg-bar { display: none !important; }
+  body { background: white; overflow: visible; }
+  .print-area { padding: 0; gap: 0; }
+  .page-container {
+    margin: 0;
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+    max-height: 297mm;
+    box-shadow: none;
+    border-radius: 0;
+    page-break-after: always;
+  }
+  .page-container::after { display: none !important; }
+  .answer-sheet { display: flex !important; }
+  .ans-box { border-color: var(--print-accent) !important; color: var(--print-accent) !important; }
+  .info-bar { border-color: var(--print-accent) !important; color: var(--print-accent) !important; }
+  .page-header h2 { color: var(--print-accent) !important; }
+  .word-item .q-label { color: var(--print-accent) !important; }
+  .passage-title { color: var(--print-accent) !important; border-color: var(--print-accent) !important; }
+  .hint-box { border-color: var(--print-accent) !important; }
+}
+
+/* ========================================================
+   狀態提示列
+======================================================== */
+#msg-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: #2d1f1f;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  color: #ffaaaa;
+  margin: 12px 18px 0;
+}
+#msg-bar.show { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- ======================================================
+     控制面板
+====================================================== -->
+<div class="control-bar" id="ctrl-bar">
+  <h1>📐 國小數學出題系統 V1</h1>
+
+  <!-- 規則儲存管理 -->
+  <div class="cb-group" style="min-width: 200px; border-color: var(--accent);">
+    <span class="cb-label" style="color: var(--gold);">💾 題庫出題規則存取</span>
+    <div class="cb-row">
+      <select id="configSelect" class="w130" onchange="loadConfig()">
+        <option value="">-- 載入預設/已存規則 --</option>
+      </select>
+      <button class="btn btn-danger" onclick="deleteConfig()" title="刪除選定規則">✕</button>
+    </div>
+    <div class="cb-row" style="margin-top: 4px;">
+      <input type="text" id="configName" placeholder="規則名稱 (例如：三年級每日練習)" style="flex:1; font-size:0.75rem; padding: 4px 6px;">
+      <button class="btn btn-save" style="padding: 4px 8px; font-size:0.75rem;" onclick="saveConfig()">儲存</button>
+    </div>
+  </div>
+
+  <!-- 模組選擇 -->
+  <div class="cb-group">
+    <span class="cb-label">題型模組</span>
+    <div class="cb-row">
+      <select id="module" class="w130" onchange="onModuleChange()">
+        <optgroup label="── 四則運算 ──">
+          <option value="arithmetic">加減乘除（混合）</option>
+          <option value="add">純加法</option>
+          <option value="sub">純減法</option>
+          <option value="mul">純乘法</option>
+          <option value="div">純除法</option>
+        </optgroup>
+        <optgroup label="── 數系與分數 ──">
+          <option value="fraction">分數運算</option>
+          <option value="decimal">小數運算</option>
+          <option value="percent">百分率轉換</option>
+        </optgroup>
+        <optgroup label="── 單位換算 ──">
+          <option value="length">長度換算</option>
+          <option value="weight">重量換算</option>
+          <option value="capacity">容量換算</option>
+          <option value="area_conv">面積換算</option>
+          <option value="time_calc">時間運算</option>
+          <option value="money">金錢買賣</option>
+        </optgroup>
+        <optgroup label="── 幾何 ──">
+          <option value="perimeter">周長</option>
+          <option value="area_geo">幾何面積</option>
+          <option value="volume">體積</option>
+        </optgroup>
+        <optgroup label="── 情境與素養 ──">
+          <option value="word">一般應用題</option>
+          <option value="literacy">素養閱讀連鎖題</option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+
+  <!-- 數字位數（四則運算專用） -->
+  <div class="cb-group" id="grp-digit">
+    <span class="cb-label">數字位數</span>
+    <div class="cb-row">
+      <input type="number" id="digit1" class="w40" value="2" min="1" max="4">
+      <span style="font-size:.75rem;color:var(--text-muted)">位 對</span>
+      <input type="number" id="digit2" class="w40" value="2" min="1" max="4">
+      <span style="font-size:.75rem;color:var(--text-muted)">位</span>
+    </div>
+  </div>
+
+  <!-- 四則運算限制篩選 -->
+  <div class="cb-group" id="grp-arith-opts">
+    <span class="cb-label">進/借位與限制</span>
+    <div class="cb-row">
+      <select id="carryOpt" class="w90" title="加法進位選項">
+        <option value="auto">加法:自動</option>
+        <option value="carry">必進位</option>
+        <option value="noCarry">不進位</option>
+      </select>
+      <select id="borrowOpt" class="w90" title="減法借位選項">
+        <option value="auto">減法:自動</option>
+        <option value="borrow">必借位</option>
+        <option value="noBorrow">不借位</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 答案特徵與範圍限制 -->
+  <div class="cb-group" id="grp-filter">
+    <span class="cb-label">答案/餘數篩選</span>
+    <div class="cb-row">
+      <select id="parityOpt" class="w90" title="答案奇偶數限制">
+        <option value="auto">答案:不限</option>
+        <option value="even">限偶數</option>
+        <option value="odd">限奇數</option>
+      </select>
+      <input type="number" id="ansMin" class="w60" placeholder="答案下限" title="答案下限">
+      <input type="number" id="ansMax" class="w60" placeholder="上限" title="答案上限">
+    </div>
+  </div>
+
+  <!-- 除法選項 -->
+  <div class="cb-group" id="grp-rem" style="display:none;">
+    <span class="cb-label">除法與餘數</span>
+    <div class="cb-row">
+      <label class="inline"><input type="checkbox" id="allowRem" onchange="toggleRemInputs()"> 允許餘數</label>
+      <div id="remRangeBox" style="display: none; align-items: center; gap: 3px;">
+        <input type="number" id="remMin" class="w40" placeholder="最小餘數" title="最小餘數">
+        <span>~</span>
+        <input type="number" id="remMax" class="w40" placeholder="最大" title="最大餘數">
+      </div>
+    </div>
+  </div>
+
+  <!-- 分數類型 -->
+  <div class="cb-group" id="grp-frac" style="display:none;">
+    <span class="cb-label">分數類型</span>
+    <div class="cb-row">
+      <select id="fracType" class="w130">
+        <option value="add_same">同分母分數加法</option>
+        <option value="sub_same">同分母分數減法</option>
+        <option value="add_diff">異分母分數加法</option>
+        <option value="sub_diff">異分母分數減法</option>
+        <option value="mul">分數乘法</option>
+        <option value="div">分數除法</option>
+        <option value="compare">分數比較大小</option>
+        <option value="simplify">約分</option>
+        <option value="mixed_num">假分數⇄帶分數</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 小數設定 -->
+  <div class="cb-group" id="grp-dec" style="display:none;">
+    <span class="cb-label">小數運算</span>
+    <div class="cb-row">
+      <select id="decOp" class="w90">
+        <option value="+">加法</option>
+        <option value="-">減法</option>
+        <option value="×">乘法</option>
+        <option value="÷">除法</option>
+        <option value="mixed">混合</option>
+      </select>
+      <select id="decDigit" class="w90">
+        <option value="1">一位小數</option>
+        <option value="2">兩位小數</option>
+        <option value="3">三位小數</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 幾何設定 -->
+  <div class="cb-group" id="grp-geo" style="display:none;">
+    <span class="cb-label">圖形圖案</span>
+    <div class="cb-row">
+      <select id="geoShape" class="w110">
+        <option value="square">正方形</option>
+        <option value="rect">長方形</option>
+        <option value="triangle">三角形</option>
+        <option value="para">平行四邊形</option>
+        <option value="trap">梯形</option>
+        <option value="circle">圓形</option>
+        <option value="cube">正方體</option>
+        <option value="cuboid">長方體</option>
+        <option value="random">隨機混合</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 換算設定 -->
+  <div class="cb-group" id="grp-conv" style="display:none;">
+    <span class="cb-label">換算格式與方向</span>
+    <div class="cb-row">
+      <select id="convDir" class="w110">
+        <option value="random">完全隨機</option>
+        <option value="big2small">大→小單位</option>
+        <option value="small2big">小→大單位</option>
+      </select>
+      <select id="unitFormat" class="w110">
+        <option value="zh">中文單位</option>
+        <option value="symbol">符號單位</option>
+        <option value="mixed">中文/符號隨機</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 題數 -->
+  <div class="cb-group" id="grp-count">
+    <span class="cb-label">題數 (1~100)</span>
+    <div class="cb-row">
+      <input type="number" id="inputCount" class="w60" value="40" min="1" max="100">
+    </div>
+  </div>
+
+  <!-- 按鈕區 -->
+  <div class="cb-group" style="border-right:none; gap:6px; flex-direction:row; align-items:flex-end;">
+    <button class="btn btn-gen" onclick="generate()">⚡ 生成題目</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ 列印 A4</button>
+  </div>
+</div>
+
+<!-- 狀態欄 -->
+<div id="msg-bar">⚠ <span id="msg-text"></span></div>
+
+<!-- ======================================================
+     A4 輸出區域
+====================================================== -->
+<div class="print-area">
+
+  <!-- 題目卷 -->
+  <div class="page-container" id="page-q">
+    <div class="page-header"><h2 id="title-text">數學練習卷</h2></div>
+    <div class="info-bar">
+      <span>姓名：___________</span>
+      <span id="date-str"></span>
+      <span>得分：___________</span>
+    </div>
+    <div class="hint-box" id="hint-box"></div>
+    <div class="quiz-grid" id="q-grid"></div>
+  </div>
+
+  <!-- 答案卷 -->
+  <div class="page-container answer-sheet" id="page-a">
+    <div class="page-header"><h2>【答案卷】批改對照用</h2></div>
+    <div class="info-bar" style="border-color:#c0392b; color:#c0392b;"><span>批改對照用 — 請勿發給學生</span></div>
+    <div class="quiz-grid" id="a-grid"></div>
+  </div>
+
+</div>
+
+<!-- ======================================================
+     JavaScript 出題 & 排版引擎
+====================================================== -->
+<script>
+'use strict';
+
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   常用工具函式
+============================================================ */
+function rng(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+function lcm(a, b) { return (a * b) / gcd(a, b); }
+
+function getPool(digit) {
+  const min = Math.pow(10, digit - 1);
+  const max = Math.pow(10, digit) - 1;
+  const arr = [];
+  for (let i = min; i <= max; i++) {
+    if (i !== 1 && i !== 2) arr.push(i);
+  }
+  return arr;
+}
+
+function fracHtml(num, den) {
+  return `<span class="frac"><span class="fn">${num}</span><span class="fd">${den}</span></span>`;
+}
+
+// 單位換算格式化器
+function formatUnit(unitKey, moduleType, formatOpt) {
+  const dict = {
+    length: {
+      mm: { zh: '公釐', symbol: 'mm' },
+      cm: { zh: '公分', symbol: 'cm' },
+      m: { zh: '公尺', symbol: 'm' },
+      km: { zh: '公里', symbol: 'km' }
+    },
+    weight: {
+      g: { zh: '公克', symbol: 'g' },
+      kg: { zh: '公斤', symbol: 'kg' },
+      t: { zh: '公噸', symbol: 't' }
+    },
+    capacity: {
+      mL: { zh: '毫升', symbol: 'mL' },
+      L: { zh: '公升', symbol: 'L' }
+    },
+    area_conv: {
+      'cm²': { zh: '平方公分', symbol: 'cm²' },
+      'm²': { zh: '平方公尺', symbol: 'm²' },
+      a: { zh: '公畝', symbol: 'a' },
+      ha: { zh: '公頃', symbol: 'ha' },
+      'km²': { zh: '平方公里', symbol: 'km²' }
+    }
+  };
+  const mode = formatOpt === 'mixed' ? (rng(0, 1) === 0 ? 'zh' : 'symbol') : formatOpt;
+  return dict[moduleType]?.[unitKey]?.[mode] || unitKey;
+}
+
+// 進借位檢驗
+function hasCarry(a, b) {
+  let sa = String(a), sb = String(b);
+  let carry = 0;
+  let i = sa.length - 1, j = sb.length - 1;
+  while (i >= 0 || j >= 0) {
+    let d1 = i >= 0 ? parseInt(sa[i]) : 0;
+    let d2 = j >= 0 ? parseInt(sb[j]) : 0;
+    if (d1 + d2 + carry >= 10) return true;
+    carry = Math.floor((d1 + d2 + carry) / 10);
+    i--; j--;
+  }
+  return false;
+}
+
+function hasBorrow(a, b) {
+  let sa = String(a), sb = String(b);
+  let borrow = 0;
+  let i = sa.length - 1, j = sb.length - 1;
+  while (i >= 0 || j >= 0) {
+    let d1 = i >= 0 ? parseInt(sa[i]) : 0;
+    let d2 = j >= 0 ? parseInt(sb[j]) : 0;
+    if (d1 - borrow < d2) {
+      return true;
+    }
+    borrow = (d1 - borrow < d2) ? 1 : 0;
+    i--; j--;
+  }
+  return false;
+}
+
+let usedUnitsGlobal = new Set();
+
+/* ============================================================
+   各主題模組出題核心
+============================================================ */
+
+// 1. 四則運算
+const ArithModule = {
+  name: () => {
+    const op = $('module').value;
+    const d1 = +$('digit1').value, d2 = +$('digit2').value;
+    const label = { arithmetic:'混合運算', add:'加法', sub:'減法', mul:'乘法', div:'除法' }[op];
+    return `${d1}位數與${d2}位數 ${label}練習`;
+  },
+  gen(count, filters) {
+    const mod = $('module').value;
+    const d1 = +$('digit1').value, d2 = +$('digit2').value;
+    const allowRem = $('allowRem').checked;
+    const ops = mod === 'arithmetic' ? ['+','-','×','÷'] :
+                mod === 'add' ? ['+'] : mod === 'sub' ? ['-'] :
+                mod === 'mul' ? ['×'] : ['÷'];
+
+    const pool1 = getPool(d1), pool2 = getPool(d2);
+    const qs = [];
+    let attempts = 0;
+    while (qs.length < count && attempts < count * 80) {
+      attempts++;
+      let n1 = pool1[rng(0, pool1.length - 1)];
+      let n2 = pool2[rng(0, pool2.length - 1)];
+      let op = ops[rng(0, ops.length - 1)];
+
+      let fn1 = n1, fn2 = n2, ans, rawAns;
+      if (op === '+') {
+        if (filters.carryOpt === 'carry' && !hasCarry(fn1, fn2)) continue;
+        if (filters.carryOpt === 'noCarry' && hasCarry(fn1, fn2)) continue;
+        rawAns = fn1 + fn2;
+        ans = `${rawAns}`;
+      } else if (op === '-') {
+        if (fn1 < fn2) [fn1, fn2] = [fn2, fn1];
+        if (filters.borrowOpt === 'borrow' && !hasBorrow(fn1, fn2)) continue;
+        if (filters.borrowOpt === 'noBorrow' && hasBorrow(fn1, fn2)) continue;
+        rawAns = fn1 - fn2;
+        ans = `${rawAns}`;
+      } else if (op === '×') {
+        rawAns = fn1 * fn2;
+        ans = `${rawAns}`;
+      } else { // 除法
+        if (!allowRem) {
+          // 整除
+          const factor = rng(3, 12);
+          fn1 = fn2 * factor;
+          rawAns = factor;
+          ans = `${rawAns}`;
+        } else {
+          const q = Math.floor(fn1 / fn2);
+          const r = fn1 % fn2;
+          // 餘數篩選
+          if (r > 0) {
+            if (filters.remMin !== null && r < filters.remMin) continue;
+            if (filters.remMax !== null && r > filters.remMax) continue;
+          }
+          rawAns = q; // 奇偶篩選以商為主
+          ans = r === 0 ? `${q}` : `${q}…${r}`;
+        }
+      }
+
+      // 答案通用篩選
+      if (rawAns < 0) continue;
+      if (filters.parityOpt === 'even' && rawAns % 2 !== 0) continue;
+      if (filters.parityOpt === 'odd' && rawAns % 2 === 0) continue;
+      if (filters.ansMin !== null && rawAns < filters.ansMin) continue;
+      if (filters.ansMax !== null && rawAns > filters.ansMax) continue;
+
+      // 防止完全重覆的算式
+      if (qs.some(item => item.q === `${fn1} ${op} ${fn2} ＝`)) continue;
+
+      qs.push({ q: `${fn1} ${op} ${fn2} ＝`, a: ans });
+    }
+    return qs;
+  }
+};
+
+// 2. 分數
+const FractionModule = {
+  name: () => {
+    const map = {
+      add_same:'同分母分數加法', sub_same:'同分母分數減法',
+      add_diff:'異分母分數加法', sub_diff:'異分母分數減法',
+      mul:'分數乘法', div:'分數除法',
+      compare:'分數比較大小', simplify:'約分',
+      mixed_num:'假分數與帶分數互換'
+    };
+    return map[$('fracType').value] || '分數運算';
+  },
+  gen(count, filters) {
+    const type = $('fracType').value;
+    const qs = [];
+    const DENOMS = [2,3,4,5,6,8,9,10,12];
+    let tries = 0;
+    while (qs.length < count && tries < count * 100) {
+      tries++;
+      let q, a, rawVal;
+      const d1 = DENOMS[rng(0, DENOMS.length-1)];
+      let d2 = DENOMS[rng(0, DENOMS.length-1)];
+      while (d2 === d1) d2 = DENOMS[rng(0, DENOMS.length-1)];
+
+      if (type === 'add_same') {
+        const n1 = rng(1, d1-1), n2 = rng(1, d1-1);
+        let rn = n1 + n2, rd = d1;
+        const g = gcd(rn, rd);
+        rn /= g; rd /= g;
+        q = `${fracHtml(n1,d1)} ＋ ${fracHtml(n2,d1)} ＝`;
+        a = (rd === 1) ? `${rn}` : (rn > rd) ? `${Math.floor(rn/rd)}又${fracHtml(rn%rd,rd)}` : fracHtml(rn, rd);
+        rawVal = rn / rd;
+      } else if (type === 'sub_same') {
+        let n1 = rng(2, d1), n2 = rng(1, d1-1);
+        if (n1 <= n2) n1 = n2 + 1;
+        if (n1 > d1) n1 = d1;
+        let rn = n1 - n2, rd = d1;
+        const g = gcd(rn, rd);
+        rn /= g; rd /= g;
+        q = `${fracHtml(n1,d1)} － ${fracHtml(n2,d1)} ＝`;
+        a = (rd === 1) ? `${rn}` : fracHtml(rn, rd);
+        rawVal = rn / rd;
+      } else if (type === 'add_diff') {
+        const n1 = rng(1, d1-1), n2 = rng(1, d2-1);
+        const ld = lcm(d1, d2);
+        if (ld > 40) continue;
+        let rn = n1*(ld/d1) + n2*(ld/d2), rd = ld;
+        const g = gcd(rn, rd);
+        rn /= g; rd /= g;
+        q = `${fracHtml(n1,d1)} ＋ ${fracHtml(n2,d2)} ＝`;
+        a = (rd === 1) ? `${rn}` : (rn > rd) ? `${Math.floor(rn/rd)}又${fracHtml(rn%rd,rd)}` : fracHtml(rn, rd);
+        rawVal = rn / rd;
+      } else if (type === 'sub_diff') {
+        const ld = lcm(d1, d2);
+        if (ld > 40) continue;
+        const n1 = rng(1, d1-1), n2 = rng(1, d2-1);
+        let rn = n1*(ld/d1) - n2*(ld/d2), rd = ld;
+        if (rn <= 0) continue;
+        const g = gcd(rn, rd);
+        rn /= g; rd /= g;
+        q = `${fracHtml(n1,d1)} － ${fracHtml(n2,d2)} ＝`;
+        a = (rd === 1) ? `${rn}` : fracHtml(rn, rd);
+        rawVal = rn / rd;
+      } else if (type === 'mul') {
+        const n1 = rng(1, d1-1), n2 = rng(1, d2-1);
+        let rn = n1*n2, rd = d1*d2;
+        const g = gcd(rn, rd);
+        rn /= g; rd /= g;
+        q = `${fracHtml(n1,d1)} × ${fracHtml(n2,d2)} ＝`;
+        a = (rd === 1) ? `${rn}` : fracHtml(rn, rd);
+        rawVal = rn / rd;
+      } else if (type === 'div') {
+        const n1 = rng(1, d1-1), n2 = rng(1, d2-1);
+        let rn = n1*d2, rd = d1*n2;
+        const g = gcd(rn, rd);
+        rn /= g; rd /= g;
+        q = `${fracHtml(n1,d1)} ÷ ${fracHtml(n2,d2)} ＝`;
+        a = (rd === 1) ? `${rn}` : fracHtml(rn, rd);
+        rawVal = rn / rd;
+      } else if (type === 'compare') {
+        const n1 = rng(1, d1-1), n2 = rng(1, d2-1);
+        const v1 = n1/d1, v2 = n2/d2;
+        const sym = v1 > v2 ? '＞' : v1 < v2 ? '＜' : '＝';
+        q = `${fracHtml(n1,d1)} ☐ ${fracHtml(n2,d2)}`;
+        a = sym;
+        rawVal = 1;
+      } else if (type === 'simplify') {
+        const g0 = rng(2, 5);
+        let n1 = rng(2, 6) * g0, den = rng(2, 6) * g0;
+        while (gcd(n1/g0, den/g0) !== 1) { den = rng(2,6)*g0; }
+        const rn = n1/gcd(n1,den), rd = den/gcd(n1,den);
+        q = `約分 ${fracHtml(n1,den)} ＝`;
+        a = fracHtml(rn, rd);
+        rawVal = rn / rd;
+      } else { // 假分數帶分數互換
+        const whole = rng(1, 4);
+        const nd = DENOMS[rng(0, DENOMS.length-1)];
+        const nr = rng(1, nd-1);
+        const imp = whole*nd + nr;
+        if (rng(0,1) === 0) {
+          q = `把 ${fracHtml(imp,nd)} 化為帶分數`;
+          a = `${whole}又${fracHtml(nr,nd)}`;
+        } else {
+          q = `把 ${whole}又${fracHtml(nr,nd)} 化為假分數`;
+          a = fracHtml(imp, nd);
+        }
+        rawVal = whole;
+      }
+
+      // 篩選
+      if (filters.ansMin !== null && rawVal < filters.ansMin) continue;
+      if (filters.ansMax !== null && rawVal > filters.ansMax) continue;
+
+      qs.push({ q, a });
+    }
+    return qs;
+  }
+};
+
+// 3. 小數運算
+const DecimalModule = {
+  name: () => `小數${{'+':'加法','-':'減法','×':'乘法','÷':'除法','mixed':'混合運算'}[$('decOp').value]}練習`,
+  gen(count, filters) {
+    const op0 = $('decOp').value;
+    const dig = +$('decDigit').value;
+    const ops = op0 === 'mixed' ? ['+','-','×','÷'] : [op0];
+    const fac = Math.pow(10, dig);
+    const qs = [];
+    let tries = 0;
+    while (qs.length < count && tries < count * 100) {
+      tries++;
+      const op = ops[rng(0, ops.length - 1)];
+      let a = rng(10, 999) / fac;
+      let b = rng(10, 999) / fac;
+      let ansVal, q, aText;
+
+      if (op === '+') {
+        ansVal = +(a + b).toFixed(dig);
+        q = `${a} ＋ ${b} ＝`;
+      } else if (op === '-') {
+        if (a < b) [a, b] = [b, a];
+        ansVal = +(a - b).toFixed(dig);
+        q = `${a} － ${b} ＝`;
+      } else if (op === '×') {
+        b = rng(2, 9); // 單純整數倍
+        ansVal = +(a * b).toFixed(dig);
+        q = `${a} × ${b} ＝`;
+      } else { // ÷
+        b = rng(2, 9);
+        ansVal = +(a / b).toFixed(dig);
+        q = `${a} ÷ ${b} ＝`;
+      }
+
+      if (ansVal < 0) continue;
+      if (filters.parityOpt === 'even' && Math.round(ansVal * fac) % 2 !== 0) continue;
+      if (filters.parityOpt === 'odd' && Math.round(ansVal * fac) % 2 === 0) continue;
+      if (filters.ansMin !== null && ansVal < filters.ansMin) continue;
+      if (filters.ansMax !== null && ansVal > filters.ansMax) continue;
+
+      qs.push({ q, a: `${ansVal}` });
+    }
+    return qs;
+  }
+};
+
+// 4. 百分率
+const PercentModule = {
+  name: () => '百分率轉換練習',
+  gen(count) {
+    const types = ['pct2dec','dec2pct','pct2frac','frac2pct'];
+    const qs = [];
+    const BASE = [10,20,25,30,40,50,60,70,75,80,90,100,120,150];
+    let tries = 0;
+    while (qs.length < count && tries < count * 80) {
+      tries++;
+      const t = types[rng(0, types.length - 1)];
+      const pct = BASE[rng(0, BASE.length - 1)];
+      const dec = +(pct / 100).toFixed(2);
+      const g = gcd(pct, 100);
+      const fn = pct / g, fd = 100 / g;
+      let q, a;
+      if (t === 'pct2dec') {
+        q = `將 ${pct}% 化為小數`;
+        a = `${dec}`;
+      } else if (t === 'dec2pct') {
+        q = `將 ${dec} 化為百分率`;
+        a = `${pct}%`;
+      } else if (t === 'pct2frac') {
+        q = `將 ${pct}% 化為最簡分數`;
+        a = fd === 1 ? `${fn}` : fracHtml(fn, fd);
+      } else {
+        q = fd === 1 ? `將 ${fn} 化為百分率` : `將 ${fracHtml(fn, fd)} 化為百分率`;
+        a = `${pct}%`;
+      }
+      qs.push({ q, a });
+    }
+    return qs;
+  }
+};
+
+// 5~8. 單位換算模組基類
+const ConvModule = {
+  gen(count, moduleType) {
+    const dir = $('convDir').value;
+    const formatOpt = $('unitFormat').value;
+    const qs = [];
+    let pairs = [];
+
+    if (moduleType === 'length') {
+      pairs = [{u:'mm',v:'cm',r:10},{u:'cm',v:'m',r:100},{u:'m',v:'km',r:1000}];
+    } else if (moduleType === 'weight') {
+      pairs = [{u:'g',v:'kg',r:1000},{u:'kg',v:'t',r:1000}];
+    } else if (moduleType === 'capacity') {
+      pairs = [{u:'mL',v:'L',r:1000}];
+    } else { // area_conv
+      pairs = [
+        {u:'cm²',v:'m²',r:10000},
+        {u:'m²',v:'a',r:100},
+        {u:'a',v:'ha',r:100},
+        {u:'ha',v:'km²',r:100}
+      ];
+    }
+
+    let tries = 0;
+    while (qs.length < count && tries < count * 80) {
+      tries++;
+      const p = pairs[rng(0, pairs.length - 1)];
+      const goUp = dir === 'big2small' ? false : dir === 'small2big' ? true : rng(0,1) === 0;
+
+      // 標註所使用的單位關係，以供自動提示框使用
+      usedUnitsGlobal.add(`${moduleType}_${p.u}_${p.v}`);
+
+      let q, a;
+      const uFmt = formatUnit(p.u, moduleType, formatOpt);
+      const vFmt = formatUnit(p.v, moduleType, formatOpt);
+
+      if (!goUp) { // 大變小
+        const val = rng(2, 45);
+        q = `${val} ${vFmt} ＝ ____ ${uFmt}`;
+        a = `${val * p.r} ${uFmt}`;
+      } else { // 小變大
+        const val = rng(2, 45) * p.r;
+        q = `${val} ${uFmt} ＝ ____ ${vFmt}`;
+        a = `${val / p.r} ${vFmt}`;
+      }
+      qs.push({ q, a });
+    }
+    return qs;
+  }
+};
+
+// 9. 時間運算
+const TimeModule = {
+  name: () => '時間加減與時刻練習',
+  gen(count) {
+    const qs = [];
+    let tries = 0;
+    while (qs.length < count && tries < count * 80) {
+      tries++;
+      const type = rng(0, 2);
+      let q, a;
+      if (type === 0) { // 時分 + 分
+        const h1 = rng(1, 11), m1 = rng(0, 59), mAdd = rng(10, 120);
+        const total = h1 * 60 + m1 + mAdd;
+        const ah = Math.floor(total / 60) % 24, am = total % 60;
+        q = `${h1}小時${m1}分 ＋ ${mAdd}分 ＝`;
+        a = `${ah}小時${am}分`;
+      } else if (type === 1) { // 經過時間
+        const sh = rng(6, 11), sm = rng(0, 11) * 5;
+        const duration = rng(30, 240);
+        const eh = sh + Math.floor((sm + duration) / 60);
+        const em = (sm + duration) % 60;
+        q = `上午 ${sh}:${String(sm).padStart(2,'0')} 到下午 ${eh}:${String(em).padStart(2,'0')} 經過了？`;
+        const dh = Math.floor(duration / 60), dm = duration % 60;
+        a = dh > 0 ? `${dh}小時${dm}分` : `${dm}分`;
+      } else { // 兩時間加減
+        const h1 = rng(2, 8), m1 = rng(1, 11)*5, h2 = rng(1, h1-1), m2 = rng(1, 11)*5;
+        if (rng(0, 1) === 0) {
+          q = `${h1}時${m1}分 ＋ ${h2}時${m2}分 ＝`;
+          const total = (h1 + h2)*60 + m1 + m2;
+          a = `${Math.floor(total/60)}時${total%60}分`;
+        } else {
+          q = `${h1}時${m1}分 － ${h2}時${m2}分 ＝`;
+          const total = (h1 - h2)*60 + m1 - m2;
+          a = `${Math.floor(total/60)}時${total%60}分`;
+        }
+      }
+      qs.push({ q, a });
+    }
+    return qs;
+  }
+};
+
+// 10. 金錢買賣
+const MoneyModule = {
+  name: () => '金錢與買賣計算',
+  gen(count) {
+    const items = ['蘋果','水蜜桃','筆記本','修正帶','自動筆','點心飲料','書包','便當','水彩筆'];
+    const qs = [];
+    let tries = 0;
+    while (qs.length < count && tries < count * 80) {
+      tries++;
+      const type = rng(0, 2);
+      let q, a;
+      if (type === 0) {
+        const item = items[rng(0, items.length - 1)];
+        const price = rng(6, 30) * 5;
+        const qty = rng(2, 9);
+        q = `1個${item}${price}元，買了${qty}個，總共幾元？`;
+        a = `${price * qty}元`;
+      } else if (type === 1) {
+        const cost = rng(12, 99) * 5;
+        const pays = [100, 200, 500, 1000].filter(p => p > cost);
+        const pay = pays[rng(0, pays.length - 1)];
+        q = `買東西總共${cost}元，付了${pay}元鈔票，找回幾元？`;
+        a = `${pay - cost}元`;
+      } else {
+        const item = items[rng(0, items.length - 1)];
+        const unit = rng(10, 45);
+        const qty = rng(3, 8);
+        q = `${qty}個${item}共${unit * qty}元，請問單價多少元？`;
+        a = `${unit}元`;
+      }
+      qs.push({ q, a });
+    }
+    return qs;
+  }
+};
+
+// 11. 周長
+const PerimeterModule = {
+  name: () => '幾何圖形周長計算',
+  gen(count) {
+    const shapes = $('geoShape').value === 'random' ? ['square','rect','triangle'] : [$('geoShape').value];
+    const qs = [];
+    let tries = 0;
+    while (qs.length < count && tries < count * 80) {
+      tries++;
+      const s = shapes[rng(0, shapes.length - 1)];
+      let q, a;
+      if (s === 'square') {
+        const side = rng(4, 25);
+        q = `正方形的邊長為 ${side}公分，求周長。`;
+        a = `${side * 4}公分`;
+      } else if (s === 'rect') {
+        const l = rng(6, 30), w = rng(3, l - 1);
+        q = `長方形的長 ${l}公分、寬 ${w}公分，求周長。`;
+        a = `${(l + w) * 2}公分`;
+      } else {
+        const a1 = rng(4, 15), b1 = rng(4, 15), c1 = rng(4, 15);
+        q = `三角形三邊長各為 ${a1}、${b1}、${c1}公分，求周長。`;
+        a = `${a1 + b1 + c1}公分`;
+      }
+      qs.push({ q, a });
+    }
+    return qs;
+  }
+};
+
+// 12. 面積（幾何）
+const AreaGeoModule = {
+  name: () => '幾何圖形面積計算',
+  gen(count) {
+    const shapeOpt = $('geoShape').value;
+    const geoShapes = {
+      square:['square'], rect:['rect'], triangle:['triangle'],
+      para:['para'], trap:['trap'], circle:['circle'],
+      random:['square','rect','triangle','para','trap','circle']
+    };
+    const shapes = geoShapes[shapeOpt] || ['square','rect','triangle','para','trap','circle'];
+    const qs = [];
+    let tries = 0;
+    while (qs.length < count && tries < count * 80) {
+      tries++;
+      const s = shapes[rng(0, shapes.length - 1)];
+      let q, a;
+      if (s === 'square') {
+        const side = rng(3, 20);
+        q = `正方形邊長 ${side}公分，求面積。`;
+        a = `${side * side}平方公分`;
+      } else if (s === 'rect') {
+        const l = rng(5, 25), w = rng(3, l - 1);
+        q = `長方形長 ${l}公分、寬 ${w}公分，求面積。`;
+        a = `${l * w}平方公分`;
+      } else if (s === 'triangle') {
+        const base = rng(4, 30), h = rng(3, 20);
+        q = `三角形底 ${base}公分、高 ${h}公分，求面積。`;
+        a = `${base * h / 2}平方公分`;
+      } else if (s === 'para') {
+        const base = rng(4, 25), h = rng(3, 18);
+        q = `平行四邊形底 ${base}公分、高 ${h}公分，求面積。`;
+        a = `${base * h}平方公分`;
+      } else if (s === 'trap') {
+        const u = rng(3, 15), d = rng(u + 2, 25), h = rng(4, 18);
+        q = `梯形上底 ${u}公分、下底 ${d}公分、高 ${h}公分，求面積。`;
+        a = `${(u + d) * h / 2}平方公分`;
+      } else { // circle
+        const r = rng(2, 10);
+        q = `圓形半徑 ${r}公分，求面積。(圓周率以 3.14 計算)`;
+        a = `${+(3.14 * r * r).toFixed(2)}平方公分`;
+      }
+      qs.push({ q, a });
+    }
+    return qs;
+  }
+};
+
+// 13. 體積
+const VolumeModule = {
+  name: () => '立體圖形體積計算',
+  gen(count) {
+    const shapeOpt = $('geoShape').value;
+    const shapes = shapeOpt === 'cube' ? ['cube'] : shapeOpt === 'cuboid' ? ['cuboid'] : ['cube','cuboid'];
+    const qs = [];
+    let tries = 0;
+    while (qs.length < count && tries < count * 80) {
+      tries++;
+      const s = shapes[rng(0, shapes.length - 1)];
+      let q, a;
+      if (s === 'cube') {
+        const side = rng(2, 12);
+        q = `正方體邊長為 ${side}公分，求其體積。`;
+        a = `${side ** 3}立方公分`;
+      } else {
+        const l = rng(3, 15), w = rng(2, 12), h = rng(2, 10);
+        q = `長方體長 ${l}公分、寬 ${w}公分、高 ${h}公分，求其體積。`;
+        a = `${l * w * h}立方公分`;
+      }
+      qs.push({ q, a });
+    }
+    return qs;
+  }
+};
+
+// 14. 一般應用題
+const WordModule = {
+  name: () => '國小數學綜合應用題',
+  CHARS: ['小華','小芬','阿明','阿龍','小美','小花','大雄','胖虎'],
+  PLACES: ['量販店','大賣場','文具行','生態公園','市立圖書館','運動場'],
+  THINGS: ['筆記本','自動鉛筆','美味糖果','巧克力餅乾','新鮮紅蘋果','柳丁'],
+  gen(count) {
+    const qs = [];
+    const templates = [
+      () => {
+        const c = this.CHARS[rng(0, this.CHARS.length - 1)];
+        const item = this.THINGS[rng(0, this.THINGS.length - 1)];
+        const each = rng(4, 25) * 5, qty = rng(3, 9);
+        return {
+          q: `${c}和家人去${this.PLACES[rng(0, this.PLACES.length - 1)]}買${item}。已知每個的售價是 ${each}元，購買了 ${qty}個，請問總共要花費多少元？`,
+          a: `${each * qty}元`
+        };
+      },
+      () => {
+        const c = this.CHARS[rng(0, this.CHARS.length - 1)];
+        const item = this.THINGS[rng(0, this.THINGS.length - 1)];
+        const total = rng(4, 12) * 80, num = rng(3, 8);
+        const unit = Math.floor(total / num);
+        if (unit * num !== total) return null;
+        return {
+          q: `${c}在店內購買了 ${num}個相同的${item}，總結帳金額為 ${total}元。請問平均一個${item}的售價是多少元？`,
+          a: `${unit}元`
+        };
+      },
+      () => {
+        const c = this.CHARS[rng(0, this.CHARS.length - 1)];
+        const speed = rng(4, 12) * 10, d = rng(3, 12);
+        return {
+          q: `${c}以固定速度散步，每分鐘可以行走 ${speed}公尺。如果她連續走了 ${d}分鐘，請問她總共前進了多少公尺？`,
+          a: `${speed * d}公尺`
+        };
+      },
+      () => {
+        const c = this.CHARS[rng(0, this.CHARS.length - 1)];
+        const total = rng(10, 50) * 10, spend = rng(2, Math.floor(total / 15)) * 10;
+        return {
+          q: `${c}存摺裡原本有零用錢 ${total}元。今天下午去買點心花掉了 ${spend}元，請問她的零用錢還剩下多少元？`,
+          a: `${total - spend}元`
+        };
+      },
+      () => {
+        const c1 = this.CHARS[rng(0, this.CHARS.length - 1)];
+        const c2 = this.CHARS[rng(0, this.CHARS.length - 1)];
+        const a1 = rng(20, 80), a2 = rng(15, 60);
+        return {
+          q: `班級收集競賽中，${c1}收集了 ${a1}個寶特瓶，而${c2}收集了 ${a2}個寶特瓶。請問兩人一共收集了多少個寶特瓶？`,
+          a: `${a1 + a2}個`
+        };
+      }
+    ];
+
+    let tries = 0;
+    while (qs.length < count && tries < count * 100) {
+      tries++;
+      const tmpl = templates[rng(0, templates.length - 1)].call(this);
+      if (!tmpl) continue;
+      if (qs.some(item => item.q === tmpl.q)) continue;
+      qs.push({ q: tmpl.q, a: tmpl.a, isWord: true });
+    }
+    return qs;
+  }
+};
+
+// 15. 素養閱讀連鎖題
+const LiteracyModule = {
+  name: () => '素養閱讀推理連鎖題',
+  gen(count) {
+    const stories = [
+      {
+        title: '快樂農場夏日採收大作戰',
+        passage: '快樂農場座落在陽光明媚的谷地，佔地 6公頃，主要種植各式優質水果。今年夏天，農場主人王伯伯和 3位熱心的員工一起進行大規模採收。統計結果顯示，他們一共採收了 520公斤的好蘋果，但在運送過程中，因為路面顛簸導致有 40公斤的蘋果碰撞受損無法販售。另外，果園中也採收了 150公斤的梨子與 80公斤的李子，不過這些水果尚未進行整理。王伯伯計劃把能出售的優質蘋果進行整理分裝，每 6公斤裝成一箱來出貨。今天有一位中盤商林老闆駕駛限重 1.5公噸的小貨車前來採購，並以每箱 450元的價格向王伯伯買下所有裝箱好的蘋果。交易完成後，王伯伯扣除了 2400元的肥料與包材包裝成本，決定把剩下的淨利潤平分給包含他自己在內的 4位工作人員作為獎金。請根據上述文章回答下列問題：',
+        questions: [
+          { q: '王伯伯採收的蘋果中，可以包裝販售的好蘋果共有多少公斤？', f: () => 520 - 40, u: '公斤' },
+          { q: '承上題，這些優質蘋果一共可以包裝成多少箱？(未滿一箱的蘋果不計)', f: (q1) => Math.floor(q1 / 6), u: '箱' },
+          { q: '承上題，林老闆買下所有包裝好的蘋果，王伯伯共可收到多少元貨款？', f: (q1, q2) => q2 * 450, u: '元' },
+          { q: '承上題，在扣除包裝成本後，平分下來每位工作人員可以分得多少元獎金？', f: (q1, q2, q3) => (q3 - 2400) / 4, u: '元' }
+        ]
+      },
+      {
+        title: '光明國小愛心園遊會',
+        passage: '光明國小今天舉辦熱鬧的一年一度愛心園遊會，五年二班共有 25位同學熱情參與。為了這次園遊會，他們籌劃了「愛心鮮果飲小舖」，主打手工冬瓜檸檬飲。同學們合作準備了 18公升的冬瓜茶和 6000毫升的純檸檬汁，調配成黃金比例的冬瓜檸檬飲料（1公升＝1000毫升）。每杯飲料固定使用容量 400毫升的環保紙杯盛裝，每杯的售價是 40元。另外，攤位也代售了隔壁班手工茶葉蛋（每顆 15元，已賣出 30顆，但不計入飲料收入）。這場活動的飲料食材與杯具總成本為 600元。下午三點園遊會結束時，調配的飲料全部順利賣完，班長扣除材料成本算出淨利潤，並決定將其中的 400元捐給社區關懷基金，剩下的部分全部存入班級讀書會基金。請回答下列問題：',
+        questions: [
+          { q: '同學們調配出的冬瓜檸檬飲料，全部一共有多少公升？', f: () => 18 + (6000 / 1000), u: '公升' },
+          { q: '承上題，這批冬瓜檸檬飲料換算毫升後，總共可以裝滿多少個 400毫升紙杯？', f: (q1) => (q1 * 1000) / 400, u: '杯' },
+          { q: '承上題，若裝好的杯裝冬瓜檸檬全部賣完，總收入共有多少元？', f: (q1, q2) => q2 * 40, u: '元' },
+          { q: '承上題，扣除材料成本與愛心捐款後，最後可以存入班級讀書會基金多少元？', f: (q1, q2, q3) => q3 - 600 - 400, u: '元' }
+        ]
+      },
+      {
+        title: '綠色社區環保回收競賽',
+        passage: '綠色社區為了倡導綠色生活，在活動中心旁設立資源回收站，舉辦為期一個月的資源回收競賽，吸引了 90戶家庭熱烈參與。經過社區志工團仔細分類與統計，社區在這個月內一共回收了 420公斤的廢報紙、以及 180公斤的寶特瓶。另外也回收了 60支廢日光燈管，但日光燈管不列入本次重量回收款計算。回收商給予綠色社區的收購回饋價格為：廢報紙每公斤 5元，寶特瓶每公斤 12元。社區發展協會決定從所得的這筆回收總回饋金中，先撥出 1500元去花市採購花苗以美化中庭，其餘的剩餘資金則平分給在競賽中表現最好的 3個鄰里，作為他們的環境保護推廣金。請回答下列問題：',
+        questions: [
+          { q: '社區在這個月收回的廢報紙與寶特瓶，總重量共是多少公斤？', f: () => 420 + 180, u: '公斤' },
+          { q: '承上題，這批廢報紙與寶特瓶交給回收商後，社區發展協會能得到多少元回饋金？', f: (q1) => (420 * 5) + (180 * 12), u: '元' },
+          { q: '承上題，在買完綠色花苗美化社區中庭後，發展協會還剩下多少元？', f: (q1, q2) => q2 - 1500, u: '元' },
+          { q: '承上題，將剩餘資金平分發放，最優異的 3個鄰里，每鄰可以分得多少元？', f: (q1, q2, q3) => q3 / 3, u: '元' }
+        ]
+      }
+    ];
+
+    const s = stories[rng(0, stories.length - 1)];
+    const q1 = s.questions[0].f();
+    const q2 = s.questions[1].f(q1);
+    const q3 = s.questions[2].f(q1, q2);
+    const q4 = s.questions[3].f(q1, q2, q3);
+
+    const ansArr = [q1, q2, q3, q4];
+
+    const qs = [];
+    s.questions.forEach((qObj, index) => {
+      qs.push({
+        q: `<span class="q-label">問題 ${index + 1}：</span>${qObj.q}`,
+        a: `${ansArr[index]} ${qObj.u}`,
+        isLiteracy: true,
+        passage: index === 0 ? s.passage : null, // 僅首題攜帶文章內容
+        title: s.title
+      });
+    });
+    return qs;
+  }
+};
+
+/* ============================================================
+   模組路由對照表
+============================================================ */
+const MODULES = {
+  arithmetic: ArithModule,
+  add:        ArithModule,
+  sub:        ArithModule,
+  mul:        ArithModule,
+  div:        ArithModule,
+  fraction:   FractionModule,
+  decimal:    DecimalModule,
+  percent:    PercentModule,
+  length:     { gen: (c) => ConvModule.gen(c, 'length'), hint: () => '【重點】1公分(cm) ＝ 10公釐(mm)　1公尺(m) ＝ 100公分(cm)　1公里(km) ＝ 1000公尺(m)' },
+  weight:     { gen: (c) => ConvModule.gen(c, 'weight'), hint: () => '【重點】1公斤(kg) ＝ 1000公克(g)　1公噸(t) ＝ 1000公斤(kg)' },
+  capacity:   { gen: (c) => ConvModule.gen(c, 'capacity'), hint: () => '【重點】1公升(L) ＝ 1000毫升(mL)' },
+  area_conv:  { gen: (c) => ConvModule.gen(c, 'area_conv'), hint: () => '【重點】1平方公尺(m²)＝10000平方公分(cm²)　1公畝(a)＝100平方公尺(m²)　1公頃(ha)＝100公畝(a)　1平方公里(km²)＝100公頃(ha)' },
+  time_calc:  TimeModule,
+  money:      MoneyModule,
+  perimeter:  PerimeterModule,
+  area_geo:   AreaGeoModule,
+  volume:     VolumeModule,
+  word:       WordModule,
+  literacy:   LiteracyModule
+};
+
+/* ============================================================
+   UI 控制
+============================================================ */
+function onModuleChange() {
+  const mod = $('module').value;
+  const arithMods = ['arithmetic','add','sub','mul','div'];
+  const isArith = arithMods.includes(mod);
+  const isDiv = mod === 'div' || mod === 'arithmetic';
+  const isFrac = mod === 'fraction';
+  const isDec  = mod === 'decimal';
+  const isGeo  = ['perimeter','area_geo','volume'].includes(mod);
+  const isConv = ['length','weight','capacity','area_conv'].includes(mod);
+  const isLit  = mod === 'literacy';
+
+  $('grp-digit').style.display = isArith ? '' : 'none';
+  $('grp-arith-opts').style.display = isArith ? '' : 'none';
+  $('grp-filter').style.display = (isArith || isFrac || isDec) ? '' : 'none';
+  $('grp-rem').style.display   = isDiv   ? '' : 'none';
+  $('grp-frac').style.display  = isFrac  ? '' : 'none';
+  $('grp-dec').style.display   = isDec   ? '' : 'none';
+  $('grp-geo').style.display   = isGeo   ? '' : 'none';
+  $('grp-conv').style.display  = isConv  ? '' : 'none';
+  $('grp-count').style.display = isLit   ? 'none' : '';
+
+  // 限制幾何選項
+  const geoSelect = $('geoShape');
+  if (mod === 'perimeter') {
+    ['square','rect','triangle','random'].forEach(v => {
+      const opt = geoSelect.querySelector(`option[value="${v}"]`);
+      if (opt) opt.style.display = '';
+    });
+    ['para','trap','circle','cube','cuboid'].forEach(v => {
+      const opt = geoSelect.querySelector(`option[value="${v}"]`);
+      if (opt) opt.style.display = 'none';
+    });
+    if (!['square','rect','triangle','random'].includes(geoSelect.value)) geoSelect.value = 'random';
+  } else if (mod === 'area_geo') {
+    ['square','rect','triangle','para','trap','circle','random'].forEach(v => {
+      const opt = geoSelect.querySelector(`option[value="${v}"]`);
+      if (opt) opt.style.display = '';
+    });
+    ['cube','cuboid'].forEach(v => {
+      const opt = geoSelect.querySelector(`option[value="${v}"]`);
+      if (opt) opt.style.display = 'none';
+    });
+    if (['cube','cuboid'].includes(geoSelect.value)) geoSelect.value = 'random';
+  } else if (mod === 'volume') {
+    ['cube','cuboid','random'].forEach(v => {
+      const opt = geoSelect.querySelector(`option[value="${v}"]`);
+      if (opt) opt.style.display = '';
+    });
+    ['square','rect','triangle','para','trap','circle'].forEach(v => {
+      const opt = geoSelect.querySelector(`option[value="${v}"]`);
+      if (opt) opt.style.display = 'none';
+    });
+    if (!['cube','cuboid','random'].includes(geoSelect.value)) geoSelect.value = 'cube';
+  }
+}
+
+function toggleRemInputs() {
+  $('remRangeBox').style.display = $('allowRem').checked ? 'inline-flex' : 'none';
+}
+
+function showMsg(txt) {
+  $('msg-bar').className = 'show';
+  $('msg-text').textContent = txt;
+}
+function clearMsg() {
+  $('msg-bar').className = '';
+}
+
+/* ============================================================
+   A4 智慧自適應排版引擎 (智慧缩放核心)
+============================================================ */
+function fitToPage() {
+  const pageQ = $('page-q');
+  const qGrid = $('q-grid');
+  const pageA = $('page-a');
+  const aGrid = $('a-grid');
+
+  const headerH = pageQ.querySelector('.page-header').offsetHeight;
+  const infoH = pageQ.querySelector('.info-bar').offsetHeight;
+  const hintH = $('hint-box').classList.contains('show') ? $('hint-box').offsetHeight : 0;
+  const pageHeight = pageQ.clientHeight || 1047; // A4 像素高
+
+  // 計算可以分給題目網格的可用最大垂直高度
+  const availableHeight = pageHeight - headerH - infoH - hintH - 65; 
+
+  const count = qGrid.children.length;
+  if (count === 0) return;
+
+  const isWord = qGrid.querySelector('.word-item') !== null;
+  const isPassage = qGrid.querySelector('.passage-box') !== null;
+
+  // 1. 素養閱讀題排版
+  if (isPassage) {
+    qGrid.style.display = 'block';
+    aGrid.style.display = 'block';
+    qGrid.style.gridTemplateColumns = 'none';
+    qGrid.style.gridTemplateRows = 'none';
+    aGrid.style.gridTemplateColumns = 'none';
+    aGrid.style.gridTemplateRows = 'none';
+
+    let fs = 1.0;
+    qGrid.style.fontSize = `${fs}rem`;
+    aGrid.style.fontSize = `${fs}rem`;
+    let safety = 0;
+    while (pageQ.scrollHeight > pageQ.clientHeight && fs > 0.65 && safety < 25) {
+      fs -= 0.03;
+      qGrid.style.fontSize = `${fs}rem`;
+      aGrid.style.fontSize = `${fs}rem`;
+      safety++;
+    }
+    return;
+  }
+
+  // 2. 一般應用題排版
+  if (isWord) {
+    qGrid.style.display = 'flex';
+    qGrid.style.flexDirection = 'column';
+    qGrid.style.justifyContent = 'space-around';
+    aGrid.style.display = 'flex';
+    aGrid.style.flexDirection = 'column';
+    aGrid.style.justifyContent = 'space-around';
+
+    qGrid.style.gridTemplateColumns = 'none';
+    qGrid.style.gridTemplateRows = 'none';
+    aGrid.style.gridTemplateColumns = 'none';
+    aGrid.style.gridTemplateRows = 'none';
+
+    let fs = 1.1;
+    qGrid.style.fontSize = `${fs}rem`;
+    aGrid.style.fontSize = `${fs}rem`;
+    let safety = 0;
+    while (pageQ.scrollHeight > pageQ.clientHeight && fs > 0.7 && safety < 25) {
+      fs -= 0.04;
+      qGrid.style.fontSize = `${fs}rem`;
+      aGrid.style.fontSize = `${fs}rem`;
+      safety++;
+    }
+    return;
+  }
+
+  // 3. 標準算式題排版 (智慧多欄與雙向自適應縮放)
+  qGrid.style.display = 'grid';
+  aGrid.style.display = 'grid';
+  qGrid.style.flexDirection = 'initial';
+  qGrid.style.justifyContent = 'initial';
+  aGrid.style.flexDirection = 'initial';
+  aGrid.style.justifyContent = 'initial';
+
+  // 決定最初的最大欄數 (依據題目總量)
+  let maxCols = 4;
+  if (count <= 6) maxCols = 1;
+  else if (count <= 14) maxCols = 2;
+  else if (count <= 33) maxCols = 3;
+  else maxCols = 4;
+
+  const applyParams = (grid, rowH, fs, boxH, boxW) => {
+    grid.style.setProperty('--row-h', `${rowH}px`);
+    grid.style.setProperty('--font-size', `${fs}px`);
+    grid.style.setProperty('--box-h', `${boxH}px`);
+    grid.style.setProperty('--box-w', `${boxW}px`);
+  };
+
+  let cols = maxCols;
+  let fitted = false;
+
+  while (cols >= 1 && !fitted) {
+    qGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    aGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    const rows = Math.ceil(count / cols);
+    qGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    aGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+    const idealRowHeight = availableHeight / rows;
+    let fontSizePx = idealRowHeight * 0.46;
+    fontSizePx = Math.max(12, Math.min(38, fontSizePx));
+    let boxHPx = idealRowHeight * 0.68;
+    boxHPx = Math.max(22, Math.min(60, boxHPx));
+    let boxWPx = boxHPx * 1.35;
+    boxWPx = Math.max(35, Math.min(85, boxWPx));
+
+    applyParams(qGrid, idealRowHeight, fontSizePx, boxHPx, boxWPx);
+    applyParams(aGrid, idealRowHeight, fontSizePx, boxHPx, boxWPx);
+
+    let safety = 0;
+    let hasOverflow = true;
+
+    while (safety < 25) {
+      // 偵測垂直溢出
+      const vertOverflow = pageQ.scrollHeight > pageQ.clientHeight + 10;
+
+      // 偵測水平溢出 (題目文字 + 答題框是否超出該欄寬度)
+      let horizOverflow = false;
+      const colWidth = qGrid.clientWidth / cols;
+      const qItems = qGrid.querySelectorAll('.q-item');
+      for (let item of qItems) {
+        const textEl = item.querySelector('.q-text');
+        const boxEl = item.querySelector('.ans-box');
+        if (textEl && boxEl) {
+          const totalWidth = textEl.scrollWidth + boxEl.offsetWidth + 20; // 20px 緩衝
+          if (totalWidth > colWidth) {
+            horizOverflow = true;
+            break;
+          }
+        }
+      }
+
+      // 如果都沒有溢出，則此欄數與字體大小為完美適應
+      if (!vertOverflow && !horizOverflow) {
+        hasOverflow = false;
+        break;
+      }
+
+      // 否則，若字體大小還能縮小，就繼續縮小字體尺寸
+      if (fontSizePx > 11.5) {
+        fontSizePx -= 0.8;
+        boxHPx = Math.max(20, boxHPx - 0.8);
+        boxWPx = Math.max(30, boxWPx - 1.5);
+        applyParams(qGrid, idealRowHeight, fontSizePx, boxHPx, boxWPx);
+        applyParams(aGrid, idealRowHeight, fontSizePx, boxHPx, boxWPx);
+      } else {
+        // 已縮小到極限，仍發生溢出
+        break;
+      }
+      safety++;
+    }
+
+    if (!hasOverflow) {
+      fitted = true;
+    } else {
+      // 若字體縮小到極限仍溢出，則主動減少一欄（給予更寬的水平空間）重試
+      cols--;
+    }
+  }
+}
+
+/* ============================================================
+   主生成函式 Generate
+============================================================ */
+function generate() {
+  clearMsg();
+  usedUnitsGlobal.clear();
+
+  const mod = $('module').value;
+  const isLit = mod === 'literacy';
+  let count = isLit ? 4 : parseInt($('inputCount').value);
+  if (isNaN(count) || count < 1) count = 1;
+  if (count > 100) {
+    count = 100;
+    $('inputCount').value = 100;
+    showMsg('題數上限為 100，已自動調整為 100 題。');
+  }
+
+  const modObj = MODULES[mod];
+  if (!modObj) return;
+
+  // 收集篩選器數值
+  const filters = {
+    carryOpt: $('carryOpt').value,
+    borrowOpt: $('borrowOpt').value,
+    parityOpt: $('parityOpt').value,
+    ansMin: $('ansMin').value !== '' ? +$('ansMin').value : null,
+    ansMax: $('ansMax').value !== '' ? +$('ansMax').value : null,
+    remMin: $('remMin').value !== '' ? +$('remMin').value : null,
+    remMax: $('remMax').value !== '' ? +$('remMax').value : null
+  };
+
+  // 生成
+  const questions = modObj.gen(count, filters);
+  if (questions.length === 0) {
+    showMsg('符合條件的題目不足，請放寬限制或修改設定。');
+    return;
+  }
+  if (questions.length < count && !isLit) {
+    showMsg(`符合設定的題目不重複組合較少，僅生成了 ${questions.length} 題。`);
+  }
+
+  // 設定日期
+  const today = new Date();
+  $('date-str').textContent = `日期：${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+
+  // 設定標題
+  const titleText = (modObj.name ? modObj.name() : '數學挑戰卷') + `（${questions.length}題）`;
+  $('title-text').textContent = titleText;
+
+  // 生成提示說明文字
+  const hintBox = $('hint-box');
+  let hintHtml = '';
+  // 自動解析當前出現的換算公式
+  if (usedUnitsGlobal.size > 0) {
+    const list = [];
+    const mapping = {
+      'length_mm_cm': '1公分(cm) ＝ 10公釐(mm)',
+      'length_cm_m': '1公尺(m) ＝ 100公分(cm)',
+      'length_m_km': '1公里(km) ＝ 1000公尺(m)',
+      'weight_g_kg': '1公斤(kg) ＝ 1000公克(g)',
+      'weight_kg_t': '1公噸(t) ＝ 1000公斤(kg)',
+      'capacity_mL_L': '1公升(L) ＝ 1000毫升(mL)',
+      'area_conv_cm²_m²': '1平方公尺(m²) ＝ 10000平方公分(cm²)',
+      'area_conv_m²_a': '1公畝(a) ＝ 100平方公尺(m²)',
+      'area_conv_a_ha': '1公頃(ha) ＝ 100公畝(a)',
+      'area_conv_ha_km²': '1平方公里(km²) ＝ 100公頃(ha)'
+    };
+    usedUnitsGlobal.forEach(key => {
+      if (mapping[key]) list.push(mapping[key]);
+    });
+    if (list.length > 0) {
+      hintHtml = `<strong>【重點提示】</strong> ` + list.join(' ｜ ');
+    }
+  } else if (modObj.hint) {
+    const defaultHint = modObj.hint();
+    if (defaultHint) hintHtml = defaultHint;
+  }
+
+  if (hintHtml) {
+    hintBox.innerHTML = hintHtml;
+    hintBox.className = 'hint-box show';
+  } else {
+    hintBox.className = 'hint-box';
+  }
+
+  // 渲染
+  const qGrid = $('q-grid');
+  const aGrid = $('a-grid');
+  let qHtml = '', aHtml = '';
+
+  if (isLit) {
+    // 素養閱讀卷專用渲染
+    const first = questions[0];
+    const passageTitle = first.title;
+    const passageText = first.passage;
+
+    qHtml += `<div class="passage-box"><div class="passage-title">📖 閱讀主題：${passageTitle}</div>${passageText}</div>`;
+    aHtml += `<div class="passage-box"><div class="passage-title">📖 閱讀主題：${passageTitle}</div>${passageText}</div>`;
+
+    questions.forEach((item, i) => {
+      qHtml += `<div class="word-item" style="margin-bottom: 8px;">
+        <div>${item.q}</div>
+        <div class="ans-line">答：<div class="ans-box" style="min-width:120px; height:24px;"></div></div>
+      </div>`;
+      aHtml += `<div class="word-item" style="margin-bottom: 8px;">
+        <div>${item.q}</div>
+        <div class="ans-line">答：<div class="ans-box" style="min-width:120px; height:24px; color:#c0392b; border-color:#c0392b;">${item.a}</div></div>
+      </div>`;
+    });
+  } else if (questions[0].isWord) {
+    // 應用題渲染
+    questions.forEach((item, i) => {
+      qHtml += `<div class="word-item">
+        <div><span class="q-label">第 ${i+1} 題：</span>${item.q}</div>
+        <div class="ans-line">答：<div class="ans-box" style="min-width:110px; height:24px;"></div></div>
+      </div>`;
+      aHtml += `<div class="word-item">
+        <div><span class="q-label">第 ${i+1} 題：</span>${item.q}</div>
+        <div class="ans-line">答：<div class="ans-box" style="min-width:110px; height:24px; color:#c0392b; border-color:#c0392b;">${item.a}</div></div>
+      </div>`;
+    });
+  } else {
+    // 一般算式題渲染
+    questions.forEach((item, i) => {
+      qHtml += `<div class="q-item">
+        <div class="q-text"><span class="q-num">${i+1}</span>${item.q}</div>
+        <div class="ans-box"></div>
+      </div>`;
+      aHtml += `<div class="q-item">
+        <div class="q-text"><span class="q-num">${i+1}</span>${item.q}</div>
+        <div class="ans-box" style="color:#c0392b; border-color:#c0392b;">${item.a}</div>
+      </div>`;
+    });
+  }
+
+  qGrid.innerHTML = qHtml;
+  aGrid.innerHTML = aHtml;
+
+  // 智慧排版與溢出警告
+  setTimeout(() => {
+    fitToPage();
+    const overflowing = $('page-q').scrollHeight > $('page-q').clientHeight + 15;
+    $('page-q').classList.toggle('overflow-warn', overflowing);
+  }, 50);
+}
+
+/* ============================================================
+   出題規則儲存系統 (題庫設定儲存 V1)
+============================================================ */
+const STORAGE_KEY = 'primary_math_v1_configs';
+
+// 預設經典規則
+const DEFAULT_CONFIGS = {
+  '三年級每日練習': {
+    module: 'arithmetic', digit1: '2', digit2: '2', carryOpt: 'auto', borrowOpt: 'auto',
+    parityOpt: 'auto', ansMin: '', ansMax: '', allowRem: false, remMin: '', remMax: '',
+    fracType: 'add_same', decOp: '+', decDigit: '1', geoShape: 'random', convDir: 'random',
+    unitFormat: 'zh', inputCount: '40'
+  },
+  '五年級分數加減': {
+    module: 'fraction', digit1: '2', digit2: '2', carryOpt: 'auto', borrowOpt: 'auto',
+    parityOpt: 'auto', ansMin: '', ansMax: '', allowRem: false, remMin: '', remMax: '',
+    fracType: 'add_diff', decOp: '+', decDigit: '1', geoShape: 'random', convDir: 'random',
+    unitFormat: 'zh', inputCount: '20'
+  },
+  '六年級面積換算': {
+    module: 'area_conv', digit1: '2', digit2: '2', carryOpt: 'auto', borrowOpt: 'auto',
+    parityOpt: 'auto', ansMin: '', ansMax: '', allowRem: false, remMin: '', remMax: '',
+    fracType: 'add_same', decOp: '+', decDigit: '1', geoShape: 'random', convDir: 'random',
+    unitFormat: 'mixed', inputCount: '24'
+  },
+  '幾何周長與面積': {
+    module: 'area_geo', digit1: '2', digit2: '2', carryOpt: 'auto', borrowOpt: 'auto',
+    parityOpt: 'auto', ansMin: '', ansMax: '', allowRem: false, remMin: '', remMax: '',
+    fracType: 'add_same', decOp: '+', decDigit: '1', geoShape: 'random', convDir: 'random',
+    unitFormat: 'zh', inputCount: '15'
+  },
+  '素養閱讀連鎖題': {
+    module: 'literacy', digit1: '2', digit2: '2', carryOpt: 'auto', borrowOpt: 'auto',
+    parityOpt: 'auto', ansMin: '', ansMax: '', allowRem: false, remMin: '', remMax: '',
+    fracType: 'add_same', decOp: '+', decDigit: '1', geoShape: 'random', convDir: 'random',
+    unitFormat: 'zh', inputCount: '4'
+  }
+};
+
+function initConfigSystem() {
+  let saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIGS));
+    saved = JSON.stringify(DEFAULT_CONFIGS);
+  }
+  updateConfigDropdown();
+}
+
+function updateConfigDropdown() {
+  const select = $('configSelect');
+  select.innerHTML = '<option value="">-- 載入預設/已存規則 --</option>';
+  
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  Object.keys(saved).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+}
+
+function saveConfig() {
+  const name = $('configName').value.trim();
+  if (!name) {
+    alert('請輸入規則名稱！');
+    return;
+  }
+  const config = {
+    module: $('module').value,
+    digit1: $('digit1').value,
+    digit2: $('digit2').value,
+    carryOpt: $('carryOpt').value,
+    borrowOpt: $('borrowOpt').value,
+    parityOpt: $('parityOpt').value,
+    ansMin: $('ansMin').value,
+    ansMax: $('ansMax').value,
+    allowRem: $('allowRem').checked,
+    remMin: $('remMin').value,
+    remMax: $('remMax').value,
+    fracType: $('fracType').value,
+    decOp: $('decOp').value,
+    decDigit: $('decDigit').value,
+    geoShape: $('geoShape').value,
+    convDir: $('convDir').value,
+    unitFormat: $('unitFormat').value,
+    inputCount: $('inputCount').value
+  };
+
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  saved[name] = config;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  
+  updateConfigDropdown();
+  $('configSelect').value = name;
+  $('configName').value = '';
+  alert(`規則【${name}】已成功儲存！`);
+}
+
+function loadConfig() {
+  const name = $('configSelect').value;
+  if (!name) return;
+
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  const c = saved[name];
+  if (!c) return;
+
+  $('module').value = c.module;
+  $('digit1').value = c.digit1;
+  $('digit2').value = c.digit2;
+  $('carryOpt').value = c.carryOpt;
+  $('borrowOpt').value = c.borrowOpt;
+  $('parityOpt').value = c.parityOpt;
+  $('ansMin').value = c.ansMin;
+  $('ansMax').value = c.ansMax;
+  $('allowRem').checked = c.allowRem;
+  $('remMin').value = c.remMin;
+  $('remMax').value = c.remMax;
+  $('fracType').value = c.fracType;
+  $('decOp').value = c.decOp;
+  $('decDigit').value = c.decDigit;
+  $('geoShape').value = c.geoShape;
+  $('convDir').value = c.convDir;
+  $('unitFormat').value = c.unitFormat;
+  $('inputCount').value = c.inputCount;
+
+  onModuleChange();
+  toggleRemInputs();
+  generate();
+}
+
+function deleteConfig() {
+  const name = $('configSelect').value;
+  if (!name) {
+    alert('請先選擇要刪除的規則！');
+    return;
+  }
+  if (DEFAULT_CONFIGS[name]) {
+    alert('無法刪除預設的經典出題規則！');
+    return;
+  }
+  if (confirm(`確定要刪除規則【${name}】嗎？`)) {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    delete saved[name];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    updateConfigDropdown();
+    generate();
+  }
+}
+
+/* ============================================================
+   初始化
+============================================================ */
+window.onload = function() {
+  initConfigSystem();
+  onModuleChange();
+  // 預設載入「三年級每日練習」
+  $('configSelect').value = '三年級每日練習';
+  loadConfig();
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國小數學素養閱讀題生成器 - 簡易隨機版</title>
+<meta name="description" content="自動生成與自訂簡易版國小數學素養閱讀連鎖題，數字限制在100以內，計算僅含加減乘除且可整除，支援動態隨機出題、A4排版列印與一鍵複製。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ========================================================
+   設計令牌 Design Tokens
+   ======================================================== */
+:root {
+  --bg-dark: #0a0f1d;
+  --bg-panel: #141c32;
+  --bg-card: #1e2945;
+  --accent: #ff4757;
+  --accent-hover: #ff6b81;
+  --green: #2ed573;
+  --green-hover: #26af5f;
+  --blue: #1e90ff;
+  --text-light: #f1f2f6;
+  --text-muted: #a4b0be;
+  --border: #2e3e60;
+  --radius: 12px;
+  --shadow: 0 12px 40px rgba(0,0,0,0.5);
+  --print-accent: #c0392b;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-light);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ========================================================
+   儀表板標題 Dashboard Header
+   ======================================================== */
+.dashboard-header {
+  background: var(--bg-panel);
+  border-bottom: 2px solid var(--accent);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dashboard-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-title h1 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.dashboard-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: rgba(255, 71, 87, 0.1);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 71, 87, 0.2);
+}
+
+/* ========================================================
+   主版面結構 (左右分欄)
+   ======================================================== */
+.main-layout {
+  display: flex;
+  flex: 1;
+  gap: 28px;
+  padding: 28px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 側邊參數控制欄 */
+.config-panel {
+  width: 360px;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.config-section-title {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--accent);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 8px;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 輸入控件與滑桿 */
+.control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-label-group {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+select {
+  background: #090e1a;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+select:focus { border-color: var(--accent); }
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider-container input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.slider-value {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* 隨機變數對照表 */
+.var-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.var-table th, .var-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.var-table th {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.var-table tr:last-child td {
+  border-bottom: none;
+}
+
+.var-badge {
+  display: inline-block;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: monospace;
+  font-weight: 700;
+  color: #ffb86c;
+}
+
+/* 按鈕樣式 */
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.1s, filter 0.2s, background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  width: 100%;
+}
+.btn:active { transform: scale(0.97); }
+.btn-gen { background: linear-gradient(135deg, var(--accent), #ff6b81); }
+.btn-gen:hover { filter: brightness(1.1); }
+.btn-print { background: linear-gradient(135deg, var(--green), #26af5f); }
+.btn-print:hover { filter: brightness(1.1); }
+.btn-copy { background: var(--bg-card); border: 1px solid var(--border); font-size: 0.8rem; padding: 8px 12px; }
+.btn-copy:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--text-muted); }
+
+/* ========================================================
+   A4 紙張排版預覽 PREVIEW
+   ======================================================== */
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  flex: 1;
+}
+
+.a4-page {
+  background: #fff;
+  color: #111;
+  width: 210mm;
+  height: 297mm;
+  padding: 15mm 15mm;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.page-header h2 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin: 0;
+  color: #111;
+}
+
+.student-info-bar {
+  display: flex;
+  justify-content: space-between;
+  border-top: 3px solid #111;
+  border-bottom: 3px solid #111;
+  padding: 6px 4px;
+  margin-bottom: 14px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* 故事閱讀框 */
+.passage-card {
+  border: 2.5px solid #222;
+  border-radius: 8px;
+  background: #fdfdfa;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  line-height: 1.7;
+  font-size: 0.92rem;
+  text-align: justify;
+}
+
+.passage-title {
+  font-weight: 900;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+  color: #c0392b;
+  border-bottom: 2px solid #c0392b;
+  padding-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 題目清單 */
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.question-item {
+  border: 1px solid #dfe6e9;
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: #fcfcfc;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.question-text {
+  font-weight: 700;
+}
+
+.question-label {
+  font-weight: 900;
+  color: #c0392b;
+}
+
+.answer-space {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-top: 1px dashed #dfe6e9;
+  padding-top: 8px;
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+.answer-box {
+  border: 2px solid #111;
+  border-radius: 6px;
+  min-width: 140px;
+  height: 28px;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+}
+
+/* 答案卷專屬樣式 */
+.answer-page {
+  display: none;
+}
+.answer-page .answer-box {
+  color: var(--print-accent);
+  border-color: var(--print-accent);
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+.answer-page .student-info-bar {
+  border-color: var(--print-accent);
+  color: var(--print-accent);
+}
+
+/* ========================================================
+   列印與響應式排版
+   ======================================================== */
+@media (max-width: 1024px) {
+  .main-layout {
+    flex-direction: column;
+    padding: 16px;
+    gap: 20px;
+  }
+  .config-panel {
+    width: 100%;
+    position: static;
+  }
+  .preview-container {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 20px;
+  }
+  .a4-page {
+    flex-shrink: 0;
+  }
+}
+
+@media print {
+  .dashboard-header, .config-panel { display: none !important; }
+  body { background: #fff; overflow: visible; }
+  .main-layout { padding: 0; margin: 0; max-width: none; width: auto; display: block; }
+  .preview-container { padding: 0; gap: 0; display: block; }
+  .a4-page {
+    box-shadow: none;
+    margin: 0;
+    width: 210mm;
+    height: 297mm;
+    page-break-after: always;
+    float: none;
+  }
+  .answer-page { display: flex !important; }
+  .page-header h2, .question-label, .passage-title { color: var(--print-accent) !important; border-color: var(--print-accent) !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- 頂部控制列 -->
+<header class="dashboard-header">
+  <div class="dashboard-title">
+    <h1>📐 數學素養連鎖題產生器</h1>
+    <span class="dashboard-subtitle">低中年級簡易版</span>
+  </div>
+</header>
+
+<!-- 主排版區 -->
+<main class="main-layout">
+  
+  <!-- 側邊自訂與操作面板 -->
+  <aside class="config-panel" id="config-panel">
+    
+    <!-- 題目設定區 -->
+    <div class="config-section">
+      <div class="config-section-title">📋 題目設定</div>
+      
+      <div class="control-item">
+        <div class="control-label-group">
+          <span>情境故事主題</span>
+        </div>
+        <select id="story-select" onchange="generate()">
+          <option value="random">🎲 隨機情境故事</option>
+          <option value="farm">🚜 快樂農場水果採收</option>
+          <option value="fair">🎪 愛心園遊會冷飲攤</option>
+          <option value="recycling">♻️ 資源回收換貼紙</option>
+          <option value="bakery">🍞 美味烘焙坊出爐</option>
+          <option value="library">📚 星空圖書館挑戰</option>
+          <option value="stationery">✏️ 歡樂文具店採購</option>
+          <option value="sports">🏃 學校趣味運動會</option>
+          <option value="castle">🏰 積木城堡玩具拼裝</option>
+        </select>
+      </div>
+
+      <div class="control-item">
+        <div class="control-label-group">
+          <span>數字上限值限制</span>
+          <span class="slider-value" id="max-value-display">100</span>
+        </div>
+        <div class="slider-container">
+          <input type="range" id="max-value-slider" min="30" max="100" step="5" value="100" oninput="updateSliderVal(this.value)" onchange="generate()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 變數檢視器 -->
+    <div class="config-section">
+      <div class="config-section-title">🔍 當前數值對照表 (皆≤百位)</div>
+      <table class="var-table">
+        <thead>
+          <tr>
+            <th>變數</th>
+            <th>說明</th>
+            <th>數值</th>
+          </tr>
+        </thead>
+        <tbody id="var-table-body">
+          <!-- 動態填充 -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 操作按鈕 -->
+    <div class="config-section">
+      <button class="btn btn-gen" onclick="generate()">⚡ 重新隨機生成</button>
+      <button class="btn btn-print" onclick="window.print()">🖨️ 列印 A4 (題目+答案)</button>
+    </div>
+
+    <!-- 複製工具 -->
+    <div class="config-section">
+      <div class="config-section-title">📂 複製工具</div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-copy" onclick="copyText('q')" style="flex: 1;">📋 複製題目</button>
+        <button class="btn btn-copy" onclick="copyText('a')" style="flex: 1;">📋 複製答案</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- A4 預覽區 -->
+  <section class="preview-container">
+    
+    <!-- 題目卷 -->
+    <article class="a4-page" id="question-sheet">
+      <div class="page-header"><h2 id="q-sheet-title">數學素養閱讀挑戰卷</h2></div>
+      <div class="student-info-bar">
+        <span>姓名：___________</span>
+        <span id="date-string">日期：____年____月____日</span>
+        <span>得分：___________</span>
+      </div>
+      <div class="passage-card" id="q-passage-container"></div>
+      <div class="question-list" id="q-list-container"></div>
+    </article>
+
+    <!-- 答案卷 -->
+    <article class="a4-page answer-page" id="answer-sheet">
+      <div class="page-header"><h2 id="a-sheet-title">【答案卷】批改對照用</h2></div>
+      <div class="student-info-bar" style="border-color: var(--print-accent); color: var(--print-accent);">
+        <span>教師批改專用 — 請勿發給學生</span>
+      </div>
+      <div class="passage-card" id="a-passage-container"></div>
+      <div class="question-list" id="a-list-container"></div>
+    </article>
+
+  </section>
+
+</main>
+
+<script>
+'use strict';
+
+// 產生指定範圍的隨機整數
+function rng(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// 隨機打亂陣列
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// 八大故事主題庫 (每個情境故事字數精準設定在 450~500 字左右，最符合小學生閱讀難度)
+const stories = [
+  {
+    id: "farm",
+    title: "快樂農場水果採收",
+    icon: "🚜",
+    vars_desc: {
+      A: "水果總收穫量",
+      B: "運送碰撞受損量",
+      Q1: "好水果淨重量 (A - B)",
+      C: "每袋分裝重量",
+      Q2: "包裝分裝袋數 (Q1 ÷ C)",
+      D: "每袋出售價格",
+      Q3: "出售總收入款 (Q2 × D)",
+      E: "平分獎金人數",
+      Q4: "每人分得獎金 (Q3 ÷ E)"
+    },
+    genRandom(maxVal) {
+      for (let i = 0; i < 2000; i++) {
+        const C = rng(2, 8);
+        const E = rng(2, 5);
+        const Q2 = rng(3, Math.floor(maxVal / C));
+        const Q1 = Q2 * C;
+        const B = rng(2, 20);
+        const A = Q1 + B;
+        
+        const D = rng(2, Math.floor(maxVal / Q2));
+        const Q3 = Q2 * D;
+        if (Q3 % E === 0) {
+          const Q4 = Q3 / E;
+          if (A <= maxVal && B <= maxVal && C <= maxVal && D <= maxVal && E <= maxVal &&
+              Q1 <= maxVal && Q2 <= maxVal && Q3 <= maxVal && Q4 <= maxVal) {
+            return { A, B, C, D, E, Q1, Q2, Q3, Q4 };
+          }
+        }
+      }
+      return null;
+    },
+    getPassage(p) {
+      return `在翠綠群山環繞的綠谷深處，有一座歷史修久且非常有名的「快樂農場」。這裡一年四季氣候溫和，陽光充足，種植出來的水果都格外清甜多汁。每到夏天採收季節，總會吸引許多盤商前來搶購。為了避開中午炎熱的高溫，果園主人王伯伯在清晨五點鐘就召集了當地的村民和志工，推著推車分工合作進行大規模的水果採收工作。大家一邊唱歌一邊辛勤勞動，一共採收了 ${p.A}公斤的水果。然而，在將水果載回倉庫的運送過程中，因為山路路面有些凹凸不平，導致貨車有些劇烈顛簸，結果有 ${p.B}公斤的水果碰撞受損，實在是無法進行正常販售。為維持農場的優良品質，王伯伯計劃把剩餘能出售的優良水果進行整理與分裝，規定每 ${p.C}公斤裝成一袋來出貨。下午時分，長期合作的林老闆開著貨車前來採購，決定以每袋 ${p.D}元的價格向王伯伯全數買下所有裝袋好的水果。交易完成後，王伯伯覺得大家今天都非常辛苦，決定把這筆賣出水果的所有收入，平分給包含他自己在內的 ${p.E}位工作人員作為特別獎金。請根據上述文章的資訊回答下列問題：`;
+    },
+    solve(p) {
+      return [
+        { q: "王伯伯採收的水果中，可以包裝販售的好水果共有多少公斤？", ans: `${p.Q1} 公斤` },
+        { q: "承上題，這些優質水果一共可以包裝成多少袋？(未滿一袋不計)", ans: `${p.Q2} 袋` },
+        { q: "承上題，林老闆買下所有包裝好的水果，王伯伯共可收到多少元？", ans: `${p.Q3} 元` },
+        { q: "承上題，平分下來每位工作人員可以分得多少元獎金？", ans: `${p.Q4} 元` }
+      ];
+    }
+  },
+  {
+    id: "fair",
+    title: "愛心園遊會冷飲攤",
+    icon: "🎪",
+    vars_desc: {
+      A: "準備紅茶杯數",
+      B: "準備綠茶杯數",
+      Q1: "特調茶飲總杯數 (A + B)",
+      C: "每盒裝入杯數",
+      Q2: "包裝成盒子袋數 (Q1 ÷ C)",
+      D: "每盒特調售價",
+      Q3: "全部售出總收入 (Q2 × D)",
+      E: "購買吸管紙盒成本",
+      Q4: "最後存入基金 (Q3 - E)"
+    },
+    genRandom(maxVal) {
+      for (let i = 0; i < 2000; i++) {
+        const A = rng(10, 40);
+        const B = rng(10, 40);
+        const Q1 = A + B;
+        const C = rng(2, 8);
+        if (Q1 % C === 0) {
+          const Q2 = Q1 / C;
+          const D = rng(2, Math.floor(maxVal / Q2));
+          const Q3 = Q2 * D;
+          const E = rng(5, Math.min(35, Q3 - 2));
+          const Q4 = Q3 - E;
+          if (A <= maxVal && B <= maxVal && C <= maxVal && D <= maxVal && E <= maxVal &&
+              Q1 <= maxVal && Q2 <= maxVal && Q3 <= maxVal && Q4 <= maxVal) {
+            return { A, B, C, D, E, Q1, Q2, Q3, Q4 };
+          }
+        }
+      }
+      return null;
+    },
+    getPassage(p) {
+      return `光明國小一年一度的愛心園遊會今天在操場上隆重登場，現場彩旗飄揚，到處都充滿了歡笑聲與叫賣聲，非常熱鬧。五年二班的同學們為了這次活動做了充足的準備，他們籌劃了一個特色攤位叫做「手工冷飲小舖」，準備為前來參觀的家長和學生提供清涼消暑的特調飲品。同學們分工合作，在攤位後方精心準備了 ${p.A}杯古早味冬瓜茶和 ${p.B}杯手作純檸檬汁，並將它們以黃金比例混合，調配成大受歡迎的特調綜合飲品。為了方便顧客整盒購買以及攜帶，大家決定將調配出來的特調茶飲，每 ${p.C}杯裝成一個精美的手提紙盒，每盒的售價固定是 ${p.D}元。另外，攤位旁也擺設了代售的手工小貼紙，不過這部分的收入並不計入飲料的帳目中。直到下午三點園遊會順利結束時，所有調配出來的特調綜合茶飲全部順利賣完。班長小明在收攤結算時，扣除了購買吸管、紙盒等包裝材料的成本共 ${p.E}元，並決定將扣除成本後剩下的所有盈餘，全部存入班級的讀書會基金，用來購買下學期大家想看的科普書籍。請根據上述文章回答下列問題：`;
+    },
+    solve(p) {
+      return [
+        { q: "同學們調配出的綜合茶飲，全部一共有多少杯？", ans: `${p.Q1} 杯` },
+        { q: "承上題，這批飲料一共可以包裝成多少盒？", ans: `${p.Q2} 盒` },
+        { q: "承上題，若包裝好的茶飲全部賣完，總收入共有多少元？", ans: `${p.Q3} 元` },
+        { q: "承上題，扣除吸管與紙盒成本後，最後可以存入班級基金多少元？", ans: `${p.Q4} 元` }
+      ];
+    }
+  },
+  {
+    id: "recycling",
+    title: "資源回收愛護地球",
+    icon: "♻️",
+    vars_desc: {
+      A: "收集到的回收瓶數",
+      B: "收集到的廢紙盒數",
+      Q1: "回收物總件數 (A + B)",
+      C: "兌換1點所需件數",
+      Q2: "一共可換得點數 (Q1 ÷ C)",
+      D: "每點可換貼紙張數",
+      Q3: "獲得獎勵貼紙數 (Q2 × D)",
+      E: "平分貼紙的小朋友數",
+      Q4: "每人分得貼紙數 (Q3 ÷ E)"
+    },
+    genRandom(maxVal) {
+      for (let i = 0; i < 2000; i++) {
+        const A = rng(10, 40);
+        const B = rng(10, 40);
+        const Q1 = A + B;
+        const C = rng(2, 6);
+        if (Q1 % C === 0) {
+          const Q2 = Q1 / C;
+          const D = rng(2, Math.floor(maxVal / Q2));
+          const Q3 = Q2 * D;
+          const E = rng(2, 5);
+          if (Q3 % E === 0) {
+            const Q4 = Q3 / E;
+            if (A <= maxVal && B <= maxVal && C <= maxVal && D <= maxVal && E <= maxVal &&
+                Q1 <= maxVal && Q2 <= maxVal && Q3 <= maxVal && Q4 <= maxVal) {
+              return { A, B, C, D, E, Q1, Q2, Q3, Q4 };
+            }
+          }
+        }
+      }
+      return null;
+    },
+    getPassage(p) {
+      return `幸福社區為了宣導環境保護與資源回收的綠色概念，在社區活動中心旁舉辦了資源回收換好禮競賽，鼓勵大家把家中的廢棄物進行分類。熱心的國小學生小明也積極參與了這個活動。在這個月期間，小明放學回家後都幫忙整理家裡的垃圾，他把喝完飲料的寶特瓶清洗乾淨並踩扁，最後一共收集到了 ${p.A}個回收瓶，同時他也將快遞紙箱和飲料盒收集起來，一共收集了 ${p.B}個廢紙盒。另外小明還撿到了 15支日光燈管，但主辦單位規定日光燈管不列入本次的重量回收物件數統計中。根據活動規則，每 ${p.C}個合格的資源回收物（即回收瓶與廢紙盒的總和）可以兌換 1點環保點數，這些點數會被記錄在存摺中。陳阿姨告訴小明，每 1點環保點數可以兌換 ${p.D}張精美的卡通貼紙。小明聽了高興極了，決定將今天獲得的點數全部兌換成貼紙。拿到貼紙後，小明覺得這份環保成果是班上好朋友一起幫忙宣傳的功勞，於是他決定將換到的貼紙全部平分給包含他自己在內的 ${p.E}位好朋友，大家一起分享這份愛護地球的喜悅。請根據上述文章的資訊回答下列問題：`;
+    },
+    solve(p) {
+      return [
+        { q: "小明在這個月收回的回收瓶與廢紙盒，總數量共是多少個？", ans: `${p.Q1} 個` },
+        { q: "承上題，小明用這些回收物一共可以兌換多少點點數？", ans: `${p.Q2} 點` },
+        { q: "承上題，小明兌換完後，共可得到多少張獎勵貼紙？", ans: `${p.Q3} 張` },
+        { q: "承上題，將獎勵貼紙平分給好朋友後，每個人可以分得多少張？", ans: `${p.Q4} 張` }
+      ];
+    }
+  },
+  {
+    id: "bakery",
+    title: "美味烘焙坊大出爐",
+    icon: "🍞",
+    vars_desc: {
+      A: "烤好的奶油麵包數",
+      B: "烤好的紅豆麵包數",
+      Q1: "烤好麵包總個數 (A + B)",
+      C: "每袋包裝麵包數",
+      Q2: "全部可包裝袋數 (Q1 ÷ C)",
+      D: "每袋出售之價格",
+      Q3: "售完總營業金額 (Q2 × D)",
+      E: "奶油麵粉原物料成本",
+      Q4: "今天麵包淨利潤 (Q3 - E)"
+    },
+    genRandom(maxVal) {
+      for (let i = 0; i < 2000; i++) {
+        const A = rng(10, 40);
+        const B = rng(10, 40);
+        const Q1 = A + B;
+        const C = rng(2, 8);
+        if (Q1 % C === 0) {
+          const Q2 = Q1 / C;
+          const D = rng(2, Math.floor(maxVal / Q2));
+          const Q3 = Q2 * D;
+          const E = rng(5, Math.min(35, Q3 - 2));
+          const Q4 = Q3 - E;
+          if (A <= maxVal && B <= maxVal && C <= maxVal && D <= maxVal && E <= maxVal &&
+              Q1 <= maxVal && Q2 <= maxVal && Q3 <= maxVal && Q4 <= maxVal) {
+            return { A, B, C, D, E, Q1, Q2, Q3, Q4 };
+          }
+        }
+      }
+      return null;
+    },
+    getPassage(p) {
+      return `小林麵包坊位於社區的小角落，每天清晨都會飄出陣陣的烘焙香氣，吸引許多趕著上學和上班的鄰居前來購買。今天清晨，忙碌的麵包坊師傅在廚房裡大展身手，上午一共烤好了 ${p.A}個香甜的奶油麵包和 ${p.B}個防腐手作紅豆麵包。為了讓前來買早餐的顧客方便攜帶，店員熱心地將這些熱騰騰的麵包混搭裝袋，每 ${p.C}個麵包裝成一袋。包裝好之後，每袋麵包的零售價格統一訂為 ${p.D}元。今天早上的生意非常好，不到十點半，所有包裝好的麵包就全部順利賣光了。另外，店裡今天也順便代售了隔壁牧場送來的鮮奶（每瓶 15元，共賣出 10瓶，但這筆鮮奶的收入並不計入麵包的營業額中）。中午結算時，店長拿著帳單扣除了今天早上製作麵包所使用的奶油、麵粉與雞蛋等原物料成本共 ${p.E}元。最後，店長決定將扣除成本後剩下的這筆麵包營業淨利潤，平均分給店裡的員工當作本週的加班獎勵，感謝大家今天清晨辛苦地工作。請根據上述文章的描述回答下列問題：`;
+    },
+    solve(p) {
+      return [
+        { q: "烘焙坊今天上午一共烤好了多少個麵包？", ans: `${p.Q1} 個` },
+        { q: "承上題，這些麵包全部可以包裝成多少袋？", ans: `${p.Q2} 袋` },
+        { q: "承上題，若袋裝麵包全部售出，總營業額是多少元？", ans: `${p.Q3} 元` },
+        { q: "承上題，在扣除奶油與麵粉的成本後，烘焙坊賺得了多少元淨利潤？", ans: `${p.Q4} 元` }
+      ];
+    }
+  },
+  {
+    id: "library",
+    title: "星空圖書館挑戰",
+    icon: "📚",
+    vars_desc: {
+      A: "書籍總頁數",
+      B: "第一天已讀頁數",
+      Q1: "剩下未讀之頁數 (A - B)",
+      C: "預計每天閱讀頁數",
+      Q2: "讀完剩餘頁天數 (Q1 ÷ C)",
+      D: "每天閱讀獲得點數",
+      Q3: "累計獲得總點數 (Q2 × D)",
+      E: "每支小鉛筆所需點數",
+      Q4: "可換小鉛筆支數 (Q3 ÷ E)"
+    },
+    genRandom(maxVal) {
+      for (let i = 0; i < 2000; i++) {
+        const B = rng(10, 40);
+        const Q2 = rng(2, 10);
+        const C = rng(2, 8);
+        const Q1 = Q2 * C;
+        const A = Q1 + B;
+        const D = rng(2, Math.floor(maxVal / Q2));
+        const Q3 = Q2 * D;
+        const E = rng(2, 6);
+        if (Q3 % E === 0) {
+          const Q4 = Q3 / E;
+          if (A <= maxVal && B <= maxVal && C <= maxVal && D <= maxVal && E <= maxVal &&
+              Q1 <= maxVal && Q2 <= maxVal && Q3 <= maxVal && Q4 <= maxVal) {
+            return { A, B, C, D, E, Q1, Q2, Q3, Q4 };
+          }
+        }
+      }
+      return null;
+    },
+    getPassage(p) {
+      return `市立星空圖書館為了推廣學童的閱讀習慣，這週特別舉辦了名為「小小書蟲暑期閱讀挑戰賽」的趣味活動。小美挑選了一本非常有趣的冒險故事書來參加挑戰，這本故事書印刷精美，一共有 ${p.A}頁。小美非常喜歡書中精彩的情節，在挑戰的第一天就已經迫不及待地讀完了 ${p.B}頁。為了讓自己能養成規律讀書的好習慣，小美特別做了一個閱讀進度計畫，決定在接下來的幾天裡，每天固定閱讀 ${p.C}頁，直到把這本書剩下未讀的頁數全部讀完為止。圖書館規定，在挑戰賽的活動期間，每讀完一天的計畫頁數，就可以在閱讀護照上蓋一個章並累積點數 ${p.D}點。小美非常專心且自律，最後順利完成了這本書的閱讀挑戰，並且拿到了累積的全部點數。她決定將這些點數全部拿去圖書館的服務台，兌換每支需要 ${p.E}點的環保小鉛筆，帶回班上發給同組的組員當作小禮物，大家一起分享努力讀書的成就感。請根據上述文章回答下列問題：`;
+    },
+    solve(p) {
+      return [
+        { q: "在第一天結束後，小美還有多少頁書沒有讀完？", ans: `${p.Q1} 頁` },
+        { q: `承上題，小美每天閱讀 ${p.C}頁，她還需要花多少天才能把書全部讀完？`, ans: `${p.Q2} 天` },
+        { q: "承上題，小美讀完剩下的書後，總共累積了多少點數？", ans: `${p.Q3} 點` },
+        { q: "承上題，若小美將點數全部拿來兌換，一共可以換得多少支小鉛筆？", ans: `${p.Q4} 支` }
+      ];
+    }
+  },
+  {
+    id: "stationery",
+    title: "歡樂文具店採購",
+    icon: "✏️",
+    vars_desc: {
+      A: "挑選筆記本數量",
+      B: "筆記本單件售價",
+      Q1: "筆記本合計總額 (A × B)",
+      C: "加購精緻鉛筆盒價",
+      Q2: "未折抵合計總額 (Q1 + C)",
+      D: "使用折價券折抵",
+      Q3: "折抵後實付金額 (Q2 - D)",
+      E: "平分付款主要幹部",
+      Q4: "每人應分攤金額 (Q3 ÷ E)"
+    },
+    genRandom(maxVal) {
+      for (let i = 0; i < 2000; i++) {
+        const A = rng(2, 8);
+        const B = rng(3, 10);
+        const Q1 = A * B;
+        const C = rng(5, Math.min(50, maxVal - Q1));
+        const Q2 = Q1 + C;
+        const D = rng(5, Math.min(30, Q2 - 2));
+        const Q3 = Q2 - D;
+        const E = rng(2, 5);
+        if (Q3 % E === 0) {
+          const Q4 = Q3 / E;
+          if (A <= maxVal && B <= maxVal && C <= maxVal && D <= maxVal && E <= maxVal &&
+              Q1 <= maxVal && Q2 <= maxVal && Q3 <= maxVal && Q4 <= maxVal) {
+            return { A, B, C, D, E, Q1, Q2, Q3, Q4 };
+          }
+        }
+      }
+      return null;
+    },
+    getPassage(p) {
+      return `下週五下午，三年二班即將在教室裡舉辦期末成果發表會。為了鼓勵同學們在發表會上的優秀表現，導師特地委託了班級幹部小明和小華，利用週末時間代表班級去採購搶答環節的獎品。老師給了他們一筆班級公費，並特別叮嚀要仔細清點，做好記帳與收據整理工作。小明和小華來到學校附近的歡樂文具店，經過仔細挑選，決定先挑選 ${p.A}本封面精美、內頁為橫線設計的筆記本，每本筆記本的零售價格是 ${p.B}元。接著，為了作為發表會搶答環節的特等大獎，他們又挑選加購了一個價值 ${p.C}元的精緻鉛筆盒。另外，他們也買了海報紙和佈置用氣球，但這部分費用已由導師自行付清，不計入筆記本與鉛筆盒的累計帳目中。選好獎品後，他們來到櫃檯結帳。此時小華想起來書包裡有一張店家的班級特約折價券，出示之後順利折抵了 ${p.D}元。折抵過後的實付總金額，最後由班上的 ${p.E}位主要幹部平均分攤付款。請根據上述文章的詳細資訊回答下列問題：`;
+    },
+    solve(p) {
+      return [
+        { q: "班幹部購買這些筆記本，合計需要花費多少元？", ans: `${p.Q1} 元` },
+        { q: "承上題，加購鉛筆盒後，筆記本與鉛筆盒合計價格共是多少元？", ans: `${p.Q2} 元` },
+        { q: "承上題，使用折價券折抵後，他們實際總共付了多少元？", ans: `${p.Q3} 元` },
+        { q: "承上題，由主要幹部平均分攤後，每位幹部應出多少元？", ans: `${p.Q4} 元` }
+      ];
+    }
+  },
+  {
+    id: "sports",
+    title: "學校趣味運動會",
+    icon: "🏃",
+    vars_desc: {
+      A: "參賽男生總人數",
+      B: "參賽女生總人數",
+      Q1: "報名參賽總人數 (A + B)",
+      C: "平均分組的組數",
+      Q2: "每個競賽小組人數 (Q1 ÷ C)",
+      D: "每位分配木棒數量",
+      Q3: "每組需要木棒總數 (Q2 × D)",
+      E: "每盒包裝木棒數量",
+      Q4: "每組需要木棒盒數 (Q3 ÷ E)"
+    },
+    genRandom(maxVal) {
+      for (let i = 0; i < 2000; i++) {
+        const A = rng(10, 40);
+        const B = rng(10, 40);
+        const Q1 = A + B;
+        const C = rng(2, 6);
+        if (Q1 % C === 0) {
+          const Q2 = Q1 / C;
+          const D = rng(2, 6);
+          const Q3 = Q2 * D;
+          const E = rng(2, 10);
+          if (Q3 % E === 0) {
+            const Q4 = Q3 / E;
+            if (A <= maxVal && B <= maxVal && C <= maxVal && D <= maxVal && E <= maxVal &&
+                Q1 <= maxVal && Q2 <= maxVal && Q3 <= maxVal && Q4 <= maxVal) {
+              return { A, B, C, D, E, Q1, Q2, Q3, Q4 };
+            }
+          }
+        }
+      }
+      return null;
+    },
+    getPassage(p) {
+      return `新竹國小今天舉辦了一年一度精彩的趣味運動會，三年一班的同學在老師的帶領下，個個精神飽滿地站在跑道旁準備參加接力賽。三年一班實際報名這項趣味接力賽的參賽同學中，一共包含了 ${p.A}名男同學與 ${p.B}名女同學，大家都抱著必勝的決心想要奪下冠軍。為了在比賽時能更有默契，導師決定在練習時間將所有上場參賽的同學平均分成 ${p.C}個競賽小組。在接力賽開始前，為了讓每個人都能熟悉交棒的手感，每位同學都必須分配到 ${p.D}支彩色的接力木棒來進行傳接練習。體育股長阿國在分發木棒時，必須把每一組所需要用到的木棒從全新的包裝盒中拿出來。已知每一盒包裝盒裡面裝有 ${p.E}支接力木棒，且木棒在分發給小組時都剛好可以整盒用完，沒有留下任何零散的木棒。阿國需要計算出，為了滿足其中一個小組所有成員的練習需求，他必須為這一個小組領取多少盒接力木棒。請根據上述文章的描述回答下列問題：`;
+    },
+    solve(p) {
+      return [
+        { q: "三年一班報名趣味接力賽的同學，總共有多少人？", ans: `${p.Q1} 人` },
+        { q: "承上題，分組練習時，每一個競賽小組有多少人？", ans: `${p.Q2} 人` },
+        { q: "承上題，每一個小組總共需要分配多少支接力木棒？", ans: `${p.Q3} 支` },
+        { q: "承上題，體育股長為每一組準備木棒時，需要準備多少盒木棒才夠？", ans: `${p.Q4} 盒` }
+      ];
+    }
+  },
+  {
+    id: "castle",
+    title: "積木城堡玩具拼裝",
+    icon: "🏰",
+    vars_desc: {
+      A: "藍色積木的數量",
+      B: "紅色積木的數量",
+      Q1: "積木準備的總數 (A + B)",
+      C: "組裝大模型個數",
+      Q2: "每個城堡使用積木 (Q1 ÷ C)",
+      D: "單個積木折算價值",
+      Q3: "一個城堡基礎售價 (Q2 × D)",
+      E: "玩具展之促銷折價",
+      Q4: "特價購買實付金額 (Q3 - E)"
+    },
+    genRandom(maxVal) {
+      for (let i = 0; i < 2000; i++) {
+        const A = rng(10, 40);
+        const B = rng(10, 40);
+        const Q1 = A + B;
+        const C = rng(2, 6);
+        if (Q1 % C === 0) {
+          const Q2 = Q1 / C;
+          const D = rng(2, Math.floor(maxVal / Q2));
+          const Q3 = Q2 * D;
+          const E = rng(2, Math.min(25, Q3 - 2));
+          const Q4 = Q3 - E;
+          if (A <= maxVal && B <= maxVal && C <= maxVal && D <= maxVal && E <= maxVal &&
+              Q1 <= maxVal && Q2 <= maxVal && Q3 <= maxVal && Q4 <= maxVal) {
+            return { A, B, C, D, E, Q1, Q2, Q3, Q4 };
+          }
+        }
+      }
+      return null;
+    },
+    getPassage(p) {
+      return `創意積木俱樂部的隊員們下午聚在活動教室裡，準備一起組裝最新款的科幻積木城堡大模型。這項拼裝任務需要極大的耐心與團隊合作，大家在圓桌上分類整理，經過篩選，一共準備了 ${p.A}個藍色積木和 ${p.B}個紅色積木。另外，桌上還散落著 20個黃色積木和 15個綠色積木，但因顏色不符，因此不列入拼裝。隊員們決定將這些選好的藍色與紅色積木混在一起，並平均分配，合力組裝成 ${p.C}個一模一樣的科幻大城堡模型。根據積木社的標記規則，每一個小積木折算的基礎價值是 ${p.D}元，因此每個組裝好的城堡模型都會有其相應的基礎售價。今天剛好配合學校的玩具展發表活動，若有其他班級的顧客想要當場買走這些組裝好的城堡模型，可以享有攤位特別的促銷折價優惠，買每一個城堡模型都可以當場現減免折抵 ${p.E}元，剩下的部分就是顧客需要實付的特惠金額，所有收入將捐給社區孤兒院。請根據上述文章回答下列問題：`;
+    },
+    solve(p) {
+      return [
+        { q: "隊員們組裝城堡模型，總共準備了多少個積木？", ans: `${p.Q1} 個` },
+        { q: "承上題，若將積木平分組裝，每個大城堡模型使用多少個積木？", ans: `${p.Q2} 個` },
+        { q: "承上題，若依積木單個折算價值計算，每個城堡模型的基礎售價是多少元？", ans: `${p.Q3} 元` },
+        { q: "承上題，配合玩具展促銷活動，顧客買一個折價後的城堡實際應付多少元？", ans: `${p.Q4} 元` }
+      ];
+    }
+  }
+];
+
+let activeStory = null;
+let activeParams = null;
+
+// 更新滑動條數值顯示
+function updateSliderVal(val) {
+  document.getElementById('max-value-display').textContent = val;
+}
+
+// 出題與渲染核心
+function generate() {
+  const selectVal = document.getElementById('story-select').value;
+  const maxVal = parseInt(document.getElementById('max-value-slider').value);
+  
+  if (selectVal === 'random') {
+    const idx = Math.floor(Math.random() * stories.length);
+    activeStory = stories[idx];
+  } else {
+    activeStory = stories.find(s => s.id === selectVal);
+  }
+
+  if (!activeStory) return;
+
+  // 使用數學驗證器動態搜尋參數
+  activeParams = activeStory.genRandom(maxVal);
+
+  if (!activeParams) {
+    // 萬一因上限極小導致搜尋失敗，自動調寬上限值重新嘗試
+    activeParams = activeStory.genRandom(100);
+  }
+
+  renderUI();
+}
+
+// 渲染 A4 及儀表板對照表
+function renderUI() {
+  if (!activeStory || !activeParams) return;
+
+  // 1. 渲染左側變數表格
+  const tableBody = document.getElementById('var-table-body');
+  tableBody.innerHTML = '';
+  Object.keys(activeStory.vars_desc).forEach(key => {
+    const desc = activeStory.vars_desc[key];
+    const val = activeParams[key];
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><span class="var-badge">${key}</span></td>
+      <td style="color: var(--text-muted); font-size:0.75rem;">${desc}</td>
+      <td style="font-family: monospace; font-weight: 700; color: #2ed573;">${val}</td>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  // 2. 填入日期
+  const today = new Date();
+  document.getElementById('date-string').textContent = `日期：${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+
+  // 3. 更新標題
+  const titleText = `數學素養閱讀挑戰卷 - ${activeStory.title}`;
+  document.getElementById('q-sheet-title').textContent = titleText;
+  document.getElementById('a-sheet-title').textContent = `【答案卷】${activeStory.title}`;
+
+  // 4. 取得本文與解答
+  const passage = activeStory.getPassage(activeParams);
+  const solvedQuestions = activeStory.solve(activeParams);
+
+  // 5. 渲染本文
+  const passageHtml = `<div class="passage-title">${activeStory.icon} 閱讀主題：${activeStory.title}</div><div>${passage}</div>`;
+  document.getElementById('q-passage-container').innerHTML = passageHtml;
+  document.getElementById('a-passage-container').innerHTML = passageHtml;
+
+  // 6. 渲染連鎖問題
+  let qHtml = '';
+  let aHtml = '';
+
+  solvedQuestions.forEach((item, index) => {
+    qHtml += `
+      <div class="question-item">
+        <div class="question-text"><span class="question-label">問題 ${index + 1}：</span>${item.q}</div>
+        <div class="answer-space">答：<div class="answer-box"></div></div>
+      </div>`;
+
+    aHtml += `
+      <div class="question-item">
+        <div class="question-text"><span class="question-label">問題 ${index + 1}：</span>${item.q}</div>
+        <div class="answer-space">答：<div class="answer-box">${item.ans}</div></div>
+      </div>`;
+  });
+
+  document.getElementById('q-list-container').innerHTML = qHtml;
+  document.getElementById('a-list-container').innerHTML = aHtml;
+}
+
+// 複製到剪貼簿功能
+function copyText(type) {
+  if (!activeStory || !activeParams) return;
+  
+  let text = '';
+  const passage = activeStory.getPassage(activeParams);
+  const solvedQuestions = activeStory.solve(activeParams);
+
+  if (type === 'q') {
+    text += `【題目卷】數學素養閱讀挑戰 - ${activeStory.title}\n\n`;
+    text += `文章閱讀：\n${passage}\n\n`;
+    solvedQuestions.forEach((item, i) => {
+      text += `問題 ${i + 1}：${item.q}\n答：__________________\n\n`;
+    });
+  } else {
+    text += `【答案卷】數學素養閱讀挑戰 - ${activeStory.title}\n\n`;
+    solvedQuestions.forEach((item, i) => {
+      text += `問題 ${i + 1}：${item.q}\n答：${item.ans}\n\n`;
+    });
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert('複製成功！可以直接貼入 Word 中使用。');
+  }).catch(() => {
+    alert('您的瀏覽器不支援一鍵複製，請手動圈選內容複製。');
+  });
+}
+
+// 初始化
+window.onload = generate;
+</script>
+</body>
+</html>
