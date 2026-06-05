@@ -6,6 +6,8 @@
     <title>數學出題庫</title>
     <style>
         :root {
+            --test-color: #e67e22;
+            --test-dark: #d35400;
             --primary: #3498db;
             --primary-dark: #2980b9;
             --secondary: #2c3e50;
@@ -124,6 +126,23 @@
             background: #95a5a6;
         }
 
+        .card.test {
+            background: #fef9f4;
+            border-left: 4px solid var(--test-color);
+        }
+
+        .card.test::before {
+            background: var(--test-color);
+        }
+
+        .card.test .go-btn {
+            background-color: var(--test-color);
+        }
+
+        .card.test .go-btn:hover {
+            background-color: var(--test-dark);
+        }
+
         .old-section-header {
             grid-column: 1 / -1;
             margin-top: 40px;
@@ -157,7 +176,36 @@
             gap: 20px;
             width: 100%;
             margin-top: 20px;
-            grid-column: 1 / -1; /* Ensure it spans all columns */
+            grid-column: 1 / -1;
+        }
+
+        #test-toggle-btn {
+            background-color: var(--test-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #test-toggle-btn:hover {
+            background-color: var(--test-dark);
+            transform: scale(1.05);
+        }
+
+        #test-files-container {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-top: 20px;
+            grid-column: 1 / -1;
         }
 
         .footer {
@@ -172,7 +220,8 @@
             .grid {
                 grid-template-columns: 1fr;
             }
-            #old-files-container {
+            #old-files-container,
+            #test-files-container {
                 grid-template-columns: 1fr;
             }
         }
@@ -216,6 +265,42 @@
         <div class="card">
             <div class="card-title">重量邏輯問題</div>
             <a href="https://kaneisbaga.github.io/math/weight.html" class="go-btn">開啟出題</a>
+        </div>
+
+        <!-- Test Module Toggle -->
+        <div class="old-section-header">
+            <button id="test-toggle-btn" onclick="toggleTestFiles()">
+                <span>🧪 查看測試模組</span>
+                <small id="test-toggle-icon">▼</small>
+            </button>
+        </div>
+
+        <!-- Test Files Container (Hidden by default) -->
+        <div id="test-files-container" class="grid">
+            <div class="card test">
+                <div class="card-title">簡易版素養題（500字）</div>
+                <a href="https://kaneisbaga.github.io/math/%E7%B6%B2%E9%A0%81%E5%87%BA%E9%A1%8C/%E7%B0%A1%E6%98%93%E7%89%88%E7%9A%84%E7%B4%A0%E9%A4%8A%E9%A1%8C500%E5%AD%97%E6%95%B8%E7%89%88%E6%9C%AC.html" class="go-btn">開啟出題</a>
+            </div>
+
+            <div class="card test">
+                <div class="card-title">簡易版素養題（1000字）</div>
+                <a href="https://kaneisbaga.github.io/math/%E7%B6%B2%E9%A0%81%E5%87%BA%E9%A1%8C/%E7%B0%A1%E6%98%93%E7%89%88%E7%9A%84%E7%B4%A0%E9%A4%8A%E9%A1%8C1000%E5%AD%97%E6%95%B8%E7%89%88%E6%9C%AC.html" class="go-btn">開啟出題</a>
+            </div>
+
+            <div class="card test">
+                <div class="card-title">素養閱讀題（literacy）</div>
+                <a href="https://kaneisbaga.github.io/math/%E7%B6%B2%E9%A0%81%E5%87%BA%E9%A1%8C/literacy.html" class="go-btn">開啟出題</a>
+            </div>
+
+            <div class="card test">
+                <div class="card-title">測試版 V1</div>
+                <a href="https://kaneisbaga.github.io/math/%E7%B6%B2%E9%A0%81%E5%87%BA%E9%A1%8C/V1.html" class="go-btn">開啟出題</a>
+            </div>
+
+            <div class="card test">
+                <div class="card-title">時間換算（UN版）</div>
+                <a href="https://kaneisbaga.github.io/math/timechange(UN).html" class="go-btn">開啟出題</a>
+            </div>
         </div>
 
         <!-- Old Files Toggle -->
@@ -297,6 +382,22 @@
             container.style.display = 'grid';
             icon.textContent = '▲';
             btnText.textContent = '📁 收合舊檔模組';
+        }
+    }
+
+    function toggleTestFiles() {
+        const container = document.getElementById('test-files-container');
+        const icon = document.getElementById('test-toggle-icon');
+        const btnText = document.querySelector('#test-toggle-btn span');
+        
+        if (container.style.display === 'grid') {
+            container.style.display = 'none';
+            icon.textContent = '▼';
+            btnText.textContent = '🧪 查看測試模組';
+        } else {
+            container.style.display = 'grid';
+            icon.textContent = '▲';
+            btnText.textContent = '🧪 收合測試模組';
         }
     }
 </script>
