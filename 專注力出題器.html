@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萬用國小專注力遊戲出題器 (A4 Print-Friendly)</title>
+    <style>
+        /* ==========================================
+           1. 全局與控制台樣式 (螢幕顯示用)
+           ========================================== */
+        :root {
+            --primary-color: #2b3a4a;
+            --accent-color: #4a90e2;
+            --bg-color: #f4f7f6;
+            --panel-bg: #ffffff;
+            --border-color: #dcdfe6;
+            --font-main: "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: #333;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 側邊控制欄 */
+        .sidebar {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .sidebar h1 {
+            font-size: 1.35rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--primary-color);
+        }
+
+        .control-group select, 
+        .control-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .control-group select:focus {
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background-color: #357abd;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-print {
+            background-color: #27ae60;
+        }
+
+        .btn-print:hover {
+            background-color: #219150;
+        }
+
+        .instructions-box {
+            background-color: #eef5fc;
+            border-left: 4px solid var(--accent-color);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #444;
+        }
+
+        /* 主預覽區域 */
+        .preview-area {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #e9ecef;
+        }
+
+        /* ==========================================
+           2. A4 列印容器樣式 (螢幕模擬 A4 + 實體列印)
+           ========================================== */
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            height: 297mm;
+            background: #ffffff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            padding: 15mm 15mm 15mm 15mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            margin: auto;
+        }
+
+        /* 頁眉 (Header) */
+        .worksheet-header {
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .worksheet-title {
+            font-size: 24pt;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #000;
+        }
+
+        .meta-info {
+            display: flex;
+            gap: 20px;
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        .meta-item {
+            border-bottom: 1px solid #000;
+            padding: 0 5px;
+            min-width: 90px;
+            display: inline-block;
+        }
+
+        .header-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8f9fa;
+            border: 1px dashed #000;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+
+        .game-instruction {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .rating-box {
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        /* 遊戲主要繪製區塊 (滿版置中) */
+        .game-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 10px 0;
+            position: relative;
+        }
+
+        /* 頁腳 (Footer) */
+        .worksheet-footer {
+            border-top: 1px solid #000;
+            padding-top: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9pt;
+            color: #555;
+        }
+
+        /* ==========================================
+           3. 各遊戲題型專用 CSS 排版 (滿版化優化)
+           ========================================== */
+
+        /* 題型 1: 舒爾特方格 (Schulte Table) */
+        .schulte-grid {
+            display: grid;
+            gap: 12px;
+            width: 100%;
+            height: 100%;
+            max-width: 175mm;
+            max-height: 210mm;
+            margin: auto;
+            align-content: center;
+        }
+
+        .schulte-cell {
+            border: 3px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-family: Arial, sans-serif;
+            background: #fff;
+            aspect-ratio: 1 / 1;
+            border-radius: 8px;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 題型 2: 符號大搜查 (Visual Search) */
+        .search-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .search-target-box {
+            font-size: 16pt;
+            font-weight: bold;
+            border: 2px solid #000;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background-color: #fff;
+            text-align: center;
+            width: 100%;
+        }
+
+        .search-target-symbol {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #000;
+            margin: 0 8px;
+            display: inline-block;
+        }
+
+        .search-grid {
+            display: grid;
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+            max-width: 180mm;
+            border: 2px solid #000;
+            padding: 15px;
+            border-radius: 8px;
+            justify-items: center;
+            align-items: center;
+            align-content: space-around;
+        }
+
+        .search-item {
+            font-size: 22pt;
+            font-weight: bold;
+            font-family: "Courier New", Courier, monospace, sans-serif;
+            user-select: none;
+        }
+
+        /* 題型 3: 視線追蹤迷宮 (Visual Tracking) */
+        .tracking-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 題型 4: 圖形/影子配對 (Shape Matching) */
+        .matching-container {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15mm;
+            height: 100%;
+        }
+
+        .matching-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            height: 100%;
+            gap: 15px;
+        }
+
+        .matching-card {
+            width: 36mm;
+            height: 36mm;
+            border: 2px solid #000;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            position: relative;
+        }
+
+        .matching-label {
+            position: absolute;
+            left: -30px;
+            font-weight: bold;
+            font-size: 14pt;
+        }
+
+        .matching-card.right .matching-label {
+            left: auto;
+            right: -30px;
+        }
+
+        /* 題型 5: 點陣複製畫 (Grid Dot Copy) */
+        .dot-copy-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            gap: 20px;
+        }
+
+        .dot-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .dot-box-title {
+            font-size: 15pt;
+            font-weight: bold;
+        }
+
+        /* ==========================================
+           4. @media print 嚴格列印優化
+           ========================================== */
+        @media print {
+            body {
+                background: none;
+                color: #000;
+            }
+
+            .sidebar {
+                display: none !important;
+            }
+
+            .preview-area {
+                padding: 0;
+                background: none;
+            }
+
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+                width: 210mm;
+                height: 297mm;
+                max-height: 297mm;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左側控制面板 -->
+    <div class="sidebar">
+        <h1>🧠 專注力出題器</h1>
+        
+        <div class="control-group">
+            <label for="gameType">🎯 訓練題型選單</label>
+            <select id="gameType" onchange="renderGame()">
+                <option value="schulte">1. 舒爾特方格 (Schulte Table)</option>
+                <option value="search">2. 符號/數字大搜查 (Visual Search)</option>
+                <option value="tracking">3. 視線追蹤迷宮 (Visual Tracking)</option>
+                <option value="matching">4. 圖形/影子配對 (Shape Matching)</option>
+                <option value="dotcopy">5. 點陣複製畫 (Dot Grid Copy)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="difficulty">📊 難易度 / 年級設定</label>
+            <select id="difficulty" onchange="renderGame()">
+                <option value="easy">入門 (低年級 / 大字體 / 低密度)</option>
+                <option value="medium" selected>標準 (中年級 / 中密度)</option>
+                <option value="hard">進階 (高年級 / 高密度)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="customTitle">✏️ 學習單標題自訂</label>
+            <input type="text" id="customTitle" value="專注力視覺搜尋訓練單" oninput="updateTitle()">
+        </div>
+
+        <button class="btn" onclick="renderGame()">
+            🎲 重新出題 (隨機打亂)
+        </button>
+
+        <button class="btn btn-print" onclick="window.print()">
+            🖨️ 一鍵列印 A4 (Print)
+        </button>
+
+        <div class="instructions-box" id="sidebarInstruction">
+            <strong>說明：</strong> 請從上方選單切換題目與難易度。每次點擊「重新出題」將自動產生全不相同的題目版面！
+        </div>
+    </div>
+
+    <!-- 右側 A4 列印預覽區 -->
+    <div class="preview-area">
+        <div class="a4-page" id="a4Page">
+            <!-- 頁眉 Header -->
+            <div class="worksheet-header">
+                <div class="header-top">
+                    <div class="worksheet-title" id="displayTitle">專注力視覺搜尋訓練單</div>
+                    <div class="meta-info">
+                        <div>姓名：<span class="meta-item"></span></div>
+                        <div>日期：<span class="meta-item"></span></div>
+                    </div>
+                </div>
+                <div class="header-bottom">
+                    <div class="game-instruction" id="gameInstruction">任務目標：請依序找出數字並記錄時間。</div>
+                    <div class="rating-box">
+                        ⏱️ 耗時：____分____秒 | 自評：★ ★ ★ ★ ★
+                    </div>
+                </div>
+            </div>
+
+            <!-- 題目主要繪製區 Body -->
+            <div class="game-body" id="gameBody">
+                <!-- 動態注入遊戲內容 -->
+            </div>
+
+            <!-- 頁腳 Footer -->
+            <div class="worksheet-footer">
+                <span>萬用國小專注力訓練學習單 - 免費視覺搜尋訓練資源</span>
+                <span>A4 滿版 Print-Friendly Standard</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================
+           全域狀態與控制邏輯
+           ========================================== */
+        const titleMap = {
+            schulte: "舒爾特數字專注力訓練單",
+            search: "符號與數字大搜查學習單",
+            tracking: "視覺軌跡追蹤遊戲紙",
+            matching: "形狀與影子視覺配對單",
+            dotcopy: "空間點陣對照複製畫"
+        };
+
+        const instructionMap = {
+            schulte: "【遊戲說明】請用手指或筆尖，依照數字 1, 2, 3... 的順序快速指出，並記錄總耗時。",
+            search: "【遊戲說明】請仔細搜尋下方網格，找出指定的標題符號，並將總數量寫在框框中。",
+            tracking: "【遊戲說明】請用眼睛（或筆尖）順著線條追蹤，將左邊的圖案連到右邊正確的目標！",
+            matching: "【遊戲說明】請用直尺連線，將左邊的形狀與右邊對應的黑色影子連起來！",
+            dotcopy: "【遊戲說明】請參考左邊的點陣幾何圖案，在右邊空白點陣上精確地繪製出一模一樣的圖形。"
+        };
+
+        function updateTitle() {
+            const inputVal = document.getElementById('customTitle').value;
+            document.getElementById('displayTitle').innerText = inputVal || "專注力訓練學習單";
+        }
+
+        function renderGame() {
+            const gameType = document.getElementById('gameType').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const gameBody = document.getElementById('gameBody');
+
+            // 自動更新標題與說明
+            document.getElementById('customTitle').value = titleMap[gameType];
+            document.getElementById('displayTitle').innerText = titleMap[gameType];
+            document.getElementById('gameInstruction').innerText = instructionMap[gameType];
+
+            gameBody.innerHTML = ''; // 清空內容
+            document.querySelectorAll('.page-2-answer').forEach(el => el.remove()); // 清除第二頁舊解答
+
+            switch (gameType) {
+                case 'schulte':
+                    generateSchulteTable(gameBody, difficulty);
+                    break;
+                case 'search':
+                    generateVisualSearch(gameBody, difficulty);
+                    break;
+                case 'tracking':
+                    generateVisualTracking(gameBody, difficulty);
+                    break;
+                case 'matching':
+                    generateShapeMatching(gameBody, difficulty);
+                    break;
+                case 'dotcopy':
+                    generateDotCopy(gameBody, difficulty);
+                    break;
+            }
+        }
+
+        // 輔助工具：洗牌演算法
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        /* ==========================================
+           題型 1: 舒爾特方格 (Schulte Table)
+           ========================================== */
+        function generateSchulteTable(container, diff) {
+            let size = 5; // 預設 5x5
+            let fontSize = "32pt";
+
+            if (diff === 'easy') {
+                size = 4; // 入門 4x4
+                fontSize = "38pt";
+            } else if (diff === 'hard') {
+                size = 6; // 進階 6x6
+                fontSize = "26pt";
+            } else {
+                size = 5; // 標準 5x5
+                fontSize = "32pt";
+            }
+
+            const total = size * size;
+            let numbers = Array.from({length: total}, (_, i) => i + 1);
+            numbers = shuffle(numbers);
+
+            const grid = document.createElement('div');
+            grid.className = 'schulte-grid';
+            grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+
+            numbers.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'schulte-cell';
+                cell.style.fontSize = fontSize;
+                cell.innerText = num;
+                grid.appendChild(cell);
+            });
+
+            container.appendChild(grid);
+        }
+
+        /* ==========================================
+           題型 2: 符號/數字大搜查 (Visual Search)
+           ========================================== */
+        function generateVisualSearch(container, diff) {
+            const symbolPool = ["★", "▲", "◼", "✦", "✖", "✚", "◯", "♦", "♠", "♥", "♣", "7", "9", "3", "E", "Z"];
+            const targetSymbol = symbolPool[Math.floor(Math.random() * symbolPool.length)];
+
+            let cols = 8, rows = 10;
+            if (diff === 'easy') { cols = 6; rows = 8; }
+            else if (diff === 'hard') { cols = 10; rows = 13; }
+
+            const totalItems = cols * rows;
+            let targetCount = Math.floor(Math.random() * 5) + 5; // 5~9 個目標
+
+            let items = [];
+            for (let i = 0; i < targetCount; i++) items.push(targetSymbol);
+
+            // 填滿其餘干擾項
+            while (items.length < totalItems) {
+                let randomSym = symbolPool[Math.floor(Math.random() * symbolPool.length)];
+                if (randomSym !== targetSymbol) items.push(randomSym);
+            }
+
+            items = shuffle(items);
+
+            const searchContainer = document.createElement('div');
+            searchContainer.className = 'search-container';
+
+            // 目標提示框
+            const targetBox = document.createElement('div');
+            targetBox.className = 'search-target-box';
+            targetBox.innerHTML = `請數一數，圖中共有幾個 <span class="search-target-symbol">${targetSymbol}</span> ？ 答：【 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 】個`;
+            searchContainer.appendChild(targetBox);
+
+            // 搜尋網格
+            const grid = document.createElement('div');
+            grid.className = 'search-grid';
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+            items.forEach(sym => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'search-item';
+                itemEl.innerText = sym;
+                grid.appendChild(itemEl);
+            });
+
+            searchContainer.appendChild(grid);
+            container.appendChild(searchContainer);
+        }
+
+        /* ==========================================
+           題型 3: 視線追蹤迷宮 (Visual Tracking) - 2頁版 (P1 題目 + P2 解答)
+           ========================================== */
+        function generateVisualTracking(container, diff) {
+            let lineCount = 8;
+            if (diff === 'easy') lineCount = 6;
+            if (diff === 'hard') lineCount = 12;
+
+            const width = 650;
+            const height = 650; // 第一頁 100% 滿版畫布
+
+            const trackingWrapper = document.createElement('div');
+            trackingWrapper.style.display = 'flex';
+            trackingWrapper.style.flexDirection = 'column';
+            trackingWrapper.style.alignItems = 'center';
+            trackingWrapper.style.width = '100%';
+            trackingWrapper.style.height = '100%';
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+            const leftLabels = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"].slice(0, lineCount);
+            let rightLabels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].slice(0, lineCount);
+            
+            // 右邊標籤位置隨機擺放 (位置洗牌)
+            let shuffledRightLabels = shuffle([...rightLabels]);
+            
+            // 畫線對應隨機對調 (目標連線洗牌，創造狂甩大交叉)
+            let targetConnectIndices = shuffle(Array.from({length: lineCount}, (_, i) => i));
+
+            let answerPairs = [];
+
+            const startYStep = height / (lineCount + 1);
+            const leftPoints = [];
+            const rightPoints = [];
+
+            for (let i = 0; i < lineCount; i++) {
+                leftPoints.push({ label: leftLabels[i], x: 45, y: (i + 1) * startYStep });
+                rightPoints.push({ label: shuffledRightLabels[i], x: width - 45, y: (i + 1) * startYStep });
+            }
+
+            // 記錄第一頁的正確題目解答 (A 連到了哪一個數字標籤)
+            for (let i = 0; i < lineCount; i++) {
+                const targetIdx = targetConnectIndices[i];
+                answerPairs.push({ from: leftLabels[i], to: shuffledRightLabels[targetIdx] });
+            }
+
+            // 繪製強烈斜向大交叉的波浪曲線
+            leftPoints.forEach((startPt, idx) => {
+                const targetIdx = targetConnectIndices[idx];
+                const endPt = rightPoints[targetIdx];
+                
+                const seg1X = 45 + (width - 90) * 0.25;
+                const seg2X = 45 + (width - 90) * 0.50;
+                const seg3X = 45 + (width - 90) * 0.75;
+
+                const rawCp1Y = Math.random() * (height - 30) + 15;
+                const rawCp2Y = Math.random() * (height - 30) + 15;
+                const rawCp3Y = Math.random() * (height - 30) + 15;
+
+                const cp1Y = Math.min(height - 25, Math.max(25, rawCp1Y));
+                const cp2Y = Math.min(height - 25, Math.max(25, rawCp2Y));
+                const cp3Y = Math.min(height - 25, Math.max(25, rawCp3Y));
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                const d = `M ${startPt.x} ${startPt.y} 
+                           C ${seg1X} ${cp1Y}, ${seg1X} ${cp1Y}, ${seg2X} ${cp2Y}
+                           S ${seg3X} ${cp3Y}, ${endPt.x} ${endPt.y}`;
+                
+                path.setAttribute("d", d);
+                path.setAttribute("stroke", "#000");
+                path.setAttribute("stroke-width", diff === 'hard' ? "2" : "2.5");
+                path.setAttribute("fill", "none");
+                if (idx % 3 === 1) path.setAttribute("stroke-dasharray", "7,5");
+                else if (idx % 3 === 2) path.setAttribute("stroke-dasharray", "2,4");
+                
+                svg.appendChild(path);
+
+                // 起點標籤
+                const startCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                startCircle.setAttribute("cx", startPt.x);
+                startCircle.setAttribute("cy", startPt.y);
+                startCircle.setAttribute("r", "13");
+                startCircle.setAttribute("fill", "#fff");
+                startCircle.setAttribute("stroke", "#000");
+                startCircle.setAttribute("stroke-width", "2");
+                svg.appendChild(startCircle);
+
+                const startText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                startText.setAttribute("x", startPt.x);
+                startText.setAttribute("y", startPt.y + 5);
+                startText.setAttribute("font-size", "13");
+                startText.setAttribute("font-weight", "bold");
+                startText.setAttribute("text-anchor", "middle");
+                startText.textContent = startPt.label;
+                svg.appendChild(startText);
+            });
+
+            // 終點標籤
+            rightPoints.forEach(endPt => {
+                const endCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                endCircle.setAttribute("cx", endPt.x);
+                endCircle.setAttribute("cy", endPt.y);
+                endCircle.setAttribute("r", "13");
+                endCircle.setAttribute("fill", "#fff");
+                endCircle.setAttribute("stroke", "#000");
+                endCircle.setAttribute("stroke-width", "2");
+                svg.appendChild(endCircle);
+
+                const endText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                endText.setAttribute("x", endPt.x);
+                endText.setAttribute("y", endPt.y + 5);
+                endText.setAttribute("font-size", "13");
+                endText.setAttribute("font-weight", "bold");
+                endText.setAttribute("text-anchor", "middle");
+                endText.textContent = endPt.label;
+                svg.appendChild(endText);
+            });
+
+            trackingWrapper.appendChild(svg);
+            container.appendChild(trackingWrapper);
+
+            // 動態創建第 2 頁 (Page 2: 獨立 A4 解答頁)
+            const previewArea = document.querySelector('.preview-area');
+            const page2 = document.createElement('div');
+            page2.className = 'a4-page page-2-answer';
+            page2.style.marginTop = '20px';
+            
+            const currentTitle = document.getElementById('displayTitle').innerText;
+
+            let gridHTML = answerPairs.map(pair => `
+                <div style="border: 2px solid #000; padding: 15px; border-radius: 8px; font-size: 18pt; font-weight: bold; background-color: #fcfcfc; display: flex; justify-content: space-around; align-items: center;">
+                    <span style="font-size: 22pt; color: #2563eb;">${pair.from}</span>
+                    <span>➔</span>
+                    <span style="font-size: 22pt; color: #16a34a;">${pair.to}</span>
+                </div>
+            `).join('');
+
+            page2.innerHTML = `
+                <div class="worksheet-header">
+                    <div class="header-top">
+                        <div class="worksheet-title">${currentTitle} (解答頁)</div>
+                        <div class="meta-info">
+                            <div>解答版本：<span>標準批改用</span></div>
+                        </div>
+                    </div>
+                    <div class="header-bottom">
+                        <div class="game-instruction">【老師/家長批改專用】下方為本張視覺追蹤學習單之正確連線解答。</div>
+                    </div>
+                </div>
+                <div class="game-body" style="justify-content: flex-start; padding-top: 30px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; max-width: 170mm;">
+                        ${gridHTML}
+                    </div>
+                </div>
+                <div class="worksheet-footer">
+                    <span>萬用國小專注力訓練學習單 - Answer Key Page 2</span>
+                    <span>Page 2 of 2</span>
+                </div>
+            `;
+
+            previewArea.appendChild(page2);
+        }
+
+        /* ==========================================
+           題型 4: 圖形/影子配對 (Shape Matching) - 50+ 超豐富圖案庫與複雜度
+           ========================================== */
+        function generateShapeMatching(container, diff) {
+            let count = 5;
+            if (diff === 'easy') count = 4;
+            if (diff === 'hard') count = 6;
+
+            // 動態生成 50+ 種獨立高複雜度幾何組合形狀庫
+            const shapeGenerators = [
+                // 箭頭飛機類 (10種)
+                ...Array.from({length: 10}, (_, i) => {
+                    let w = 20 + i * 5;
+                    return `<polygon points="50,5 ${100-w},95 50,75 ${w},95" />`;
+                }),
+                // 幾何星形類 (10種)
+                ...Array.from({length: 10}, (_, i) => {
+                    let rInner = 20 + i * 2;
+                    return `<polygon points="50,5 63,${rInner} 95,35 70,55 80,95 50,75 20,95 30,55 5,35 37,${rInner}" />`;
+                }),
+                // 凹凸凸字/十字形變體 (10種)
+                ...Array.from({length: 10}, (_, i) => {
+                    let p = 15 + i * 3;
+                    return `<polygon points="${p},10 ${100-p},10 ${100-p},${p} 90,${p} 90,${100-p} ${100-p},${100-p} ${100-p},90 ${p},90 ${p},${100-p} 10,${100-p} 10,${p} ${p},${p}" />`;
+                }),
+                // 寶石皇冠與閃電月亮類 (10種)
+                `<polygon points="20,10 80,10 90,40 50,90 10,40" />`,
+                `<path d="M20,20 L80,20 L80,50 L50,50 L50,80 L20,80 Z" />`,
+                `<polygon points="25,10 75,10 90,90 10,90" />`,
+                `<path d="M 50,10 L 70,40 L 50,40 L 70,90 L 30,50 L 50,50 L 30,10 Z" />`,
+                `<path d="M 50,10 A 40,40 0 1,0 90,50 A 30,30 0 1,1 50,10 Z" />`,
+                `<polygon points="50,10 90,30 90,70 50,90 10,70 10,30" />`, // 六邊形
+                `<path d="M30,10 L70,10 L90,50 L70,90 L30,90 L10,50 Z M50,30 L70,50 L50,70 L30,50 Z" />`, // 雙層洞
+                `<polygon points="10,10 90,10 90,40 60,40 60,90 10,90" />`, // 大L塊
+                `<polygon points="50,5 85,25 85,75 50,95 15,75 15,25" />`,
+                `<path d="M 10,50 Q 50,0 90,50 Q 50,100 10,50 Z" />`, // 眼睛橄欖形
+                // 組合幾何塊 (10種)
+                ...Array.from({length: 10}, (_, i) => {
+                    let off = i * 4;
+                    return `<path d="M10,10 L${80-off},10 L${80-off},${50+off} L90,${50+off} L90,90 L10,90 Z" />`;
+                })
+            ];
+
+            let selectedShapes = shuffle([...shapeGenerators]).slice(0, count);
+            const rotations = [0, 90, 180, 270];
+
+            let items = selectedShapes.map(svgStr => {
+                return {
+                    svg: svgStr,
+                    rotation: rotations[Math.floor(Math.random() * rotations.length)]
+                };
+            });
+
+            let rightIndices = shuffle(Array.from({length: count}, (_, i) => i));
+
+            const matchingContainer = document.createElement('div');
+            matchingContainer.className = 'matching-container';
+
+            // 左欄 (題目圖案區)
+            const leftCol = document.createElement('div');
+            leftCol.className = 'matching-column';
+
+            for (let i = 0; i < count; i++) {
+                const card = document.createElement('div');
+                card.className = 'matching-card';
+                card.style.width = '36mm';
+                card.style.height = '36mm';
+                card.innerHTML = `
+                    <span class="matching-label">${i + 1}</span>
+                    <svg width="75" height="75" viewBox="0 0 100 100">
+                        <g stroke="#000" stroke-width="4" fill="none">
+                            ${items[i].svg}
+                        </g>
+                    </svg>`;
+                leftCol.appendChild(card);
+            }
+
+            // 右欄 (影子對應區)
+            const rightCol = document.createElement('div');
+            rightCol.className = 'matching-column';
+
+            for (let i = 0; i < count; i++) {
+                const targetIdx = rightIndices[i];
+                const item = items[targetIdx];
+                const card = document.createElement('div');
+                card.className = 'matching-card right';
+                card.style.width = '36mm';
+                card.style.height = '36mm';
+                card.innerHTML = `
+                    <span class="matching-label">${String.fromCharCode(65 + i)}</span>
+                    <svg width="75" height="75" viewBox="0 0 100 100">
+                        <g fill="#000" transform="rotate(${item.rotation}, 50, 50)">
+                            ${item.svg}
+                        </g>
+                    </svg>`;
+                rightCol.appendChild(card);
+            }
+
+            matchingContainer.appendChild(leftCol);
+            matchingContainer.appendChild(rightCol);
+            container.appendChild(matchingContainer);
+        }
+
+        /* ==========================================
+           題型 5: 點陣複製畫 (Dot Grid Copy) - 無多餘空白，作答區特大極致版
+           ========================================== */
+        function generateDotCopy(container, diff) {
+            let gridSize = 6; // 6x6 點陣
+            if (diff === 'easy') gridSize = 5;
+            if (diff === 'hard') gridSize = 7;
+
+            function drawPattern(svg, size, dotSpacing, padding) {
+                const pathCount = diff === 'hard' ? 3 : 2;
+                for (let p = 0; p < pathCount; p++) {
+                    let pathLength = Math.floor(size * 1.4);
+                    let currR = Math.floor(Math.random() * size);
+                    let currC = Math.floor(Math.random() * size);
+
+                    let pointsStr = `${padding + currC * dotSpacing},${padding + currR * dotSpacing}`;
+
+                    for (let step = 0; step < pathLength; step++) {
+                        let nextR = Math.max(0, Math.min(size - 1, currR + Math.floor(Math.random() * 3) - 1));
+                        let nextC = Math.max(0, Math.min(size - 1, currC + Math.floor(Math.random() * 3) - 1));
+
+                        pointsStr += ` ${padding + nextC * dotSpacing},${padding + nextR * dotSpacing}`;
+                        currR = nextR;
+                        currC = nextC;
+                    }
+
+                    const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                    polyline.setAttribute("points", pointsStr);
+                    polyline.setAttribute("stroke", "#000");
+                    polyline.setAttribute("stroke-width", "3");
+                    polyline.setAttribute("fill", "none");
+                    polyline.setAttribute("stroke-linecap", "round");
+                    polyline.setAttribute("stroke-linejoin", "round");
+                    svg.appendChild(polyline);
+                }
+            }
+
+            function drawDots(svg, size, dotSpacing, padding, dotRadius) {
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        circle.setAttribute("cx", padding + c * dotSpacing);
+                        circle.setAttribute("cy", padding + r * dotSpacing);
+                        circle.setAttribute("r", dotRadius);
+                        circle.setAttribute("fill", "#000");
+                        svg.appendChild(circle);
+                    }
+                }
+            }
+
+            const mainBox = document.createElement('div');
+            mainBox.style.display = 'flex';
+            mainBox.style.flexDirection = 'column';
+            mainBox.style.alignItems = 'center';
+            mainBox.style.justifyContent = 'flex-start';
+            mainBox.style.width = '100%';
+            mainBox.style.height = '100%';
+
+            // 1. 上方題目區：題目放大 1.5 倍 (smallSpacing = 36)
+            const smallSpacing = 36;
+            const smallPadding = 10;
+            const smallSvgSize = (gridSize - 1) * smallSpacing + smallPadding * 2;
+
+            const topBox = document.createElement('div');
+            topBox.style.display = 'flex';
+            topBox.style.alignItems = 'center';
+            topBox.style.justifyContent = 'center';
+            topBox.style.gap = '15px';
+            topBox.style.border = '2px dashed #000';
+            topBox.style.padding = '4px 15px';
+            topBox.style.borderRadius = '8px';
+            topBox.style.backgroundColor = '#fdfdfd';
+            topBox.style.margin = '0 0 8px 0';
+
+            const labelEl = document.createElement('span');
+            labelEl.style.fontSize = '12pt';
+            labelEl.style.fontWeight = 'bold';
+            labelEl.innerText = '【題目對照圖】:';
+            topBox.appendChild(labelEl);
+
+            const topSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            topSVG.setAttribute("width", smallSvgSize);
+            topSVG.setAttribute("height", smallSvgSize);
+            topSVG.setAttribute("viewBox", `0 0 ${smallSvgSize} ${smallSvgSize}`);
+
+            drawPattern(topSVG, gridSize, smallSpacing, smallPadding);
+            drawDots(topSVG, gridSize, smallSpacing, smallPadding, 3.5);
+            topBox.appendChild(topSVG);
+
+            // 2. 下方繪製區：點陣圖放大至最大 (bigSpacing = 66 ~ 76)
+            const bigSpacing = diff === 'hard' ? 66 : 76;
+            const bigPadding = 22;
+            const bigSvgSize = (gridSize - 1) * bigSpacing + bigPadding * 2;
+
+            const bottomBox = document.createElement('div');
+            bottomBox.className = 'dot-box';
+            bottomBox.style.flex = '1';
+            bottomBox.style.display = 'flex';
+            bottomBox.style.flexDirection = 'column';
+            bottomBox.style.justifyContent = 'center';
+            bottomBox.style.alignItems = 'center';
+            bottomBox.style.border = '3px solid #000';
+            bottomBox.style.padding = '10px';
+            bottomBox.style.borderRadius = '10px';
+            bottomBox.style.backgroundColor = '#fff';
+            bottomBox.style.width = '100%';
+            bottomBox.innerHTML = '<div class="dot-box-title" style="font-size:15pt; margin-bottom:8px; text-decoration: underline;">✏️ 【動手繪製區】請在下方特大點陣畫出相同的圖形：</div>';
+
+            const bottomSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            bottomSVG.setAttribute("width", bigSvgSize);
+            bottomSVG.setAttribute("height", bigSvgSize);
+            bottomSVG.setAttribute("viewBox", `0 0 ${bigSvgSize} ${bigSvgSize}`);
+
+            drawDots(bottomSVG, gridSize, bigSpacing, bigPadding, 5);
+            bottomBox.appendChild(bottomSVG);
+
+            mainBox.appendChild(topBox);
+            mainBox.appendChild(bottomBox);
+            container.appendChild(mainBox);
+        }
+
+        // 頁面初始化
+        window.onload = function() {
+            renderGame();
+        };
+    </script>
+</body>
+</html>
