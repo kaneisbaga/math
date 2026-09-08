@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>ultimate_training_math_generator_v5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --qsize:30px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  padding:16px;
+  background:#d9d9d9;
+  font-family:"Microsoft JhengHei",sans-serif;
+}
+
+.toolbar{
+  background:#111;
+  color:white;
+  border-radius:14px;
+  padding:12px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.block{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:110px;
+}
+
+.block label{
+  font-size:12px;
+}
+
+input,select{
+  border:none;
+  border-radius:8px;
+  padding:6px;
+}
+
+.check-row{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+button{
+  border:none;
+  border-radius:10px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.generate-btn{
+  background:#4caf50;
+  color:white;
+}
+
+.print-btn{
+  background:#2196f3;
+  color:white;
+}
+
+.help-btn{
+  background:#ff9800;
+  color:white;
+}
+
+.modal-overlay{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.65);
+  z-index:1000;
+  justify-content:center;
+  align-items:center;
+  padding:16px;
+  backdrop-filter:blur(2px);
+}
+
+.modal-content{
+  background:#fff;
+  color:#333;
+  border-radius:14px;
+  max-width:640px;
+  width:100%;
+  max-height:85vh;
+  overflow-y:auto;
+  padding:24px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.35);
+  font-size:14px;
+  line-height:1.6;
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:2px solid #eee;
+  padding-bottom:12px;
+  margin-bottom:16px;
+}
+
+.modal-header h3{
+  margin:0;
+  font-size:18px;
+  color:#111;
+}
+
+.close-btn{
+  background:none;
+  border:none;
+  font-size:24px;
+  cursor:pointer;
+  color:#888;
+  padding:0;
+  line-height:1;
+}
+
+.close-btn:hover{
+  color:#000;
+}
+
+.rule-table{
+  width:100%;
+  border-collapse:collapse;
+  margin:12px 0;
+  font-size:13px;
+}
+
+.rule-table th, .rule-table td{
+  border:1px solid #e0e0e0;
+  padding:8px 10px;
+  text-align:left;
+}
+
+.rule-table th{
+  background:#f5f7fa;
+  font-weight:bold;
+  color:#222;
+}
+
+.rule-tag{
+  display:inline-block;
+  background:#e3f2fd;
+  color:#1565c0;
+  padding:2px 6px;
+  border-radius:4px;
+  font-family:monospace;
+  font-weight:bold;
+}
+
+.help-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:15px;
+  height:15px;
+  background:#ffa000;
+  color:#fff;
+  font-size:10px;
+  font-weight:bold;
+  border-radius:50%;
+  margin-left:4px;
+  cursor:pointer;
+  vertical-align:middle;
+}
+
+.paper{
+  width:210mm;
+  height:297mm;
+  background:white;
+  margin:auto auto 20px auto;
+  padding:8mm;
+  box-shadow:0 0 10px rgba(0,0,0,.2);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  box-sizing:border-box;
+}
+
+.question-paper, .answer-paper{
+  break-after:page;
+  page-break-after:always;
+}
+
+.paper:last-child{
+  break-after:auto;
+  page-break-after:auto;
+}
+
+.title{
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+  font-size:12px;
+}
+
+.question-grid{
+  flex:1;
+  display:grid;
+  gap:2px 10px;
+  align-content:stretch;
+  height:100%;
+}
+
+.question{
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid #ccc;
+  min-height:35px;
+}
+
+.qnum{
+  width:22px;
+  font-size:12px;
+  color:#666;
+  flex-shrink:0;
+}
+
+.qtext{
+  font-size:var(--qsize);
+  font-weight:bold;
+  white-space:nowrap;
+  line-height:1.2;
+  display: inline-flex;
+  align-items: center;
+}
+
+math {
+  font-family: "Microsoft JhengHei", serif;
+  font-size: 1.1em;
+}
+
+.answer-box{
+  width:104px;
+  height:35.2px;
+  border:2px solid #000;
+  margin-left:4px;
+  flex-shrink:0;
+}
+
+.answer-box.answer{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  font-weight:bold;
+}
+
+@media print{
+
+  @page{
+    size:A4;
+    margin:0;
+  }
+
+  body{
+    background:white;
+    padding:0;
+    margin:0;
+  }
+
+  .toolbar, .modal-overlay{
+    display:none !important;
+  }
+
+  .paper{
+    margin:0;
+    width:210mm;
+    height:297mm;
+    box-shadow:none;
+    break-after:page;
+    page-break-after:always;
+    break-inside:avoid;
+    page-break-inside:avoid;
+    box-sizing:border-box;
+  }
+
+  .paper:last-child{
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="toolbar">
+
+<div class="block">
+<label>題目數量(1~100)</label>
+<input id="questionCount" type="number" min="1" max="100" value="40">
+</div>
+
+<div class="block">
+<label>試卷張數(1~50)</label>
+<input id="sheetCount" type="number" min="1" max="50" value="1" title="要生成幾張不同題目的試卷">
+</div>
+
+<div class="block">
+<label>答案卷選項</label>
+<select id="includeAnswer">
+<option value="back">包含 (題目在前、答案在後)</option>
+<option value="alternate">包含 (題目答案交替)</option>
+<option value="none">不含答案卷 (只印題目)</option>
+</select>
+</div>
+
+<div class="block">
+<label>數字類型</label>
+<select id="numberType" onchange="toggleOptions()">
+<option value="integer">整數</option>
+<option value="decimal">小數</option>
+<option value="fraction">分數</option>
+</select>
+</div>
+
+<div class="block" id="operatorBlock">
+<label>固定運算</label>
+<select id="operatorMode" onchange="toggleOptions()">
+<option value="mixed">混合 (二數)</option>
+<option value="+">加法</option>
+<option value="-">減法</option>
+<option value="×">乘法</option>
+<option value="÷">除法</option>
+<option value="four_ops">四則運算 (多步驟)</option>
+</select>
+</div>
+
+<div class="block" id="fourOpsTermsBlock" style="display:none;">
+<label>運算項數</label>
+<select id="fourOpsTerms" onchange="toggleOptions()">
+<option value="3" selected>3 個數 (如 A+B×C)</option>
+<option value="4">4 個數 (如 A+B×C-D)</option>
+<option value="5">5 個數 (如 A+B×C-D÷E)</option>
+<option value="rand34">隨機 3~4 個數</option>
+<option value="rand35">隨機 3~5 個數</option>
+</select>
+</div>
+
+<div class="block" id="parenBlock" style="display:none;">
+<label>括號模式</label>
+<select id="parenMode">
+<option value="mixed" selected>隨機包含括號</option>
+<option value="none">無括號</option>
+<option value="always">必含括號</option>
+</select>
+</div>
+
+<div class="block" id="mixBlock">
+<label>混合運算</label>
+<div class="check-row">
+<label><input type="checkbox" class="mix" value="+" checked>+</label>
+<label><input type="checkbox" class="mix" value="-" checked>-</label>
+<label><input type="checkbox" class="mix" value="×" checked>×</label>
+<label><input type="checkbox" class="mix" value="÷" checked>÷</label>
+</div>
+</div>
+
+<div class="block" id="fractionOptions" style="display:none;">
+<label>分數模式</label>
+<select id="fractionMode" onchange="toggleOptions()">
+<option value="arithmetic">一般運算</option>
+<option value="m2i">帶分數->假分數</option>
+<option value="i2m">假分數->帶分數</option>
+<option value="mix_conv">混合</option>
+</select>
+</div>
+
+<div class="block" id="maskABlock">
+<label id="maskALabel">第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+<input id="maskA" value="***" placeholder="例如: *** 或 3~9">
+</div>
+
+<div class="block" id="maskBBlock">
+<label id="maskBLabel">第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+<input id="maskB" value="**" placeholder="例如: ** 或 2~9">
+</div>
+
+<div class="block" id="maskCBlock" style="display:none;">
+<label id="maskCLabel">第三數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+<input id="maskC" value="*" placeholder="例如: * 或 2~9">
+</div>
+
+<div class="block" id="maskDBlock" style="display:none;">
+<label id="maskDLabel">第四數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+<input id="maskD" value="*" placeholder="例如: * 或 2~9">
+</div>
+
+<div class="block" id="maskEBlock" style="display:none;">
+<label id="maskELabel">第五數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+<input id="maskE" value="*" placeholder="例如: * 或 2~9">
+</div>
+
+<div class="block" id="negativeBlock">
+<label>避免負數</label>
+<select id="negativeMode">
+<option value="yes">是</option>
+<option value="no">否</option>
+</select>
+</div>
+
+<div class="block" id="divisionBlock">
+<label>除法模式</label>
+<select id="divisionMode">
+<option value="integer">整除</option>
+<option value="remainder">餘數</option>
+<option value="decimal">小數(四位)</option>
+<option value="mixed_rem">混合(整除+餘數)</option>
+<option value="mixed_dec">混合(整除+小數)</option>
+</select>
+</div>
+
+<div class="block" id="carryBlock">
+<label>借位/進位</label>
+<select id="carryMode">
+<option value="mixed">一半需要一半不要</option>
+<option value="need">全部需要</option>
+<option value="none">全部不要</option>
+</select>
+</div>
+
+<div class="block">
+<button class="generate-btn" onclick="generateWorksheet()">產生題目</button>
+</div>
+
+<div class="block">
+<button class="print-btn" onclick="window.print()">列印</button>
+</div>
+
+<div class="block">
+<button class="help-btn" onclick="toggleHelpModal(true)">❓ 規則說明</button>
+</div>
+
+</div>
+
+<!-- 規則使用說明彈窗 -->
+<div id="helpModal" class="modal-overlay" onclick="if(event.target===this) toggleHelpModal(false)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📖 數字規則 (第一數至第五數) 使用說明</h3>
+      <button class="close-btn" onclick="toggleHelpModal(false)">&times;</button>
+    </div>
+    <p style="margin-top:0;">規則輸入框用於自訂題目中的<strong>第一數（左邊被運算數）</strong>與<strong>第二數（右邊運算數）</strong>格式。支援的語法如下：</p>
+    
+    <table class="rule-table">
+      <thead>
+        <tr>
+          <th style="width:28%;">語法 / 符號</th>
+          <th style="width:40%;">說明</th>
+          <th style="width:32%;">範例</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="rule-tag">~</span> 或 <span class="rule-tag">～</span> (範圍)</td>
+          <td><strong>指定數字範圍</strong><br><small style="color:#666;">(不用寫一長串逗號，直接在區間隨機選)</small></td>
+          <td><code>3~9</code> &rarr; 3到9隨機取一數<br><code>10~50</code> &rarr; 10到50隨機取一數<br><code>1~5/6~10</code> &rarr; 分子1~5、分母6~10</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">*</span> (星號)</td>
+          <td><strong>隨機一位數字</strong><br><small style="color:#666;">(首位自動為 1~9，避免 0 開頭)</small></td>
+          <td><code>*</code> &rarr; 1~9 (個位數)<br><code>**</code> &rarr; 10~99 (二位數)<br><code>***</code> &rarr; 100~999 (三位數)</td>
+        </tr>
+        <tr>
+          <td><strong>固定數字 / 混合位數</strong></td>
+          <td>直接輸入數字代表固定值，或固定特定位數</td>
+          <td><code>25</code> &rarr; 固定為 25<br><code>2*</code> &rarr; 20~29<br><code>1**</code> &rarr; 100~199</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">,</span> (逗號)</td>
+          <td><strong>多選隨機抽選</strong><br><small style="color:#666;">(每次隨機從逗號清單中抽一種)</small></td>
+          <td><code>3~9,20~50</code> &rarr; 從兩範圍抽一種<br><code>**,***</code> &rarr; 隨機抽二位或三位數<br><code>5,10,15,20</code> &rarr; 抽指定倍數</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">.</span> (小數點)</td>
+          <td><strong>小數格式</strong><br><small style="color:#666;">(適用於小數模式)</small></td>
+          <td><code>**.**</code> &rarr; 如 23.45<br><code>0.1~0.9</code> &rarr; 範圍小數<br><code>0.**</code> &rarr; 如 0.78</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">/</span> (斜線)</td>
+          <td><strong>真 / 假分數</strong><br><small style="color:#666;">(格式為 分子/分母)</small></td>
+          <td><code>*/*</code> &rarr; 如 3/7<br><code>1~5/7</code> &rarr; 分子1~5、分母7<br><code>1/*</code> &rarr; 分子固定為 1</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">+</span> 與 <span class="rule-tag">/</span></td>
+          <td><strong>帶分數</strong><br><small style="color:#666;">(格式為 整數+分子/分母)</small></td>
+          <td><code>*+*/*</code> &rarr; 如 2+1/3 (即 2又1/3)<br><code>1~3+1~5/8</code> &rarr; 帶分數範圍</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:#f8f9fa; padding:12px 14px; border-radius:8px; border-left:4px solid #ff9800; margin-top:14px;">
+      <strong style="color:#e65100;">💡 常見題型設定範例：</strong>
+      <ul style="margin:6px 0 0 18px; padding:0; font-size:13px; line-height:1.7;">
+        <li><strong>自訂乘法範圍 (例如 3~9 的乘法)：</strong> 第一數 <code>3~9</code> 、 第二數 <code>3~9</code></li>
+        <li><strong>二位數加減一位數：</strong> 第一數 <code>**</code> (或 <code>10~99</code>) 、 第二數 <code>*</code> (或 <code>1~9</code>)</li>
+        <li><strong>指定範圍混合運算：</strong> 第一數 <code>10~50</code> 、 第二數 <code>2~9</code></li>
+        <li><strong>四則運算 (多步驟運算)：</strong> 固定運算選擇「四則運算」，可分別設定第一數至第五數規則（如 第一數 <code>10~50</code>、第二數 <code>2~9</code>、第三數 <code>2~9</code>），支援括號與先乘除後加減。</li>
+        <li><strong>同分母分數加減：</strong> 第一數 <code>1~6/7</code> 、 第二數 <code>1~6/7</code></li>
+      </ul>
+    </div>
+    
+    <div style="text-align:right; margin-top:16px;">
+      <button style="background:#333; color:white; padding:8px 20px; border-radius:8px;" onclick="toggleHelpModal(false)">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div id="papersContainer"></div>
+
+<script>
+
+const usedQuestions = new Set();
+
+const today = new Date();
+const formattedDate =
+today.getFullYear() + '/' +
+String(today.getMonth()+1).padStart(2,'0') + '/' +
+String(today.getDate()).padStart(2,'0');
+
+function toggleHelpModal(show){
+  const modal = document.getElementById('helpModal');
+  if(modal){
+    modal.style.display = show ? 'flex' : 'none';
+  }
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') toggleHelpModal(false);
+});
+
+function toggleOptions(){
+  const type = document.getElementById('numberType').value;
+  const opMode = document.getElementById('operatorMode').value;
+  const isFourOps = (opMode === 'four_ops');
+
+  const divBlock = document.getElementById('divisionBlock');
+  const carryBlock = document.getElementById('carryBlock');
+  const fracBlock = document.getElementById('fractionOptions');
+  const opBlock = document.getElementById('operatorBlock');
+  const mixBlock = document.getElementById('mixBlock');
+  const negBlock = document.getElementById('negativeBlock');
+
+  const fourTermsBlock = document.getElementById('fourOpsTermsBlock');
+  const parenBlock = document.getElementById('parenBlock');
+  
+  const maskA = document.getElementById('maskA');
+  const maskB = document.getElementById('maskB');
+  const maskC = document.getElementById('maskC');
+  const maskD = document.getElementById('maskD');
+  const maskE = document.getElementById('maskE');
+
+  const maskALabel = document.getElementById('maskALabel');
+  const maskBBlock = document.getElementById('maskBBlock');
+  const maskCBlock = document.getElementById('maskCBlock');
+  const maskDBlock = document.getElementById('maskDBlock');
+  const maskEBlock = document.getElementById('maskEBlock');
+
+  // Reset defaults
+  divBlock.style.display = 'flex';
+  carryBlock.style.display = 'flex';
+  fracBlock.style.display = 'none';
+  opBlock.style.display = 'flex';
+  mixBlock.style.display = 'flex';
+  negBlock.style.display = 'flex';
+  maskBBlock.style.display = 'flex';
+  if(maskCBlock) maskCBlock.style.display = 'none';
+  if(maskDBlock) maskDBlock.style.display = 'none';
+  if(maskEBlock) maskEBlock.style.display = 'none';
+  if(fourTermsBlock) fourTermsBlock.style.display = 'none';
+  if(parenBlock) parenBlock.style.display = 'none';
+  maskALabel.innerHTML = '第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+
+  if (isFourOps) {
+    divBlock.style.display = 'none';
+    carryBlock.style.display = 'none';
+    if(fourTermsBlock) fourTermsBlock.style.display = 'flex';
+    if(parenBlock) parenBlock.style.display = 'flex';
+
+    const terms = document.getElementById('fourOpsTerms') ? document.getElementById('fourOpsTerms').value : '3';
+    if(maskCBlock) maskCBlock.style.display = 'flex';
+    if (terms === '4' || terms === '5' || terms === 'rand34' || terms === 'rand35') {
+      if(maskDBlock) maskDBlock.style.display = 'flex';
+    }
+    if (terms === '5' || terms === 'rand35') {
+      if(maskEBlock) maskEBlock.style.display = 'flex';
+    }
+
+    if (type === 'integer') {
+      if (!maskA.value || maskA.value === '***') maskA.value = '**';
+      if (!maskB.value || maskB.value === '***') maskB.value = '*';
+      if (!maskC.value) maskC.value = '*';
+      if (!maskD.value) maskD.value = '*';
+      if (!maskE.value) maskE.value = '*';
+    } else if (type === 'decimal') {
+      if (!maskA.value || maskA.value === '***') maskA.value = '*.**';
+      if (!maskB.value || maskB.value === '***') maskB.value = '*.**';
+      if (!maskC.value) maskC.value = '*.**';
+      if (!maskD.value) maskD.value = '*.**';
+      if (!maskE.value) maskE.value = '*.**';
+    }
+    return;
+  }
+
+  if(type === 'integer'){
+    maskA.value = '***';
+    maskB.value = '**';
+  } else if(type === 'decimal'){
+    divBlock.style.display = 'none';
+    carryBlock.style.display = 'none';
+    maskA.value = '**.**';
+    maskB.value = '**.**';
+  } else if(type === 'fraction'){
+    divBlock.style.display = 'none';
+    carryBlock.style.display = 'none';
+    fracBlock.style.display = 'flex';
+    
+    const fracMode = document.getElementById('fractionMode').value;
+    if (fracMode !== 'arithmetic') {
+      opBlock.style.display = 'none';
+      mixBlock.style.display = 'none';
+      negBlock.style.display = 'none';
+      maskBBlock.style.display = 'none';
+      maskALabel.innerHTML = '分數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+      
+      if (fracMode === 'm2i') {
+        maskA.value = '*+*/*';
+      } else if (fracMode === 'i2m') {
+        maskA.value = '*/*';
+      } else {
+        maskA.value = '*/*';
+      }
+    } else {
+      maskA.value = '*/*';
+      maskB.value = '*/*';
+    }
+  }
+}
+
+toggleOptions();
+
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function parseMask(mask){
+
+  mask = String(mask).trim();
+  
+  if (mask === '_') return '_';
+
+  // Handle comma-separated list: pick one at random
+  if(mask.includes(',')){
+    const parts = mask.split(',').map(p => p.trim()).filter(p => p.length > 0);
+    if(parts.length > 0){
+      mask = parts[rand(0, parts.length - 1)];
+    }
+  }
+
+  // Handle decimal ranges like 0.1~0.9 or 1.5~3.5
+  if(/(\d+\.\d+)\s*[~～]\s*(\d+\.\d+)/.test(mask)){
+    mask = mask.replace(/(\d+\.\d+)\s*[~～]\s*(\d+\.\d+)/g, (_, minStr, maxStr) => {
+      const min = parseFloat(minStr);
+      const max = parseFloat(maxStr);
+      const low = Math.min(min, max);
+      const high = Math.max(min, max);
+      const dec1 = (minStr.split('.')[1] || '').length;
+      const dec2 = (maxStr.split('.')[1] || '').length;
+      const dec = Math.max(dec1, dec2);
+      const factor = Math.pow(10, dec);
+      const val = rand(Math.round(low * factor), Math.round(high * factor)) / factor;
+      return val.toFixed(dec);
+    });
+  }
+
+  // Handle integer ranges like 3~9 or 10~50
+  if(/(\d+)\s*[~～]\s*(\d+)/.test(mask)){
+    mask = mask.replace(/(\d+)\s*[~～]\s*(\d+)/g, (_, minStr, maxStr) => {
+      const min = parseInt(minStr, 10);
+      const max = parseInt(maxStr, 10);
+      const low = Math.min(min, max);
+      const high = Math.max(min, max);
+      return String(rand(low, high));
+    });
+  }
+
+  if(/^\d+$/.test(mask)){
+    return parseInt(mask);
+  }
+
+  let output='';
+
+  for(let i=0;i<mask.length;i++){
+
+    const c = mask[i];
+
+    if(c==='*'){
+
+      const isStart = (i === 0 || mask[i-1] === '/' || mask[i-1] === ' ' || mask[i-1] === '+');
+      if(isStart || mask.length === 1){
+        output += rand(1,9);
+      }else{
+        output += rand(0,9);
+      }
+
+    }else{
+      output += c;
+    }
+  }
+
+  if (mask.includes('/') || mask.includes('.') || mask.includes('+') || /[^0-9*]/.test(mask)) {
+    return output;
+  }
+
+  const num = parseInt(output);
+
+  if(String(num).length !== mask.length){
+    return parseMask(mask);
+  }
+
+  return num;
+}
+
+function getSelectedOperators(){
+
+  const list =
+  [...document.querySelectorAll('.mix:checked')]
+  .map(v=>v.value);
+
+  return list.length ? list : ['+'];
+}
+
+function chooseOperator(){
+  const fixed = document.getElementById('operatorMode').value;
+  if(fixed !== 'mixed' && fixed !== 'four_ops'){
+    return fixed;
+  }
+  const list = getSelectedOperators();
+  return list[rand(0,list.length-1)];
+}
+
+function uglyNumber(n){
+
+  return [
+    '111','222','333','444','555',
+    '666','777','888','999',
+    '123','321'
+  ].includes(String(n));
+}
+
+function hasCarry(a,b){
+
+  const aa = String(a).split('').reverse();
+  const bb = String(b).split('').reverse();
+
+  for(let i=0;i<Math.max(aa.length,bb.length);i++){
+
+    const x = parseInt(aa[i]||0);
+    const y = parseInt(bb[i]||0);
+
+    if(x+y>=10){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasBorrow(a,b){
+
+  const aa = String(a).split('').reverse();
+  const bb = String(b).split('').reverse();
+
+  for(let i=0;i<aa.length;i++){
+
+    const x = parseInt(aa[i]||0);
+    const y = parseInt(bb[i]||0);
+
+    if(x<y){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function badQuestion(a,b,op){
+
+  const type = document.getElementById('numberType').value;
+  
+  if (type === 'fraction') {
+    if (a === '_' || b === '_') return false;
+    const f1 = toImproper(parseFraction(a));
+    const f2 = toImproper(parseFraction(b));
+    if (f1.d === 0 || f2.d === 0) return true;
+    if (op === '÷' && f2.n === 0) return true;
+    return false;
+  }
+
+  if (type === 'decimal') {
+    const fa = parseFloat(a);
+    const fb = parseFloat(b);
+    if (fa === 0 || fb === 0) return true;
+    if (op === '÷' && (fa === 0 || fb === 0)) return true;
+    return false;
+  }
+
+  if(a===0 || b===0) return true;
+  if(op==='÷' && a===0) return true;
+
+  if(op==='×' && (a===1 || b===1)) return true;
+
+  if(op==='÷' && (a===1 || b===1)) return true;
+
+  if(uglyNumber(a) || uglyNumber(b)) return true;
+
+  return false;
+}
+
+function gcd(a, b) {
+  return b ? gcd(b, a % b) : a;
+}
+
+function simplify(n, d) {
+  if (d === 0) return { n, d };
+  const common = gcd(Math.abs(n), Math.abs(d));
+  return { n: n / common, d: d / common };
+}
+
+function parseFraction(s) {
+  if (typeof s === 'number') return { n: s, d: 1, w: 0 };
+  s = String(s);
+  let w = 0, n = 0, d = 1;
+  
+  if (s.includes('+')) {
+    const parts = s.split('+');
+    w = parseInt(parts[0]);
+    const fParts = parts[1].split('/');
+    n = parseInt(fParts[0]);
+    d = parseInt(fParts[1]);
+  } else if (s.includes('/')) {
+    const parts = s.split('/');
+    n = parseInt(parts[0]);
+    d = parseInt(parts[1]);
+  } else {
+    n = parseInt(s);
+  }
+  return { n, d, w };
+}
+
+function toImproper(f) {
+  return { n: f.w * f.d + f.n, d: f.d };
+}
+
+function toMixed(f) {
+  const res = simplify(f.n, f.d);
+  const w = Math.floor(res.n / res.d);
+  const n = res.n % res.d;
+  return { w, n, d: res.d };
+}
+
+function formatFractionMathML(fStr) {
+  if (fStr === '_') return '<div style="width:30px; border-bottom:2px solid #000; height:20px; margin: 0 5px;"></div>';
+  if (String(fStr).includes('+')) {
+    const f = parseFraction(fStr);
+    return `${f.w}<math><mfrac><mi>${f.n}</mi><mi>${f.d}</mi></mfrac></math>`;
+  }
+  if (String(fStr).includes('/')) {
+    const parts = String(fStr).split('/');
+    return `<math><mfrac><mi>${parts[0]}</mi><mi>${parts[1]}</mi></mfrac></math>`;
+  }
+  return fStr;
+}
+
+function calculateFraction(a, b, op) {
+  const f1 = toImproper(parseFraction(a));
+  const f2 = toImproper(parseFraction(b));
+  let resN, resD;
+
+  switch (op) {
+    case '+':
+      resN = f1.n * f2.d + f2.n * f1.d;
+      resD = f1.d * f2.d;
+      break;
+    case '-':
+      resN = f1.n * f2.d - f2.n * f1.d;
+      resD = f1.d * f2.d;
+      break;
+    case '×':
+      resN = f1.n * f2.n;
+      resD = f1.d * f2.d;
+      break;
+    case '÷':
+      resN = f1.n * f2.d;
+      resD = f1.d * f2.n;
+      break;
+  }
+  
+  const res = simplify(resN, resD);
+  if (res.d < 0) { res.n *= -1; res.d *= -1; }
+  
+  const m = toMixed(res);
+  if (m.w === 0 && m.n === 0) return "0";
+  if (m.w === 0) return `${m.n}/${m.d}`;
+  if (m.n === 0) return String(m.w);
+  return `${m.w}+${m.n}/${m.d}`;
+}
+
+function calculate(a,b,op){
+
+  const type = document.getElementById('numberType').value;
+  
+  if (type === 'decimal') {
+    const fa = parseFloat(a);
+    const fb = parseFloat(b);
+    let res;
+    switch(op){
+      case '+': res = fa + fb; break;
+      case '-': res = fa - fb; break;
+      case '×': res = fa * fb; break;
+      case '÷': res = fa / fb; break;
+    }
+    return Math.round(res * 10000) / 10000;
+  }
+  
+  if (type === 'fraction') {
+    return calculateFraction(a, b, op);
+  }
+
+  switch(op){
+
+    case '+':
+      return a+b;
+
+    case '-':
+      return a-b;
+
+    case '×':
+      return a*b;
+
+    case '÷':
+
+      const mode =
+      document.getElementById('divisionMode').value;
+
+      if(mode==='remainder' || (mode==='mixed_rem' && a % b !== 0)){
+        return `${Math.floor(a/b)}...${a%b}`;
+      }
+      
+      if(mode==='decimal' || (mode==='mixed_dec' && a % b !== 0)){
+        return Math.round((a / b) * 10000) / 10000;
+      }
+
+      return a/b;
+  }
+}
+
+// Evaluate arithmetic expressions with +, -, *, / and parentheses
+function evalArithmeticExpr(expr, isInteger = true, avoidNegative = true) {
+  let pos = 0;
+  let hasError = false;
+
+  function skipWhitespace() {
+    while (pos < expr.length && expr[pos] === ' ') pos++;
+  }
+
+  function parseNumber() {
+    skipWhitespace();
+    let start = pos;
+    if (pos < expr.length && (expr[pos] === '+' || expr[pos] === '-')) {
+      pos++;
+    }
+    while (pos < expr.length && /[0-9.]/.test(expr[pos])) {
+      pos++;
+    }
+    if (start === pos) {
+      hasError = true;
+      return 0;
+    }
+    const num = parseFloat(expr.slice(start, pos));
+    if (isNaN(num)) hasError = true;
+    return num;
+  }
+
+  function parseFactor() {
+    skipWhitespace();
+    if (pos < expr.length && expr[pos] === '(') {
+      pos++; // consume '('
+      const val = parseExpr();
+      skipWhitespace();
+      if (pos < expr.length && expr[pos] === ')') {
+        pos++; // consume ')'
+      } else {
+        hasError = true;
+      }
+      return val;
+    }
+    return parseNumber();
+  }
+
+  function parseTerm() {
+    let val = parseFactor();
+    while (!hasError) {
+      skipWhitespace();
+      if (pos < expr.length && (expr[pos] === '*' || expr[pos] === '/')) {
+        const op = expr[pos];
+        pos++;
+        const nextVal = parseFactor();
+        if (op === '*') {
+          val = val * nextVal;
+        } else {
+          if (nextVal === 0) {
+            hasError = true;
+            return 0;
+          }
+          if (isInteger) {
+            if (Math.abs(val % nextVal) > 1e-9) {
+              hasError = true; // Not divisible evenly
+              return 0;
+            }
+          }
+          val = val / nextVal;
+        }
+      } else {
+        break;
+      }
+    }
+    return val;
+  }
+
+  function parseExpr() {
+    let val = parseTerm();
+    while (!hasError) {
+      skipWhitespace();
+      if (pos < expr.length && (expr[pos] === '+' || expr[pos] === '-')) {
+        const op = expr[pos];
+        pos++;
+        const nextVal = parseTerm();
+        if (op === '+') {
+          val = val + nextVal;
+        } else {
+          val = val - nextVal;
+          if (avoidNegative && val < 0) {
+            hasError = true;
+            return 0;
+          }
+        }
+      } else {
+        break;
+      }
+    }
+    if (avoidNegative && val < 0) hasError = true;
+    return val;
+  }
+
+  const result = parseExpr();
+  skipWhitespace();
+  if (pos !== expr.length) hasError = true;
+  if (isNaN(result) || !isFinite(result)) hasError = true;
+  if (avoidNegative && result < 0) hasError = true;
+
+  return { isValid: !hasError, value: result };
+}
+
+function buildFourOpsQuestion(index) {
+  const type = document.getElementById('numberType').value;
+  const isInteger = (type === 'integer');
+  const avoidNegative = (document.getElementById('negativeMode').value === 'yes');
+  const termsMode = document.getElementById('fourOpsTerms') ? document.getElementById('fourOpsTerms').value : '3';
+  const parenMode = document.getElementById('parenMode') ? document.getElementById('parenMode').value : 'mixed';
+
+  let numTerms = 3;
+  if (termsMode === '4') numTerms = 4;
+  else if (termsMode === '5') numTerms = 5;
+  else if (termsMode === 'rand34') numTerms = rand(3, 4);
+  else if (termsMode === 'rand35') numTerms = rand(3, 5);
+
+  const availableOps = getSelectedOperators();
+  const masks = [
+    document.getElementById('maskA').value || '**',
+    document.getElementById('maskB').value || '*',
+    document.getElementById('maskC').value || '*',
+    document.getElementById('maskD').value || '*',
+    document.getElementById('maskE').value || '*'
+  ];
+
+  let guard = 0;
+  while (guard < 500) {
+    guard++;
+
+    // 1. Generate numbers using maskA, maskB, maskC, maskD, maskE
+    const nums = [];
+    for (let i = 0; i < numTerms; i++) {
+      let n = parseMask(masks[i] || '*');
+      if (typeof n === 'number' && n === 0) n = rand(1, 9);
+      nums.push(n);
+    }
+
+    // 2. Choose operators
+    const ops = [];
+    for (let i = 0; i < numTerms - 1; i++) {
+      ops.push(availableOps[rand(0, availableOps.length - 1)]);
+    }
+
+    // 3. Parentheses placement
+    let useParen = false;
+    if (parenMode === 'always') useParen = true;
+    else if (parenMode === 'mixed') useParen = (Math.random() < 0.5);
+
+    let exprDisp = '';
+    if (!useParen) {
+      let parts = [];
+      for (let i = 0; i < numTerms; i++) {
+        parts.push(nums[i]);
+        if (i < numTerms - 1) parts.push(ops[i]);
+      }
+      exprDisp = parts.join(' ');
+    } else {
+      if (numTerms === 3) {
+        const pattern = rand(1, 2);
+        if (pattern === 1) {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} ${nums[2]}`;
+        } else {
+          exprDisp = `${nums[0]} ${ops[0]} (${nums[1]} ${ops[1]} ${nums[2]})`;
+        }
+      } else if (numTerms === 4) {
+        const pattern = rand(1, 4);
+        if (pattern === 1) {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} ${nums[2]} ${ops[2]} ${nums[3]}`;
+        } else if (pattern === 2) {
+          exprDisp = `${nums[0]} ${ops[0]} (${nums[1]} ${ops[1]} ${nums[2]}) ${ops[2]} ${nums[3]}`;
+        } else if (pattern === 3) {
+          exprDisp = `${nums[0]} ${ops[0]} ${nums[1]} ${ops[1]} (${nums[2]} ${ops[2]} ${nums[3]})`;
+        } else {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} (${nums[2]} ${ops[2]} ${nums[3]})`;
+        }
+      } else { // 5 terms
+        const pattern = rand(1, 4);
+        if (pattern === 1) {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} ${nums[2]} ${ops[2]} ${nums[3]} ${ops[3]} ${nums[4]}`;
+        } else if (pattern === 2) {
+          exprDisp = `${nums[0]} ${ops[0]} (${nums[1]} ${ops[1]} ${nums[2]}) ${ops[2]} ${nums[3]} ${ops[3]} ${nums[4]}`;
+        } else if (pattern === 3) {
+          exprDisp = `${nums[0]} ${ops[0]} ${nums[1]} ${ops[1]} (${nums[2]} ${ops[2]} ${nums[3]}) ${ops[3]} ${nums[4]}`;
+        } else {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} (${nums[2]} ${ops[2]} ${nums[3]})`;
+        }
+      }
+    }
+
+    const evalStr = exprDisp.replace(/×/g, '*').replace(/÷/g, '/');
+    const res = evalArithmeticExpr(evalStr, isInteger, avoidNegative);
+
+    if (res.isValid) {
+      let finalAns = res.value;
+      if (!isInteger) {
+        finalAns = Math.round(finalAns * 10000) / 10000;
+      }
+      return {
+        text: `${exprDisp} =`,
+        answer: String(finalAns),
+        op: ''
+      };
+    }
+  }
+
+  return {
+    text: `10 + (2 × 5) =`,
+    answer: "20",
+    op: ''
+  };
+}
+
+function buildQuestion(index){
+  const opMode = document.getElementById('operatorMode').value;
+  if (opMode === 'four_ops') {
+    return buildFourOpsQuestion(index);
+  }
+
+  const op = chooseOperator();
+  const type = document.getElementById('numberType').value;
+  const fracMode = document.getElementById('fractionMode').value;
+
+  let a,b;
+  let guard = 0;
+
+  if (type === 'fraction' && (fracMode === 'm2i' || fracMode === 'i2m' || fracMode === 'mix_conv')) {
+    // Conversion mode: Mixed <-> Improper
+    do {
+      let isMixedToImproper;
+      if (fracMode === 'm2i') isMixedToImproper = true;
+      else if (fracMode === 'i2m') isMixedToImproper = false;
+      else isMixedToImproper = (index % 2 === 1);
+
+      if (isMixedToImproper) {
+        // Mixed -> Improper: First number is mixed, second is blank
+        a = parseMask(document.getElementById('maskA').value.includes('+') ? document.getElementById('maskA').value : "*+*/*");
+        const f = parseFraction(a);
+        const imp = toImproper(f);
+        return { text: `${a} =`, answer: `${imp.n}/${imp.d}`, op: '' };
+      } else {
+        // Improper -> Mixed: First number is improper, second is blank
+        a = parseMask(document.getElementById('maskA').value.includes('+') ? "*/*" : document.getElementById('maskA').value);
+        const imp = parseFraction(a);
+        if (imp.n < imp.d) {
+          guard++;
+          continue;
+        }
+        const m = toMixed(imp);
+        const answer = m.n === 0 ? String(m.w) : `${m.w}+${m.n}/${m.d}`;
+        return { text: `${a} =`, answer: answer, op: '' };
+      }
+      guard++;
+    } while (guard < 100);
+    // Fallback if conversion fails
+    return { text: "3/2 =", answer: "1+1/2", op: '' };
+  }
+
+  do{
+
+    a = parseMask(
+      document.getElementById('maskA').value
+    );
+
+    b = parseMask(
+      document.getElementById('maskB').value
+    );
+
+    if(op==='-'){
+
+      if(
+        document.getElementById('negativeMode').value
+        === 'yes'
+      ){
+        let valA, valB;
+        if (type === 'decimal') { valA = parseFloat(a); valB = parseFloat(b); }
+        else if (type === 'fraction') {
+          const f1 = toImproper(parseFraction(a)); const f2 = toImproper(parseFraction(b));
+          valA = f1.n / f1.d; valB = f2.n / f2.d;
+        } else { valA = a; valB = b; }
+
+        if(valA<valB){
+          [a,b] = [b,a];
+        }
+      }
+    }
+
+    if(op==='÷' && type === 'integer'){
+
+      if(b===0) b=rand(2,9);
+
+      const mode =
+      document.getElementById('divisionMode').value;
+
+      if(mode==='integer'){
+        if (a < b) [a, b] = [b, a];
+        a = a - (a % b);
+      } else if(mode==='remainder'){
+        if (a < b) [a, b] = [b, a];
+      } else if(mode==='decimal'){
+        // Allow a < b
+      } else if(mode==='mixed_rem'){
+        if (a < b) [a, b] = [b, a];
+        if (Math.random() < 0.5) a = a - (a % b);
+      } else if(mode==='mixed_dec'){
+        if (Math.random() < 0.5) {
+          if (a < b) [a, b] = [b, a];
+          a = a - (a % b);
+        }
+      }
+    }
+
+    guard++;
+
+  }while(
+    (badQuestion(a,b,op) || (op==='÷' && a===0)) &&
+    guard<500
+  );
+
+  // Fallback for extreme cases to avoid returning bad questions
+  if (guard >= 500 && badQuestion(a, b, op)) {
+    a = rand(10, 20);
+    b = rand(2, 5);
+    if (op === '-') a = 20, b = 10;
+    if (op === '÷') a = 20, b = 4;
+  }
+
+  const carryMode =
+  document.getElementById('carryMode').value;
+
+  if(type === 'integer'){
+    if(op==='+'){
+
+      const carry = hasCarry(a,b);
+
+      if(carryMode==='need' && !carry){
+        return buildQuestion(index);
+      }
+
+      if(carryMode==='none' && carry){
+        return buildQuestion(index);
+      }
+    }
+
+    if(op==='-'){
+
+      const borrow = hasBorrow(a,b);
+
+      if(carryMode==='need' && !borrow){
+        return buildQuestion(index);
+      }
+
+      if(carryMode==='none' && borrow){
+        return buildQuestion(index);
+      }
+    }
+  }
+
+  return {
+    text:`${a}${op}${b}=`,
+    answer:calculate(a,b,op),
+    op: op
+  };
+}
+
+function getLayoutConfig(total, isFourOps = false){
+  let columns = 2;
+  if(total > 30) columns = 3;
+  if(total > 55) columns = 4;
+  if(total > 80) columns = 5;
+
+  const rows = Math.ceil(total / columns);
+  let size = Math.round(Math.max(10, 24 - (columns * 2)) * 1.5);
+  if (isFourOps) {
+    size = Math.max(11, Math.round(size * 0.72));
+  }
+  return { columns, rows, size };
+}
+
+function createQuestionHTML(
+  i,
+  text,
+  isAnswer=false,
+  answer='',
+  mainOp=''
+){
+  const type = document.getElementById('numberType').value;
+  let displayText = text;
+  let displayAnswer = answer;
+
+  if (type === 'fraction') {
+    if (mainOp) {
+      const parts = text.split(mainOp);
+      const f1 = formatFractionMathML(parts[0].trim());
+      const f2 = formatFractionMathML(parts[1].replace('=', '').trim());
+      displayText = `${f1} ${mainOp} ${f2} ${text.includes('=') ? '=' : ''}`;
+    } else if (text.includes('=')) {
+      const parts = text.split('=');
+      displayText = `${formatFractionMathML(parts[0].trim())} = ${formatFractionMathML(parts[1].trim())}`;
+    } else {
+      displayText = formatFractionMathML(text);
+    }
+    displayAnswer = formatFractionMathML(answer);
+  }
+
+  if(isAnswer){
+    return `
+    <div class="question">
+      <div class="qnum">${i}.</div>
+      <div class="qtext">${displayText}</div>
+      <div class="answer-box answer">${displayAnswer}</div>
+    </div>`;
+  }
+
+  return `
+  <div class="question">
+    <div class="qnum">${i}.</div>
+    <div class="qtext">${displayText}</div>
+    <div class="answer-box"></div>
+  </div>`;
+}
+
+function generateWorksheet(){
+  usedQuestions.clear();
+
+  const total = Math.max(
+    1,
+    Math.min(
+      100,
+      parseInt(document.getElementById('questionCount').value) || 40
+    )
+  );
+
+  const sheetCount = Math.max(
+    1,
+    Math.min(
+      50,
+      parseInt(document.getElementById('sheetCount').value) || 1
+    )
+  );
+
+  const answerMode = document.getElementById('includeAnswer').value;
+  const isFourOps = (document.getElementById('operatorMode').value === 'four_ops');
+
+  const { columns, rows, size } = getLayoutConfig(total, isFourOps);
+  document.documentElement.style.setProperty('--qsize', size + 'px');
+
+  const container = document.getElementById('papersContainer');
+  if(!container) return;
+  container.innerHTML = '';
+
+  const sheetsData = [];
+
+  for(let s = 1; s <= sheetCount; s++){
+    const questions = [];
+    const sheetUsed = new Set();
+
+    for(let i = 1; i <= total; i++){
+      let q;
+      let guard = 0;
+
+      do{
+        q = buildQuestion(i);
+        guard++;
+      } while((sheetUsed.has(q.text) || (guard < 200 && usedQuestions.has(q.text))) && guard < 500);
+
+      usedQuestions.add(q.text);
+      sheetUsed.add(q.text);
+      questions.push(q);
+    }
+
+    sheetsData.push({ sheetIndex: s, questions });
+  }
+
+  const hintHTML = isFourOps ? `<div class="rule-hint" style="text-align:center; font-size:12px; font-weight:bold; color:#222; margin-bottom:5px; background:#f5f5f5; padding:2px 8px; border-radius:4px; letter-spacing:0.5px;">【提示：有括號先算、先乘除後加減、由左而右計算】</div>` : '';
+
+  function buildPaperHTML(sIndex, questions, isAnswer) {
+    const titleText = isAnswer ? '答案卷' : '數學訓練卷';
+    const subTitle = sheetCount > 1 ? `<span style="font-size:18px; font-weight:normal; color:#555; margin-left:8px;">(第 ${sIndex} 份)</span>` : '';
+    const paperClass = isAnswer ? 'paper answer-paper' : 'paper question-paper';
+
+    let gridHTML = '';
+    for(let i = 1; i <= questions.length; i++){
+      const q = questions[i - 1];
+      gridHTML += createQuestionHTML(i, q.text, isAnswer, q.answer, q.op);
+    }
+
+    return `
+    <div class="${paperClass}">
+      <div class="title">${titleText}${subTitle}</div>
+      <div class="info-row">
+        <div>姓名：____________</div>
+        <div>日期：${formattedDate}</div>
+        <div>${isAnswer ? '得分' : '分數'}：____________</div>
+      </div>
+      ${hintHTML}
+      <div class="question-grid" style="grid-template-columns: repeat(${columns}, 1fr); grid-template-rows: repeat(${rows}, 1fr);">
+        ${gridHTML}
+      </div>
+    </div>`;
+  }
+
+  let allHTML = '';
+
+  if (answerMode === 'none') {
+    for (const sheet of sheetsData) {
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, false);
+    }
+  } else if (answerMode === 'alternate') {
+    for (const sheet of sheetsData) {
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, false);
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, true);
+    }
+  } else {
+    // 'back' (default): All question papers first, then all answer papers
+    for (const sheet of sheetsData) {
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, false);
+    }
+    for (const sheet of sheetsData) {
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, true);
+    }
+  }
+
+  container.innerHTML = allHTML;
+}
+
+generateWorksheet();
+
+</script>
+
+</body>
+</html>
