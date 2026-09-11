@@ -216,6 +216,20 @@
             padding-bottom: 20px;
         }
 
+        .visit-counter {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .visit-counter-label {
+            font-size: 13px;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
         @media (max-width: 600px) {
             .grid {
                 grid-template-columns: 1fr;
@@ -245,8 +259,8 @@
 
         <!-- 9.1 -->
         <div class="card">
-            <div class="card-title">萬用出題(all-3)</div>
-            <a href="https://kaneisbaga.github.io/math/all-3.html" class="go-btn">開啟出題</a>
+            <div class="card-title">萬用出題(all-5)</div>
+            <a href="https://kaneisbaga.github.io/math/all-5.html" class="go-btn">開啟出題</a>
         </div>
         
         <!-- 10 -->
@@ -364,6 +378,12 @@
     </div>
 
     <div class="footer">
+        <div class="visit-counter">
+            <span class="visit-counter-label">👀 網頁瀏覽次數</span>
+            <a href="https://hits.sh/kaneisbaga.github.io/math/">
+                <img src="https://hits.sh/kaneisbaga.github.io/math/.svg?style=flat&label=%E7%80%8F%E8%A6%BD%E6%AC%A1%E6%95%B8&color=3498db&labelColor=2c3e50" alt="瀏覽次數" />
+            </a>
+        </div>
         © 2026 數學自動出題系統 · 設計者：Rich
     </div>
 </div>
