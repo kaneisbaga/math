@@ -1,0 +1,4402 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>ultimate_training_math_generator_v6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --qsize:28px;
+  --primary:#2563eb;
+  --primary-hover:#1d4ed8;
+  --success:#16a34a;
+  --success-hover:#15803d;
+  --danger:#dc2626;
+  --warning:#d97706;
+  --info:#0284c7;
+  --bg-app:#f1f5f9;
+  --card-bg:#ffffff;
+  --text-main:#1e293b;
+  --text-muted:#64748b;
+  --border-color:#e2e8f0;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  padding:16px;
+  background:var(--bg-app);
+  font-family:"Microsoft JhengHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color:var(--text-main);
+}
+
+/* 頂部導航與操作面板 */
+.app-container{
+  max-width:1200px;
+  margin:0 auto 16px auto;
+}
+
+.app-header{
+  background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color:#fff;
+  border-radius:14px;
+  padding:16px 20px;
+  margin-bottom:12px;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.12);
+}
+
+.logo-title h2{
+  margin:0 0 4px 0;
+  font-size:20px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.version-tag{
+  font-size:12px;
+  background:#3b82f6;
+  color:#fff;
+  padding:2px 8px;
+  border-radius:12px;
+  font-weight:bold;
+  letter-spacing:0.5px;
+}
+
+.logo-title .subtitle{
+  font-size:13px;
+  color:#94a3b8;
+}
+
+.header-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+
+.btn{
+  border:none;
+  border-radius:8px;
+  padding:8px 14px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:13px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:all 0.15s ease-in-out;
+  box-shadow:0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn:active{
+  transform:scale(0.97);
+}
+
+.btn-primary{ background:var(--primary); color:#fff; }
+.btn-primary:hover{ background:var(--primary-hover); }
+
+.btn-success{ background:var(--success); color:#fff; }
+.btn-success:hover{ background:var(--success-hover); }
+
+.btn-info{ background:var(--info); color:#fff; }
+.btn-info:hover{ background:#0369a1; }
+
+.btn-secondary{ background:#475569; color:#fff; }
+.btn-secondary:hover{ background:#334155; }
+
+.btn-warning{ background:var(--warning); color:#fff; }
+.btn-warning:hover{ background:#b45309; }
+
+/* 控制面板與卡片分組 */
+.control-panel{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.panel-card{
+  background:var(--card-bg);
+  border:1px solid var(--border-color);
+  border-radius:12px;
+  padding:12px 16px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-title{
+  font-size:13px;
+  font-weight:bold;
+  color:var(--text-muted);
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
+/* 一鍵快選題型 */
+.preset-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.preset-pill{
+  background:#f8fafc;
+  border:1.5px solid #cbd5e1;
+  color:#334155;
+  border-radius:20px;
+  padding:5px 12px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+
+.preset-pill:hover{
+  background:#e2e8f0;
+  border-color:#94a3b8;
+  color:#0f172a;
+}
+
+.preset-pill.active{
+  background:#2563eb;
+  border-color:#2563eb;
+  color:#ffffff;
+  box-shadow:0 2px 6px rgba(37,99,235,0.3);
+}
+
+/* 表單元件排版 */
+.form-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:flex-end;
+}
+
+.block{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:115px;
+  flex:0 1 auto;
+}
+
+.block label{
+  font-size:12px;
+  font-weight:600;
+  color:#475569;
+}
+
+input, select{
+  border:1.5px solid #cbd5e1;
+  border-radius:8px;
+  padding:7px 10px;
+  font-size:13px;
+  background:#fff;
+  color:#0f172a;
+  outline:none;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus, select:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(37,99,235,0.15);
+}
+
+.check-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  height:35px;
+}
+
+.check-row label{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:bold;
+  background:#f1f5f9;
+  padding:4px 8px;
+  border-radius:6px;
+  user-select:none;
+}
+
+.check-row label:hover{
+  background:#e2e8f0;
+}
+
+/* 線上作答評分橫幅 */
+.interactive-banner{
+  display:none;
+  background:#fff;
+  border:2px solid #22c55e;
+  border-radius:12px;
+  padding:12px 18px;
+  margin-bottom:16px;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 4px 14px rgba(34,197,94,0.2);
+}
+
+.banner-content{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.score-badge{
+  font-size:26px;
+  font-weight:bold;
+  color:#15803d;
+  background:#dcfce7;
+  padding:4px 14px;
+  border-radius:10px;
+}
+
+.score-text h4{
+  margin:0 0 2px 0;
+  font-size:15px;
+  color:#0f172a;
+}
+
+.score-text p{
+  margin:0;
+  font-size:13px;
+  color:#475569;
+}
+
+/* 規則彈窗 */
+.modal-overlay{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.65);
+  z-index:1000;
+  justify-content:center;
+  align-items:center;
+  padding:16px;
+  backdrop-filter:blur(2px);
+}
+
+.modal-content{
+  background:#fff;
+  color:#333;
+  border-radius:14px;
+  max-width:680px;
+  width:100%;
+  max-height:85vh;
+  overflow-y:auto;
+  padding:24px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.35);
+  font-size:14px;
+  line-height:1.6;
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:2px solid #eee;
+  padding-bottom:12px;
+  margin-bottom:16px;
+}
+
+.modal-header h3{
+  margin:0;
+  font-size:18px;
+  color:#111;
+}
+
+.close-btn{
+  background:none;
+  border:none;
+  font-size:24px;
+  cursor:pointer;
+  color:#888;
+  padding:0;
+  line-height:1;
+}
+
+.close-btn:hover{ color:#000; }
+
+.rule-table{
+  width:100%;
+  border-collapse:collapse;
+  margin:12px 0;
+  font-size:13px;
+}
+
+.rule-table th, .rule-table td{
+  border:1px solid #e0e0e0;
+  padding:8px 10px;
+  text-align:left;
+}
+
+.rule-table th{
+  background:#f5f7fa;
+  font-weight:bold;
+  color:#222;
+}
+
+.rule-tag{
+  display:inline-block;
+  background:#e3f2fd;
+  color:#1565c0;
+  padding:2px 6px;
+  border-radius:4px;
+  font-family:monospace;
+  font-weight:bold;
+}
+
+.help-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  background:#ffa000;
+  color:#fff;
+  font-size:10px;
+  font-weight:bold;
+  border-radius:50%;
+  margin-left:4px;
+  cursor:pointer;
+  vertical-align:middle;
+}
+
+/* 試卷本體與紙張設定 */
+.paper{
+  width:210mm;
+  height:297mm;
+  background:white;
+  margin:auto auto 20px auto;
+  padding:8mm 9mm;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  box-sizing:border-box;
+}
+
+.question-paper, .answer-paper{
+  break-after:page;
+  page-break-after:always;
+}
+
+.paper:last-child{
+  break-after:auto;
+  page-break-after:auto;
+}
+
+.title{
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  margin-bottom:6px;
+  letter-spacing:1px;
+}
+
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:6px;
+  font-size:12px;
+  border-bottom:1.5px solid #333;
+  padding-bottom:4px;
+}
+
+.score-display-box{
+  font-weight:bold;
+  color:#b91c1c;
+}
+
+.question-grid{
+  flex:1;
+  display:grid;
+  gap:2px 12px;
+  align-content:stretch;
+  height:100%;
+}
+
+.question{
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid #e2e8f0;
+  min-height:34px;
+  padding:2px 0;
+  position:relative;
+}
+
+.qnum{
+  width:24px;
+  font-size:12px;
+  color:#64748b;
+  flex-shrink:0;
+  font-weight:600;
+}
+
+.qtext{
+  font-size:var(--qsize);
+  font-weight:bold;
+  white-space:nowrap;
+  line-height:1.2;
+  display:inline-flex;
+  align-items:center;
+}
+
+math {
+  font-family:"Microsoft JhengHei", serif;
+  font-size:1.1em;
+}
+
+/* 作答框與輸入元素 */
+.answer-wrapper{
+  display:inline-flex;
+  align-items:center;
+  margin-left:6px;
+  position:relative;
+}
+
+.answer-wrapper.factor-box{
+  flex:1;
+  min-width:90px;
+}
+
+.answer-box{
+  width:104px;
+  height:33px;
+  flex-shrink:0;
+  font-family:inherit;
+  text-align:center;
+  box-sizing:border-box;
+  transition:all 0.15s;
+}
+
+.answer-box.style-box{
+  border:2px solid #222;
+  border-radius:6px;
+  background:#fff;
+}
+
+.answer-box.style-underline{
+  border:none;
+  border-bottom:2px solid #222;
+  border-radius:0;
+  background:transparent;
+}
+
+.answer-box.factor-box{
+  width:auto;
+  min-width:85px;
+  flex:1;
+}
+
+.answer-box.unit-box{
+  width:84px;
+  min-width:68px;
+}
+
+.answer-box.unit-dual-box{
+  width:54px;
+  min-width:44px;
+}
+
+.answer-wrapper.unit-box{
+  flex-shrink:0;
+}
+
+.qtext.unit-compact, .qsuffix.unit-compact{
+  font-size:calc(var(--qsize) * 0.85);
+}
+
+.qtext.unit-xcompact, .qsuffix.unit-xcompact{
+  font-size:calc(var(--qsize) * 0.74);
+}
+
+.qsuffix{
+  font-size:var(--qsize);
+  font-weight:bold;
+  white-space:nowrap;
+  margin-left:5px;
+  line-height:1.2;
+  display:inline-flex;
+  align-items:center;
+}
+
+/* 線上輸入框樣式 */
+.answer-input{
+  padding:2px 6px;
+  font-size:16px;
+  font-weight:bold;
+  color:#0f172a;
+}
+
+.answer-input:focus{
+  border-color:var(--primary) !important;
+  box-shadow:0 0 0 3px rgba(37,99,235,0.2) !important;
+  background:#f8fafc !important;
+}
+
+.answer-input.is-correct{
+  border-color:#16a34a !important;
+  background:#f0fdf4 !important;
+  color:#15803d !important;
+}
+
+.answer-input.is-wrong{
+  border-color:#dc2626 !important;
+  background:#fef2f2 !important;
+  color:#b91c1c !important;
+}
+
+.feedback-mark{
+  display:none;
+  margin-left:4px;
+  font-size:12px;
+  font-weight:bold;
+  flex-shrink:0;
+  white-space:nowrap;
+}
+
+.feedback-mark.correct{
+  display:inline-block;
+  color:#16a34a;
+}
+
+.feedback-mark.wrong{
+  display:inline-block;
+  color:#dc2626;
+}
+
+/* 答案卷的靜態答案框 */
+.answer-box.answer{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  font-weight:bold;
+  color:#1e3a8a;
+  background:#f8fafc;
+  word-break:break-all;
+  overflow:hidden;
+}
+
+.answer-box.fraction-box{
+  min-height:42px;
+  height:auto;
+  padding:2px 6px;
+}
+
+.answer-box.answer.fraction-box{
+  font-size:calc(var(--qsize) * 0.88);
+  line-height:1.1;
+  overflow:visible;
+}
+
+.answer-box.answer.fraction-box math{
+  font-size:1.18em;
+}
+
+/* 列印專用樣式 */
+@media print{
+  @page{
+    size:A4;
+    margin:0;
+  }
+
+  body{
+    background:white !important;
+    padding:0 !important;
+    margin:0 !important;
+  }
+
+  .app-container, .modal-overlay, .interactive-banner{
+    display:none !important;
+  }
+
+  .paper{
+    margin:0 !important;
+    width:210mm !important;
+    height:297mm !important;
+    box-shadow:none !important;
+    break-after:page;
+    page-break-after:always;
+    break-inside:avoid;
+    page-break-inside:avoid;
+    box-sizing:border-box !important;
+    padding:8mm 9mm !important;
+  }
+
+  .paper:last-child{
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+
+  .question{
+    border-bottom:1px solid #ccc !important;
+  }
+
+  .answer-box{
+    box-shadow:none !important;
+    border-color:#000 !important;
+  }
+
+  .answer-input{
+    border:2px solid #000 !important;
+    background:transparent !important;
+  }
+
+  .answer-input.style-underline{
+    border:none !important;
+    border-bottom:2px solid #000 !important;
+  }
+
+  .answer-box.unit-box{
+    width:76px !important;
+  }
+
+  .answer-box.unit-dual-box{
+    width:50px !important;
+    min-width:42px !important;
+  }
+
+  .feedback-mark{
+    display:none !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+  <!-- 頂部導航與主要動作 -->
+  <header class="app-header">
+    <div class="logo-title">
+      <h2>🧮 數學出題與訓練產生器 <span class="version-tag">v6.0 Pro</span></h2>
+      <div class="subtitle">支援整數、小數、分數、國小全系列單位換算(長度/重量/容量/面積/體積/容積/時間)、四則混合、因數倍數</div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary" onclick="generateWorksheet()">🎲 產生題目</button>
+      <button type="button" class="btn btn-success" onclick="checkInteractiveAnswers()">✅ 線上批改</button>
+      <button type="button" class="btn btn-secondary" onclick="clearInteractiveInputs()">🧹 清空填寫</button>
+      <button type="button" class="btn btn-info" onclick="window.print()">🖨️ 列印試卷</button>
+      <button type="button" class="btn btn-warning" onclick="toggleHelpModal(true)">❓ 規則說明</button>
+    </div>
+  </header>
+
+  <!-- 批改結果橫幅 -->
+  <div id="interactiveBanner" class="interactive-banner">
+    <div class="banner-content">
+      <div id="bannerScore" class="score-badge">100分</div>
+      <div class="score-text">
+        <h4 id="bannerTitle">🎉 太棒了！全部答對！</h4>
+        <p id="bannerDetail">答對 40 題 / 共 40 題，正確率 100%</p>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="btn btn-secondary" onclick="clearInteractiveInputs()">重新做題</button>
+      <button type="button" class="btn btn-primary" onclick="generateWorksheet()">下一回題目 ➔</button>
+    </div>
+  </div>
+
+  <div class="control-panel">
+    <!-- 試卷與作答設定卡片 -->
+    <div class="panel-card">
+      <div class="card-title">📋 試卷版面與作答樣式</div>
+      <div class="form-row">
+        <div class="block">
+          <label>題目數量 (1~100)</label>
+          <input id="questionCount" type="number" min="1" max="100" value="40" onchange="generateWorksheet()">
+        </div>
+        <div class="block">
+          <label>試卷張數 (1~50)</label>
+          <input id="sheetCount" type="number" min="1" max="50" value="1" title="要生成幾張不同題目的試卷" onchange="generateWorksheet()">
+        </div>
+        <div class="block">
+          <label>答案卷選項</label>
+          <select id="includeAnswer" onchange="generateWorksheet()">
+            <option value="back">包含 (題目在前、答案在後)</option>
+            <option value="alternate">包含 (題目答案交替)</option>
+            <option value="none">不含答案卷 (只印題目)</option>
+          </select>
+        </div>
+        <div class="block">
+          <label>排版欄數</label>
+          <select id="columnLayout" onchange="generateWorksheet()">
+            <option value="auto" selected>自動最適欄數</option>
+            <option value="1">1 欄 (單欄極寬敞、大字手寫)</option>
+            <option value="2">2 欄 (寬敞、適合手寫草稿)</option>
+            <option value="3">3 欄 (標準緊湊)</option>
+            <option value="4">4 欄 (密集速算)</option>
+          </select>
+        </div>
+        <div class="block">
+          <label>作答框樣式</label>
+          <select id="boxStyle" onchange="generateWorksheet()">
+            <option value="box" selected>方框型 ▢</option>
+            <option value="underline">底線型 _____</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 題型與運算核心設定卡片 -->
+    <div class="panel-card">
+      <div class="card-title">🧮 題型、運算與數值規則</div>
+      <div class="form-row">
+        <div class="block">
+          <label>數字類型</label>
+          <select id="numberType" onchange="toggleOptions(); generateWorksheet()">
+            <option value="integer">整數</option>
+            <option value="decimal">小數</option>
+            <option value="fraction">分數</option>
+            <option value="unit">單位換算</option>
+          </select>
+        </div>
+
+        <!-- 單位換算控制項 -->
+        <div class="block" id="unitCategoryBlock" style="display:none;">
+          <label>換算類別</label>
+          <select id="unitCategory" onchange="toggleOptions(); generateWorksheet()">
+            <option value="length" selected>📏 長度換算 (公里/公尺/公分/毫米)</option>
+            <option value="weight">⚖️ 重量換算 (公噸/公斤/公克/毫克)</option>
+            <option value="capacity">🧪 容量換算 (公秉/公升/分公升/毫升)</option>
+            <option value="area">📐 面積換算 (平方公里/公頃/公畝/m²/cm²)</option>
+            <option value="volume">🧊 體積換算 (立方公尺/立方公分)</option>
+            <option value="vol_cap">💧 體積與容量換算 (m³/公秉/公升/毫升/cm³)</option>
+            <option value="time">⏱️ 時間換算 (日/時/分/秒)</option>
+            <option value="all_mix">🌟 國小單位綜合大混合 (跨類別總複習)</option>
+          </select>
+        </div>
+
+        <div class="block" id="lengthModeBlock" style="display:none;">
+          <label id="lengthModeLabel">題型模式</label>
+          <select id="lengthMode" onchange="generateWorksheet()">
+            <option value="mix" selected>綜合混合 (大換小/小換大/複名數/陷阱)</option>
+            <option value="trap">陷阱題專練 (大數跨級/補零/小數逆換)</option>
+            <option value="big_to_small">大單位 ➔ 小單位 (整數倍)</option>
+            <option value="small_to_big_int">小單位 ➔ 大單位 (整除整數)</option>
+            <option value="small_to_big_dec">小單位 ➔ 大單位 (含小數)</option>
+            <option value="compound_to_single">複名數 ➔ 小單位單名數 (如 3公里50公尺➔3050公尺)</option>
+            <option value="compound_to_single_dec">複名數 ➔ 大單位單名數 (如 3公里50公尺➔3.05公里)</option>
+            <option value="single_to_compound">單名數 ➔ 複名數 (如 3050公尺➔3公里50公尺)</option>
+          </select>
+        </div>
+
+        <div class="block" id="lengthUnitsBlock" style="display:none;">
+          <label id="lengthUnitsLabel">出現單位 (自由勾選，至少2個)</label>
+          <!-- 長度單位 -->
+          <div class="check-row unit-cb-group" id="unitCbs-length">
+            <label><input type="checkbox" class="length-unit-cb unit-cb-item" data-cat="length" id="unit-cb-km" value="km" checked onchange="handleUnitCbChange(this, 'length')">公里(km)</label>
+            <label><input type="checkbox" class="length-unit-cb unit-cb-item" data-cat="length" id="unit-cb-m" value="m" checked onchange="handleUnitCbChange(this, 'length')">公尺(m)</label>
+            <label><input type="checkbox" class="length-unit-cb unit-cb-item" data-cat="length" id="unit-cb-cm" value="cm" checked onchange="handleUnitCbChange(this, 'length')"><span id="cbCmLabel">公分(cm)</span></label>
+            <label><input type="checkbox" class="length-unit-cb unit-cb-item" data-cat="length" id="unit-cb-mm" value="mm" checked onchange="handleUnitCbChange(this, 'length')">毫米(mm)</label>
+          </div>
+          <!-- 重量單位 -->
+          <div class="check-row unit-cb-group" id="unitCbs-weight" style="display:none;">
+            <label><input type="checkbox" class="unit-cb-item" data-cat="weight" id="unit-cb-t" value="t" checked onchange="handleUnitCbChange(this, 'weight')">公噸(t)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="weight" id="unit-cb-kg" value="kg" checked onchange="handleUnitCbChange(this, 'weight')">公斤(kg)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="weight" id="unit-cb-g" value="g" checked onchange="handleUnitCbChange(this, 'weight')">公克(g)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="weight" id="unit-cb-mg" value="mg" onchange="handleUnitCbChange(this, 'weight')">毫克(mg)</label>
+          </div>
+          <!-- 容量單位 -->
+          <div class="check-row unit-cb-group" id="unitCbs-capacity" style="display:none;">
+            <label><input type="checkbox" class="unit-cb-item" data-cat="capacity" id="unit-cb-kl" value="kl" checked onchange="handleUnitCbChange(this, 'capacity')">公秉(kl)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="capacity" id="unit-cb-l" value="l" checked onchange="handleUnitCbChange(this, 'capacity')">公升(L)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="capacity" id="unit-cb-dl" value="dl" checked onchange="handleUnitCbChange(this, 'capacity')">分公升(dl)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="capacity" id="unit-cb-ml" value="ml" checked onchange="handleUnitCbChange(this, 'capacity')"><span id="cbMlLabel">毫升(ml)</span></label>
+          </div>
+          <!-- 面積單位 -->
+          <div class="check-row unit-cb-group" id="unitCbs-area" style="display:none;">
+            <label><input type="checkbox" class="unit-cb-item" data-cat="area" id="unit-cb-km2" value="km2" checked onchange="handleUnitCbChange(this, 'area')">平方公里(km²)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="area" id="unit-cb-ha" value="ha" checked onchange="handleUnitCbChange(this, 'area')">公頃(ha)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="area" id="unit-cb-a" value="a" checked onchange="handleUnitCbChange(this, 'area')">公畝(a)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="area" id="unit-cb-m2" value="m2" checked onchange="handleUnitCbChange(this, 'area')">平方公尺(m²)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="area" id="unit-cb-cm2" value="cm2" checked onchange="handleUnitCbChange(this, 'area')"><span id="cbCm2Label">平方公分(cm²)</span></label>
+          </div>
+          <!-- 體積單位 -->
+          <div class="check-row unit-cb-group" id="unitCbs-volume" style="display:none;">
+            <label><input type="checkbox" class="unit-cb-item" data-cat="volume" id="unit-cb-m3" value="m3" checked onchange="handleUnitCbChange(this, 'volume')">立方公尺(m³)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="volume" id="unit-cb-cm3" value="cm3" checked onchange="handleUnitCbChange(this, 'volume')"><span id="cbCm3Label">立方公分(cm³)</span></label>
+          </div>
+          <!-- 體積與容量(容積)單位 -->
+          <div class="check-row unit-cb-group" id="unitCbs-vol_cap" style="display:none;">
+            <label><input type="checkbox" class="unit-cb-item" data-cat="vol_cap" id="unit-cb-vc-m3" value="m3" checked onchange="handleUnitCbChange(this, 'vol_cap')">立方公尺(m³)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="vol_cap" id="unit-cb-vc-kl" value="kl" checked onchange="handleUnitCbChange(this, 'vol_cap')">公秉(kl)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="vol_cap" id="unit-cb-vc-l" value="l" checked onchange="handleUnitCbChange(this, 'vol_cap')">公升(L)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="vol_cap" id="unit-cb-vc-dl" value="dl" onchange="handleUnitCbChange(this, 'vol_cap')">分公升(dl)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="vol_cap" id="unit-cb-vc-ml" value="ml" checked onchange="handleUnitCbChange(this, 'vol_cap')"><span id="cbVcMlLabel">毫升(ml)</span></label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="vol_cap" id="unit-cb-vc-cm3" value="cm3" checked onchange="handleUnitCbChange(this, 'vol_cap')"><span id="cbVcCm3Label">立方公分(cm³)</span></label>
+          </div>
+          <!-- 時間單位 -->
+          <div class="check-row unit-cb-group" id="unitCbs-time" style="display:none;">
+            <label><input type="checkbox" class="unit-cb-item" data-cat="time" id="unit-cb-day" value="day" checked onchange="handleUnitCbChange(this, 'time')">日(d)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="time" id="unit-cb-hr" value="hr" checked onchange="handleUnitCbChange(this, 'time')">小時(hr)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="time" id="unit-cb-min" value="min" checked onchange="handleUnitCbChange(this, 'time')">分鐘(min)</label>
+            <label><input type="checkbox" class="unit-cb-item" data-cat="time" id="unit-cb-sec" value="sec" checked onchange="handleUnitCbChange(this, 'time')">秒(s)</label>
+          </div>
+          <!-- 綜合大混合類別勾選 -->
+          <div class="check-row unit-cb-group" id="unitCbs-all_mix" style="display:none;">
+            <label><input type="checkbox" class="unit-mix-cat-cb" value="length" checked onchange="handleUnitMixCatChange(this)">長度</label>
+            <label><input type="checkbox" class="unit-mix-cat-cb" value="weight" checked onchange="handleUnitMixCatChange(this)">重量</label>
+            <label><input type="checkbox" class="unit-mix-cat-cb" value="capacity" checked onchange="handleUnitMixCatChange(this)">容量</label>
+            <label><input type="checkbox" class="unit-mix-cat-cb" value="area" checked onchange="handleUnitMixCatChange(this)">面積</label>
+            <label><input type="checkbox" class="unit-mix-cat-cb" value="volume" checked onchange="handleUnitMixCatChange(this)">體積</label>
+            <label><input type="checkbox" class="unit-mix-cat-cb" value="vol_cap" checked onchange="handleUnitMixCatChange(this)">容積與容量</label>
+            <label><input type="checkbox" class="unit-mix-cat-cb" value="time" checked onchange="handleUnitMixCatChange(this)">時間</label>
+          </div>
+        </div>
+
+        <div class="block" id="trapBlock" style="display:none;">
+          <label>陷阱題 / 進階挑戰</label>
+          <select id="trapMode" onchange="generateWorksheet()">
+            <option value="mix" selected>隨機穿插陷阱題 (約 35%)</option>
+            <option value="always">全為高難度陷阱題 (挑戰模式)</option>
+            <option value="none">無陷阱題 (純標準題)</option>
+          </select>
+        </div>
+
+        <div class="block" id="unitDecimalBlock" style="display:none;">
+          <label>小數點題型</label>
+          <select id="unitDecimalMode" onchange="generateWorksheet()">
+            <option value="yes" selected>允許出現小數 (整數+小數)</option>
+            <option value="no">不出現小數 (純整數換算)</option>
+            <option value="only">僅出小數題 (小數強化專練)</option>
+          </select>
+        </div>
+
+        <div class="block" id="cmNameBlock" style="display:none;">
+          <label>公分名稱</label>
+          <select id="cmName" onchange="handleCmNameChange()">
+            <option value="公分" selected>公分</option>
+            <option value="釐米">釐米</option>
+            <option value="公分(釐米)">公分(釐米)</option>
+          </select>
+        </div>
+
+        <div class="block" id="mlNameBlock" style="display:none;">
+          <label>毫升名稱</label>
+          <select id="mlName" onchange="handleMlNameChange()">
+            <option value="毫升" selected>毫升</option>
+            <option value="毫公升">毫公升</option>
+            <option value="c.c.">c.c.</option>
+            <option value="毫升(c.c.)">毫升(c.c.)</option>
+          </select>
+        </div>
+
+        <div class="block" id="unitSymbolBlock" style="display:none;">
+          <label>單位符號樣式</label>
+          <select id="unitSymbol" onchange="generateWorksheet()">
+            <option value="mix_zh_en" selected>中英隨機混和 (第一題中文、第二題英文...)</option>
+            <option value="zh">全中文 (如 公里、公斤、公升、平方公尺、小時...)</option>
+            <option value="en">全英文代號 (如 km、kg、L、m²、hr...)</option>
+            <option value="cross_zh_en">中英對調互換 (如 15公里 = ___ m)</option>
+            <option value="both">中英並列 (如 公里(km)、公斤(kg)...)</option>
+          </select>
+        </div>
+
+        <div class="block" id="lengthRangeBlock" style="display:none;">
+          <label>數值大小</label>
+          <select id="lengthRange" onchange="toggleOptions(); generateWorksheet()">
+            <option value="easy">基礎 (1 ~ 50)</option>
+            <option value="medium" selected>中等 (1 ~ 200)</option>
+            <option value="hard">較大 (1 ~ 999)</option>
+            <option value="custom">自訂規則 (使用下方規則框)</option>
+          </select>
+        </div>
+
+        <div class="block" id="unitHintBlock" style="display:none;">
+          <label>附換算提示</label>
+          <select id="unitHint" onchange="generateWorksheet()">
+            <option value="no" selected>否 (標準試卷)</option>
+            <option value="yes">是 (卷頭附公式)</option>
+          </select>
+        </div>
+
+        <div class="block" id="integerOptions">
+          <label>整數模式</label>
+          <select id="integerMode" onchange="toggleOptions(); generateWorksheet()">
+            <option value="arithmetic">一般運算</option>
+            <option value="factor">1. 單一數字因數</option>
+            <option value="multiple">2. 單一數字倍數</option>
+            <option value="common_factor">3. 兩個數字的公因數</option>
+            <option value="common_multiple">4. 兩個數字的公倍數</option>
+            <option value="gcd">5. 兩個數字最大公因數</option>
+            <option value="lcm">6. 兩個數字最小公倍數</option>
+            <option value="mix_factor_multiple">混合：單一數字因數＋倍數 (1+2)</option>
+            <option value="mix_cf_cm">混合：兩數公因數＋公倍數 (3+4)</option>
+            <option value="mix_gcd_lcm">混合：最大公因數＋最小公倍數 (5+6)</option>
+            <option value="mix_all_factors">混合：因數全系列 (1+3+5)</option>
+            <option value="mix_all_multiples">混合：倍數全系列 (2+4+6)</option>
+            <option value="all_mix">綜合混合 (自選勾選 1~6)</option>
+          </select>
+        </div>
+
+        <div class="block" id="factorMixBlock" style="display:none;">
+          <label>勾選要混合的題型 (至少1項)</label>
+          <div class="check-row">
+            <label><input type="checkbox" class="fm-mix-cb" value="factor" checked onchange="handleFmMixCbChange(this)">1.單數因數</label>
+            <label><input type="checkbox" class="fm-mix-cb" value="multiple" checked onchange="handleFmMixCbChange(this)">2.單數倍數</label>
+            <label><input type="checkbox" class="fm-mix-cb" value="common_factor" checked onchange="handleFmMixCbChange(this)">3.兩數公因數</label>
+            <label><input type="checkbox" class="fm-mix-cb" value="common_multiple" checked onchange="handleFmMixCbChange(this)">4.兩數公倍數</label>
+            <label><input type="checkbox" class="fm-mix-cb" value="gcd" checked onchange="handleFmMixCbChange(this)">5.最大公因數</label>
+            <label><input type="checkbox" class="fm-mix-cb" value="lcm" checked onchange="handleFmMixCbChange(this)">6.最小公倍數</label>
+          </div>
+        </div>
+
+        <div class="block" id="excludePrimeBlock" style="display:none;">
+          <label>排除質數</label>
+          <select id="excludePrime" onchange="generateWorksheet()">
+            <option value="no">否</option>
+            <option value="yes">是</option>
+          </select>
+        </div>
+
+        <div class="block" id="multipleCountBlock" style="display:none;">
+          <label>倍數/公倍數數量</label>
+          <select id="multipleCount" onchange="generateWorksheet()">
+            <option value="2">前 2 個</option>
+            <option value="3">前 3 個</option>
+            <option value="4">前 4 個</option>
+            <option value="5" selected>前 5 個</option>
+            <option value="6">前 6 個</option>
+          </select>
+        </div>
+
+        <div class="block" id="operatorBlock">
+          <label>固定運算</label>
+          <select id="operatorMode" onchange="toggleOptions(); generateWorksheet()">
+            <option value="mixed">混合 (二數)</option>
+            <option value="+">加法</option>
+            <option value="-">減法</option>
+            <option value="×">乘法</option>
+            <option value="÷">除法</option>
+            <option value="four_ops">四則運算 (多步驟)</option>
+          </select>
+        </div>
+
+        <div class="block" id="fourOpsTermsBlock" style="display:none;">
+          <label>運算項數</label>
+          <select id="fourOpsTerms" onchange="toggleOptions(); generateWorksheet()">
+            <option value="3" selected>3 個數 (如 A+B×C)</option>
+            <option value="4">4 個數 (如 A+B×C-D)</option>
+            <option value="5">5 個數 (如 A+B×C-D÷E)</option>
+            <option value="rand34">隨機 3~4 個數</option>
+            <option value="rand35">隨機 3~5 個數</option>
+          </select>
+        </div>
+
+        <div class="block" id="parenBlock" style="display:none;">
+          <label>括號模式</label>
+          <select id="parenMode" onchange="generateWorksheet()">
+            <option value="mixed" selected>隨機包含括號</option>
+            <option value="none">無括號</option>
+            <option value="always">必含括號</option>
+          </select>
+        </div>
+
+        <div class="block" id="mixBlock">
+          <label>混合運算</label>
+          <div class="check-row">
+            <label><input type="checkbox" class="mix" value="+" checked onchange="generateWorksheet()">+</label>
+            <label><input type="checkbox" class="mix" value="-" checked onchange="generateWorksheet()">-</label>
+            <label><input type="checkbox" class="mix" value="×" checked onchange="generateWorksheet()">×</label>
+            <label><input type="checkbox" class="mix" value="÷" checked onchange="generateWorksheet()">÷</label>
+          </div>
+        </div>
+
+        <div class="block" id="fractionOptions" style="display:none;">
+          <label>分數模式</label>
+          <select id="fractionMode" onchange="toggleOptions(); generateWorksheet()">
+            <option value="arithmetic">一般運算</option>
+            <option value="m2i">帶分數->假分數</option>
+            <option value="i2m">假分數->帶分數</option>
+            <option value="mix_conv">混合</option>
+          </select>
+        </div>
+
+        <div class="block" id="fractionSimplifyBlock" style="display:none;">
+          <label>答案約分</label>
+          <select id="fractionSimplify" onchange="generateWorksheet()">
+            <option value="yes" selected>要 (最簡分數)</option>
+            <option value="no">不要 (不約分)</option>
+          </select>
+        </div>
+
+        <div class="block" id="maskABlock">
+          <label id="maskALabel">第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+          <input id="maskA" value="***" placeholder="例如: *** 或 3~9" onchange="generateWorksheet()">
+        </div>
+
+        <div class="block" id="maskBBlock">
+          <label id="maskBLabel">第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+          <input id="maskB" value="**" placeholder="例如: ** 或 2~9" onchange="generateWorksheet()">
+        </div>
+
+        <div class="block" id="maskCBlock" style="display:none;">
+          <label id="maskCLabel">第三數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+          <input id="maskC" value="*" placeholder="例如: * 或 2~9" onchange="generateWorksheet()">
+        </div>
+
+        <div class="block" id="maskDBlock" style="display:none;">
+          <label id="maskDLabel">第四數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+          <input id="maskD" value="*" placeholder="例如: * 或 2~9" onchange="generateWorksheet()">
+        </div>
+
+        <div class="block" id="maskEBlock" style="display:none;">
+          <label id="maskELabel">第五數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span></label>
+          <input id="maskE" value="*" placeholder="例如: * 或 2~9" onchange="generateWorksheet()">
+        </div>
+
+        <div class="block" id="negativeBlock">
+          <label>避免負數</label>
+          <select id="negativeMode" onchange="generateWorksheet()">
+            <option value="yes">是</option>
+            <option value="no">否</option>
+          </select>
+        </div>
+
+        <div class="block" id="divisionBlock">
+          <label>除法模式</label>
+          <select id="divisionMode" onchange="generateWorksheet()">
+            <option value="integer">整除</option>
+            <option value="remainder">餘數</option>
+            <option value="decimal">小數(四位)</option>
+            <option value="mixed_rem">混合(整除+餘數)</option>
+            <option value="mixed_dec">混合(整除+小數)</option>
+          </select>
+        </div>
+
+        <div class="block" id="carryBlock">
+          <label>借位/進位</label>
+          <select id="carryMode" onchange="generateWorksheet()">
+            <option value="mixed">一半需要一半不要</option>
+            <option value="need">全部需要</option>
+            <option value="none">全部不要</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 規則使用說明彈窗 -->
+<div id="helpModal" class="modal-overlay" onclick="if(event.target===this) toggleHelpModal(false)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📖 數字規則 (第一數至第五數) 使用說明</h3>
+      <button class="close-btn" onclick="toggleHelpModal(false)">&times;</button>
+    </div>
+    <p style="margin-top:0;">規則輸入框用於自訂題目中的<strong>第一數（左邊被運算數）</strong>與<strong>第二數（右邊運算數）</strong>格式。支援的語法如下：</p>
+    
+    <table class="rule-table">
+      <thead>
+        <tr>
+          <th style="width:28%;">語法 / 符號</th>
+          <th style="width:40%;">說明</th>
+          <th style="width:32%;">範例</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="rule-tag">~</span> 或 <span class="rule-tag">～</span> (範圍)</td>
+          <td><strong>指定數字範圍</strong><br><small style="color:#666;">(不用寫一長串逗號，直接在區間隨機選)</small></td>
+          <td><code>3~9</code> &rarr; 3到9隨機取一數<br><code>10~50</code> &rarr; 10到50隨機取一數<br><code>1~5/6~10</code> &rarr; 分子1~5、分母6~10</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">*</span> (星號)</td>
+          <td><strong>隨機一位數字</strong><br><small style="color:#666;">(首位自動為 1~9，避免 0 開頭)</small></td>
+          <td><code>*</code> &rarr; 1~9 (個位數)<br><code>**</code> &rarr; 10~99 (二位數)<br><code>***</code> &rarr; 100~999 (三位數)</td>
+        </tr>
+        <tr>
+          <td><strong>固定數字 / 混合位數</strong></td>
+          <td>直接輸入數字代表固定值，或固定特定位數</td>
+          <td><code>25</code> &rarr; 固定為 25<br><code>2*</code> &rarr; 20~29<br><code>1**</code> &rarr; 100~199</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">,</span> (逗號)</td>
+          <td><strong>多選隨機抽選</strong><br><small style="color:#666;">(每次隨機從逗號清單中抽一種)</small></td>
+          <td><code>3~9,20~50</code> &rarr; 從兩範圍抽一種<br><code>**,***</code> &rarr; 隨機抽二位或三位數<br><code>5,10,15,20</code> &rarr; 抽指定倍數</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">.</span> (小數點)</td>
+          <td><strong>小數格式</strong><br><small style="color:#666;">(適用於小數模式)</small></td>
+          <td><code>**.**</code> &rarr; 如 23.45<br><code>0.1~0.9</code> &rarr; 範圍小數<br><code>0.**</code> &rarr; 如 0.78</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">/</span> (斜線)</td>
+          <td><strong>真 / 假分數</strong><br><small style="color:#666;">(格式為 分子/分母)</small></td>
+          <td><code>*/*</code> &rarr; 如 3/7<br><code>1~5/7</code> &rarr; 分子1~5、分母7<br><code>1/*</code> &rarr; 分子固定為 1</td>
+        </tr>
+        <tr>
+          <td><span class="rule-tag">+</span> 與 <span class="rule-tag">/</span></td>
+          <td><strong>帶分數</strong><br><small style="color:#666;">(格式為 整數+分子/分母)</small></td>
+          <td><code>*+*/*</code> &rarr; 如 2+1/3 (即 2又1/3)<br><code>1~3+1~5/8</code> &rarr; 帶分數範圍</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:#f8f9fa; padding:12px 14px; border-radius:8px; border-left:4px solid #ff9800; margin-top:14px;">
+      <strong style="color:#e65100;">💡 常見題型設定範例：</strong>
+      <ul style="margin:6px 0 0 18px; padding:0; font-size:13px; line-height:1.7;">
+        <li><strong>自訂乘法範圍 (例如 3~9 的乘法)：</strong> 第一數 <code>3~9</code> 、 第二數 <code>3~9</code></li>
+        <li><strong>二位數加減一位數：</strong> 第一數 <code>**</code> (或 <code>10~99</code>) 、 第二數 <code>*</code> (或 <code>1~9</code>)</li>
+        <li><strong>指定範圍混合運算：</strong> 第一數 <code>10~50</code> 、 第二數 <code>2~9</code></li>
+        <li><strong>四則運算 (多步驟運算)：</strong> 固定運算選擇「四則運算」，可分別設定第一數至第五數規則（如 第一數 <code>10~50</code>、第二數 <code>2~9</code>、第三數 <code>2~9</code>），支援括號與先乘除後加減。</li>
+        <li><strong>同分母分數加減：</strong> 第一數 <code>1~6/7</code> 、 第二數 <code>1~6/7</code>（可透過「答案約分」選擇答案是否要化為最簡分數）</li>
+        <li><strong>整數因數與倍數 (六大題型)：</strong> 選擇數字類型「整數」並切換整數模式，支援：
+          <strong>1. 單一數字因數</strong>、<strong>2. 單一數字倍數</strong>、<strong>3. 兩個數字的公因數</strong>、<strong>4. 兩個數字的公倍數</strong>、<strong>5. 兩個數字最大公因數</strong>、<strong>6. 兩個數字最小公倍數</strong>，以及多種混合模式與自由勾選混合。可透過第一數/第二數規則自訂數值範圍（如 <code>10~100</code>、<code>10~50</code>、<code>6~30</code>），並可設定是否排除質數、以及倍數/公倍數要列出的數量。</li>
+        <li><strong>國小全系列單位換算：</strong> 選擇數字類型「單位換算」，完整支援國小一至六年級八大換算類別：
+          <strong>📏 長度換算</strong>（公里/公尺/公分/毫米）、<strong>⚖️ 重量換算</strong>（公噸/公斤/公克/毫克）、<strong>🧪 容量換算</strong>（公秉/公升/分公升/毫升）、<strong>📐 面積換算</strong>（平方公里/公頃/公畝/平方公尺/平方公分）、<strong>🧊 體積換算</strong>（立方公尺/立方公分）、<strong>💧 體積與容量(容積)換算</strong>（m³/公秉/公升/分公升/毫升/cm³）、<strong>⏱️ 時間換算</strong>（日/時/分/秒，支援 24 進位與 60 進位整數及有限小數換算）、以及<strong>🌟 國小單位綜合大混合</strong>（跨類別總複習）。支援自由勾選出現單位、大換小、小換大、複名數換單名數（換小單位或大單位小數）、單名數換複名數（雙格作答）、高難度陷阱題專練、以及中英代號混合等豐富設定。</li>
+      </ul>
+    </div>
+    
+    <div style="text-align:right; margin-top:16px;">
+      <button style="background:#333; color:white; padding:8px 20px; border-radius:8px;" onclick="toggleHelpModal(false)">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div id="papersContainer"></div>
+
+<script>
+
+const usedQuestions = new Set();
+
+const today = new Date();
+const formattedDate =
+today.getFullYear() + '/' +
+String(today.getMonth()+1).padStart(2,'0') + '/' +
+String(today.getDate()).padStart(2,'0');
+
+function toggleHelpModal(show){
+  const modal = document.getElementById('helpModal');
+  if(modal){
+    modal.style.display = show ? 'flex' : 'none';
+  }
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') {
+    toggleHelpModal(false);
+  } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    generateWorksheet();
+  }
+});
+
+let lastIntMode = 'arithmetic';
+
+function handleFmMixCbChange(el) {
+  const checked = document.querySelectorAll('.fm-mix-cb:checked');
+  if (checked.length < 1) {
+    alert('至少需勾選 1 種因數倍數題型！');
+    if (el) el.checked = true;
+    return;
+  }
+  toggleOptions();
+  generateWorksheet();
+}
+
+function getSelectedFmMixModes() {
+  const checked = Array.from(document.querySelectorAll('.fm-mix-cb:checked')).map(cb => cb.value);
+  return checked.length > 0 ? checked : ['factor', 'multiple', 'common_factor', 'common_multiple', 'gcd', 'lcm'];
+}
+
+function toggleOptions(){
+  const type = document.getElementById('numberType').value;
+  const intOptions = document.getElementById('integerOptions');
+  const factorMixBlock = document.getElementById('factorMixBlock');
+  const excludePrimeBlock = document.getElementById('excludePrimeBlock');
+  const multipleCountBlock = document.getElementById('multipleCountBlock');
+  const multipleCountSelect = document.getElementById('multipleCount');
+  const intMode = document.getElementById('integerMode') ? document.getElementById('integerMode').value : 'arithmetic';
+
+  const opMode = document.getElementById('operatorMode').value;
+  const isFourOps = (opMode === 'four_ops');
+
+  const divBlock = document.getElementById('divisionBlock');
+  const carryBlock = document.getElementById('carryBlock');
+  const fracBlock = document.getElementById('fractionOptions');
+  const fracSimplifyBlock = document.getElementById('fractionSimplifyBlock');
+  const opBlock = document.getElementById('operatorBlock');
+  const mixBlock = document.getElementById('mixBlock');
+  const negBlock = document.getElementById('negativeBlock');
+
+  const fourTermsBlock = document.getElementById('fourOpsTermsBlock');
+  const parenBlock = document.getElementById('parenBlock');
+  
+  const maskA = document.getElementById('maskA');
+  const maskB = document.getElementById('maskB');
+  const maskC = document.getElementById('maskC');
+  const maskD = document.getElementById('maskD');
+  const maskE = document.getElementById('maskE');
+
+  const maskALabel = document.getElementById('maskALabel');
+  const maskBLabel = document.getElementById('maskBLabel');
+  const maskABlock = document.getElementById('maskABlock');
+  const maskBBlock = document.getElementById('maskBBlock');
+  const maskCBlock = document.getElementById('maskCBlock');
+  const maskDBlock = document.getElementById('maskDBlock');
+  const maskEBlock = document.getElementById('maskEBlock');
+
+  // Unit conversion blocks
+  const unitCatBlock = document.getElementById('unitCategoryBlock');
+  const lengthModeBlock = document.getElementById('lengthModeBlock');
+  const lengthUnitsBlock = document.getElementById('lengthUnitsBlock');
+  const lengthUnitsLabel = document.getElementById('lengthUnitsLabel');
+  const trapBlock = document.getElementById('trapBlock');
+  const unitDecimalBlock = document.getElementById('unitDecimalBlock');
+  const cmNameBlock = document.getElementById('cmNameBlock');
+  const mlNameBlock = document.getElementById('mlNameBlock');
+  const unitSymbolBlock = document.getElementById('unitSymbolBlock');
+  const lengthRangeBlock = document.getElementById('lengthRangeBlock');
+  const unitHintBlock = document.getElementById('unitHintBlock');
+
+  // Reset defaults
+  if (intOptions) intOptions.style.display = 'none';
+  if (factorMixBlock) factorMixBlock.style.display = 'none';
+  if (excludePrimeBlock) excludePrimeBlock.style.display = 'none';
+  if (multipleCountBlock) multipleCountBlock.style.display = 'none';
+
+  if (unitCatBlock) unitCatBlock.style.display = 'none';
+  if (lengthModeBlock) lengthModeBlock.style.display = 'none';
+  if (lengthUnitsBlock) lengthUnitsBlock.style.display = 'none';
+  if (trapBlock) trapBlock.style.display = 'none';
+  if (unitDecimalBlock) unitDecimalBlock.style.display = 'none';
+  if (cmNameBlock) cmNameBlock.style.display = 'none';
+  if (mlNameBlock) mlNameBlock.style.display = 'none';
+  if (unitSymbolBlock) unitSymbolBlock.style.display = 'none';
+  if (lengthRangeBlock) lengthRangeBlock.style.display = 'none';
+  if (unitHintBlock) unitHintBlock.style.display = 'none';
+
+  divBlock.style.display = 'flex';
+  carryBlock.style.display = 'flex';
+  fracBlock.style.display = 'none';
+  if (fracSimplifyBlock) fracSimplifyBlock.style.display = 'none';
+  opBlock.style.display = 'flex';
+  mixBlock.style.display = 'flex';
+  negBlock.style.display = 'flex';
+  if (maskABlock) maskABlock.style.display = 'flex';
+  maskBBlock.style.display = 'flex';
+  if(maskCBlock) maskCBlock.style.display = 'none';
+  if(maskDBlock) maskDBlock.style.display = 'none';
+  if(maskEBlock) maskEBlock.style.display = 'none';
+  if(fourTermsBlock) fourTermsBlock.style.display = 'none';
+  if(parenBlock) parenBlock.style.display = 'none';
+  maskALabel.innerHTML = '第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+  if (maskBLabel) maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+
+  const autoPresetsA = ['***', '**.**', '*/*', '10~50', '6~30', '4~24', '10~100', '2~20', '2~100', '1~100'];
+  const autoPresetsB = ['**', '***', '**.**', '*/*', '10~50', '6~30', '4~24'];
+
+  if (type === 'unit') {
+    divBlock.style.display = 'none';
+    carryBlock.style.display = 'none';
+    fracBlock.style.display = 'none';
+    opBlock.style.display = 'none';
+    mixBlock.style.display = 'none';
+    negBlock.style.display = 'none';
+    maskBBlock.style.display = 'none';
+    if(maskCBlock) maskCBlock.style.display = 'none';
+    if(maskDBlock) maskDBlock.style.display = 'none';
+    if(maskEBlock) maskEBlock.style.display = 'none';
+    if(fourTermsBlock) fourTermsBlock.style.display = 'none';
+    if(parenBlock) parenBlock.style.display = 'none';
+
+    if (unitCatBlock) unitCatBlock.style.display = 'flex';
+    if (lengthModeBlock) lengthModeBlock.style.display = 'flex';
+    if (lengthUnitsBlock) lengthUnitsBlock.style.display = 'flex';
+    if (trapBlock) trapBlock.style.display = 'flex';
+    if (unitDecimalBlock) unitDecimalBlock.style.display = 'flex';
+    if (unitSymbolBlock) unitSymbolBlock.style.display = 'flex';
+    if (lengthRangeBlock) lengthRangeBlock.style.display = 'flex';
+    if (unitHintBlock) unitHintBlock.style.display = 'flex';
+
+    const cat = document.getElementById('unitCategory') ? document.getElementById('unitCategory').value : 'length';
+
+    // Show the active category's checkbox group
+    document.querySelectorAll('.unit-cb-group').forEach(grp => {
+      grp.style.display = 'none';
+    });
+    const activeGrp = document.getElementById(`unitCbs-${cat}`);
+    if (activeGrp) activeGrp.style.display = 'flex';
+
+    if (lengthUnitsLabel) {
+      if (cat === 'all_mix') {
+        lengthUnitsLabel.textContent = '要混合的換算類別 (至少勾選1類)';
+      } else {
+        lengthUnitsLabel.textContent = '出現單位 (自由勾選，至少2個)';
+      }
+    }
+
+    if (['length', 'area', 'volume', 'vol_cap', 'all_mix'].includes(cat)) {
+      if (cmNameBlock) cmNameBlock.style.display = 'flex';
+    }
+    if (['capacity', 'vol_cap', 'all_mix'].includes(cat)) {
+      if (mlNameBlock) mlNameBlock.style.display = 'flex';
+    }
+
+    const rangeVal = document.getElementById('lengthRange') ? document.getElementById('lengthRange').value : 'medium';
+    if (rangeVal === 'custom') {
+      if (maskABlock) maskABlock.style.display = 'flex';
+      maskALabel.innerHTML = '自訂數值規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+      if (!maskA.value || autoPresetsA.includes(maskA.value)) {
+        maskA.value = '1~100';
+      }
+    } else {
+      if (maskABlock) maskABlock.style.display = 'none';
+    }
+    return;
+  }
+
+  if (type === 'integer') {
+    if (intOptions) intOptions.style.display = 'flex';
+
+    if (intMode !== 'arithmetic') {
+      opBlock.style.display = 'none';
+      mixBlock.style.display = 'none';
+      negBlock.style.display = 'none';
+      divBlock.style.display = 'none';
+      carryBlock.style.display = 'none';
+
+      if (intMode === 'factor') {
+        maskBBlock.style.display = 'none';
+        maskALabel.innerHTML = '目標數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (excludePrimeBlock) excludePrimeBlock.style.display = 'flex';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) {
+          maskA.value = '10~100';
+        }
+      } else if (intMode === 'multiple') {
+        maskBBlock.style.display = 'none';
+        maskALabel.innerHTML = '目標數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (multipleCountBlock) multipleCountBlock.style.display = 'flex';
+        if (lastIntMode !== 'multiple' && multipleCountSelect) multipleCountSelect.value = '5';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) {
+          maskA.value = '2~20';
+        }
+      } else if (intMode === 'mix_factor_multiple') {
+        maskBBlock.style.display = 'none';
+        maskALabel.innerHTML = '目標數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (excludePrimeBlock) excludePrimeBlock.style.display = 'flex';
+        if (multipleCountBlock) multipleCountBlock.style.display = 'flex';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) {
+          maskA.value = '2~100';
+        }
+      } else if (intMode === 'common_factor') {
+        maskBBlock.style.display = 'flex';
+        maskALabel.innerHTML = '第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) maskA.value = '10~50';
+        if (!maskB.value || autoPresetsB.includes(maskB.value)) maskB.value = '10~50';
+      } else if (intMode === 'common_multiple') {
+        maskBBlock.style.display = 'flex';
+        if (multipleCountBlock) multipleCountBlock.style.display = 'flex';
+        if (lastIntMode !== 'common_multiple' && multipleCountSelect) multipleCountSelect.value = '3';
+        maskALabel.innerHTML = '第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) maskA.value = '4~24';
+        if (!maskB.value || autoPresetsB.includes(maskB.value)) maskB.value = '4~24';
+      } else if (intMode === 'mix_cf_cm') {
+        maskBBlock.style.display = 'flex';
+        if (multipleCountBlock) multipleCountBlock.style.display = 'flex';
+        if (lastIntMode !== 'mix_cf_cm' && multipleCountSelect) multipleCountSelect.value = '3';
+        maskALabel.innerHTML = '第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) maskA.value = '6~30';
+        if (!maskB.value || autoPresetsB.includes(maskB.value)) maskB.value = '6~30';
+      } else if (intMode === 'gcd' || intMode === 'mix_gcd_lcm') {
+        maskBBlock.style.display = 'flex';
+        maskALabel.innerHTML = '第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) maskA.value = '10~50';
+        if (!maskB.value || autoPresetsB.includes(maskB.value)) maskB.value = '10~50';
+      } else if (intMode === 'lcm') {
+        maskBBlock.style.display = 'flex';
+        maskALabel.innerHTML = '第一數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) maskA.value = '6~30';
+        if (!maskB.value || autoPresetsB.includes(maskB.value)) maskB.value = '6~30';
+      } else if (intMode === 'mix_all_factors') {
+        maskBBlock.style.display = 'flex';
+        if (excludePrimeBlock) excludePrimeBlock.style.display = 'flex';
+        maskALabel.innerHTML = '第一數規則 (或目標數) <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) maskA.value = '10~50';
+        if (!maskB.value || autoPresetsB.includes(maskB.value)) maskB.value = '10~50';
+      } else if (intMode === 'mix_all_multiples') {
+        maskBBlock.style.display = 'flex';
+        if (multipleCountBlock) multipleCountBlock.style.display = 'flex';
+        if (lastIntMode !== 'mix_all_multiples' && multipleCountSelect) multipleCountSelect.value = '3';
+        maskALabel.innerHTML = '第一數規則 (或目標數) <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) maskA.value = '4~24';
+        if (!maskB.value || autoPresetsB.includes(maskB.value)) maskB.value = '4~24';
+      } else if (intMode === 'all_mix') {
+        if (factorMixBlock) factorMixBlock.style.display = 'flex';
+        const activeMix = getSelectedFmMixModes();
+        const hasTwoNum = activeMix.some(m => ['common_factor', 'common_multiple', 'gcd', 'lcm'].includes(m));
+        const hasFactor = activeMix.includes('factor');
+        const hasMult = activeMix.includes('multiple') || activeMix.includes('common_multiple');
+
+        maskBBlock.style.display = hasTwoNum ? 'flex' : 'none';
+        maskALabel.innerHTML = hasTwoNum
+          ? '第一數規則 (或目標數) <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>'
+          : '目標數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        maskBLabel.innerHTML = '第二數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+        if (excludePrimeBlock && hasFactor) excludePrimeBlock.style.display = 'flex';
+        if (multipleCountBlock && hasMult) multipleCountBlock.style.display = 'flex';
+        if (lastIntMode !== 'all_mix' && multipleCountSelect) multipleCountSelect.value = '3';
+        if (!maskA.value || autoPresetsA.includes(maskA.value)) maskA.value = '10~50';
+        if (!maskB.value || autoPresetsB.includes(maskB.value)) maskB.value = '10~50';
+      }
+      lastIntMode = intMode;
+      return;
+    }
+    lastIntMode = intMode;
+  }
+
+  if (isFourOps) {
+    divBlock.style.display = 'none';
+    carryBlock.style.display = 'none';
+    if(fourTermsBlock) fourTermsBlock.style.display = 'flex';
+    if(parenBlock) parenBlock.style.display = 'flex';
+
+    const terms = document.getElementById('fourOpsTerms') ? document.getElementById('fourOpsTerms').value : '3';
+    if(maskCBlock) maskCBlock.style.display = 'flex';
+    if (terms === '4' || terms === '5' || terms === 'rand34' || terms === 'rand35') {
+      if(maskDBlock) maskDBlock.style.display = 'flex';
+    }
+    if (terms === '5' || terms === 'rand35') {
+      if(maskEBlock) maskEBlock.style.display = 'flex';
+    }
+
+    if (type === 'integer') {
+      if (!maskA.value || ['***', '10~100', '2~20', '2~100', '10~50', '6~30', '4~24'].includes(maskA.value)) maskA.value = '**';
+      if (!maskB.value || maskB.value === '***' || ['10~50', '6~30', '4~24'].includes(maskB.value)) maskB.value = '*';
+      if (!maskC.value) maskC.value = '*';
+      if (!maskD.value) maskD.value = '*';
+      if (!maskE.value) maskE.value = '*';
+    } else if (type === 'decimal') {
+      if (!maskA.value || maskA.value === '***') maskA.value = '*.**';
+      if (!maskB.value || maskB.value === '***') maskB.value = '*.**';
+      if (!maskC.value) maskC.value = '*.**';
+      if (!maskD.value) maskD.value = '*.**';
+      if (!maskE.value) maskE.value = '*.**';
+    }
+    return;
+  }
+
+  if(type === 'integer'){
+    if (!maskA.value || ['10~100', '2~20', '2~100', '10~50', '6~30', '4~24'].includes(maskA.value)) {
+      maskA.value = '***';
+    }
+    if (!maskB.value || ['10~50', '6~30', '4~24'].includes(maskB.value)) {
+      maskB.value = '**';
+    }
+  } else if(type === 'decimal'){
+    divBlock.style.display = 'none';
+    carryBlock.style.display = 'none';
+    maskA.value = '**.**';
+    maskB.value = '**.**';
+  } else if(type === 'fraction'){
+    divBlock.style.display = 'none';
+    carryBlock.style.display = 'none';
+    fracBlock.style.display = 'flex';
+    if (fracSimplifyBlock) fracSimplifyBlock.style.display = 'flex';
+    
+    const fracMode = document.getElementById('fractionMode').value;
+    if (fracMode !== 'arithmetic') {
+      opBlock.style.display = 'none';
+      mixBlock.style.display = 'none';
+      negBlock.style.display = 'none';
+      maskBBlock.style.display = 'none';
+      maskALabel.innerHTML = '分數規則 <span class="help-badge" onclick="toggleHelpModal(true)" title="查看規則說明">?</span>';
+      
+      if (fracMode === 'm2i') {
+        maskA.value = '*+*/*';
+      } else if (fracMode === 'i2m') {
+        maskA.value = '*/*';
+      } else {
+        maskA.value = '*/*';
+      }
+    } else {
+      maskA.value = '*/*';
+      maskB.value = '*/*';
+    }
+  }
+}
+
+toggleOptions();
+
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function parseMask(mask){
+
+  mask = String(mask).trim();
+  
+  if (mask === '_') return '_';
+
+  // Handle comma-separated list: pick one at random
+  if(mask.includes(',')){
+    const parts = mask.split(',').map(p => p.trim()).filter(p => p.length > 0);
+    if(parts.length > 0){
+      mask = parts[rand(0, parts.length - 1)];
+    }
+  }
+
+  // Handle decimal ranges like 0.1~0.9 or 1.5~3.5
+  if(/(\d+\.\d+)\s*[~～]\s*(\d+\.\d+)/.test(mask)){
+    mask = mask.replace(/(\d+\.\d+)\s*[~～]\s*(\d+\.\d+)/g, (_, minStr, maxStr) => {
+      const min = parseFloat(minStr);
+      const max = parseFloat(maxStr);
+      const low = Math.min(min, max);
+      const high = Math.max(min, max);
+      const dec1 = (minStr.split('.')[1] || '').length;
+      const dec2 = (maxStr.split('.')[1] || '').length;
+      const dec = Math.max(dec1, dec2);
+      const factor = Math.pow(10, dec);
+      const val = rand(Math.round(low * factor), Math.round(high * factor)) / factor;
+      return val.toFixed(dec);
+    });
+  }
+
+  // Handle integer ranges like 3~9 or 10~50
+  if(/(\d+)\s*[~～]\s*(\d+)/.test(mask)){
+    mask = mask.replace(/(\d+)\s*[~～]\s*(\d+)/g, (_, minStr, maxStr) => {
+      const min = parseInt(minStr, 10);
+      const max = parseInt(maxStr, 10);
+      const low = Math.min(min, max);
+      const high = Math.max(min, max);
+      return String(rand(low, high));
+    });
+  }
+
+  if(/^\d+$/.test(mask)){
+    return parseInt(mask);
+  }
+
+  let output='';
+
+  for(let i=0;i<mask.length;i++){
+
+    const c = mask[i];
+
+    if(c==='*'){
+
+      const isStart = (i === 0 || mask[i-1] === '/' || mask[i-1] === ' ' || mask[i-1] === '+');
+      if(isStart || mask.length === 1){
+        output += rand(1,9);
+      }else{
+        output += rand(0,9);
+      }
+
+    }else{
+      output += c;
+    }
+  }
+
+  if (mask.includes('/') || mask.includes('.') || mask.includes('+') || /[^0-9*]/.test(mask)) {
+    return output;
+  }
+
+  const num = parseInt(output);
+
+  if(String(num).length !== mask.length){
+    return parseMask(mask);
+  }
+
+  return num;
+}
+
+function getSelectedOperators(){
+
+  const list =
+  [...document.querySelectorAll('.mix:checked')]
+  .map(v=>v.value);
+
+  return list.length ? list : ['+'];
+}
+
+function chooseOperator(){
+  const fixed = document.getElementById('operatorMode').value;
+  if(fixed !== 'mixed' && fixed !== 'four_ops'){
+    return fixed;
+  }
+  const list = getSelectedOperators();
+  return list[rand(0,list.length-1)];
+}
+
+function uglyNumber(n){
+
+  return [
+    '111','222','333','444','555',
+    '666','777','888','999',
+    '123','321'
+  ].includes(String(n));
+}
+
+function hasCarry(a,b){
+
+  const aa = String(a).split('').reverse();
+  const bb = String(b).split('').reverse();
+
+  for(let i=0;i<Math.max(aa.length,bb.length);i++){
+
+    const x = parseInt(aa[i]||0);
+    const y = parseInt(bb[i]||0);
+
+    if(x+y>=10){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasBorrow(a,b){
+
+  const aa = String(a).split('').reverse();
+  const bb = String(b).split('').reverse();
+
+  for(let i=0;i<aa.length;i++){
+
+    const x = parseInt(aa[i]||0);
+    const y = parseInt(bb[i]||0);
+
+    if(x<y){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function badQuestion(a,b,op){
+
+  const type = document.getElementById('numberType').value;
+  
+  if (type === 'fraction') {
+    if (a === '_' || b === '_') return false;
+    const f1 = toImproper(parseFraction(a));
+    const f2 = toImproper(parseFraction(b));
+    if (f1.d <= 1 || f2.d <= 1) return true;
+    if (op === '÷' && f2.n === 0) return true;
+    return false;
+  }
+
+  if (type === 'decimal') {
+    const fa = parseFloat(a);
+    const fb = parseFloat(b);
+    if (fa === 0 || fb === 0) return true;
+    if (op === '÷' && (fa === 0 || fb === 0)) return true;
+    return false;
+  }
+
+  if(a===0 || b===0) return true;
+  if(op==='÷' && a===0) return true;
+
+  if(op==='×' && (a===1 || b===1)) return true;
+
+  if(op==='÷' && (a===1 || b===1)) return true;
+
+  if(uglyNumber(a) || uglyNumber(b)) return true;
+
+  return false;
+}
+
+function gcd(a, b) {
+  return b ? gcd(b, a % b) : a;
+}
+
+function simplify(n, d) {
+  if (d === 0) return { n, d };
+  const common = gcd(Math.abs(n), Math.abs(d));
+  return { n: n / common, d: d / common };
+}
+
+function parseFraction(s) {
+  if (typeof s === 'number') return { n: s, d: 1, w: 0 };
+  s = String(s);
+  let w = 0, n = 0, d = 1;
+  
+  if (s.includes('+')) {
+    const parts = s.split('+');
+    w = parseInt(parts[0]);
+    const fParts = parts[1].split('/');
+    n = parseInt(fParts[0]);
+    d = parseInt(fParts[1]);
+  } else if (s.includes('/')) {
+    const parts = s.split('/');
+    n = parseInt(parts[0]);
+    d = parseInt(parts[1]);
+  } else {
+    n = parseInt(s);
+  }
+  return { n, d, w };
+}
+
+function toImproper(f) {
+  return { n: f.w * f.d + f.n, d: f.d };
+}
+
+function shouldSimplifyFraction() {
+  const el = document.getElementById('fractionSimplify');
+  return el ? el.value !== 'no' : true;
+}
+
+function toMixed(f, doSimplify = true) {
+  const res = doSimplify ? simplify(f.n, f.d) : { n: f.n, d: f.d };
+  const w = Math.floor(res.n / res.d);
+  const n = res.n % res.d;
+  return { w, n, d: res.d };
+}
+
+function formatFractionMathML(fStr) {
+  if (fStr === '_') return '<div style="width:30px; border-bottom:2px solid #000; height:20px; margin: 0 5px;"></div>';
+  if (String(fStr).includes('+')) {
+    const f = parseFraction(fStr);
+    if (f.d === 1) return String(f.w + f.n);
+    if (f.n === 0) return String(f.w);
+    return `${f.w}<math><mfrac><mi>${f.n}</mi><mi>${f.d}</mi></mfrac></math>`;
+  }
+  if (String(fStr).includes('/')) {
+    const parts = String(fStr).split('/');
+    const n = parseInt(parts[0], 10);
+    const d = parseInt(parts[1], 10);
+    if (d === 1 && !isNaN(n)) return String(n);
+    return `<math><mfrac><mi>${parts[0]}</mi><mi>${parts[1]}</mi></mfrac></math>`;
+  }
+  return fStr;
+}
+
+function calculateFraction(a, b, op) {
+  const f1 = toImproper(parseFraction(a));
+  const f2 = toImproper(parseFraction(b));
+  const doSimplify = shouldSimplifyFraction();
+  let resN, resD;
+
+  switch (op) {
+    case '+': {
+      const commonD = lcm(Math.abs(f1.d), Math.abs(f2.d)) || (f1.d * f2.d);
+      resN = f1.n * (commonD / f1.d) + f2.n * (commonD / f2.d);
+      resD = commonD;
+      break;
+    }
+    case '-': {
+      const commonD = lcm(Math.abs(f1.d), Math.abs(f2.d)) || (f1.d * f2.d);
+      resN = f1.n * (commonD / f1.d) - f2.n * (commonD / f2.d);
+      resD = commonD;
+      break;
+    }
+    case '×':
+      resN = f1.n * f2.n;
+      resD = f1.d * f2.d;
+      break;
+    case '÷':
+      resN = f1.n * f2.d;
+      resD = f1.d * f2.n;
+      break;
+  }
+  
+  if (resD < 0) { resN *= -1; resD *= -1; }
+  const res = doSimplify ? simplify(resN, resD) : { n: resN, d: resD };
+  if (res.d < 0) { res.n *= -1; res.d *= -1; }
+  if (res.n === 0) return "0";
+  if (res.d === 1) return String(res.n);
+  
+  const sign = res.n < 0 ? '-' : '';
+  const absRes = { n: Math.abs(res.n), d: res.d };
+  const m = toMixed(absRes, doSimplify);
+  if (m.w === 0 && m.n === 0) return "0";
+  if (m.n === 0 || m.d === 1) return sign + String(m.w + (m.d === 1 ? m.n : 0));
+  if (m.w === 0) return `${sign}${m.n}/${m.d}`;
+  return `${sign}${m.w}+${m.n}/${m.d}`;
+}
+
+function calculate(a,b,op){
+
+  const type = document.getElementById('numberType').value;
+  
+  if (type === 'decimal') {
+    const fa = parseFloat(a);
+    const fb = parseFloat(b);
+    let res;
+    switch(op){
+      case '+': res = fa + fb; break;
+      case '-': res = fa - fb; break;
+      case '×': res = fa * fb; break;
+      case '÷': res = fa / fb; break;
+    }
+    return Math.round(res * 10000) / 10000;
+  }
+  
+  if (type === 'fraction') {
+    return calculateFraction(a, b, op);
+  }
+
+  switch(op){
+
+    case '+':
+      return a+b;
+
+    case '-':
+      return a-b;
+
+    case '×':
+      return a*b;
+
+    case '÷':
+
+      const mode =
+      document.getElementById('divisionMode').value;
+
+      if(mode==='remainder' || (mode==='mixed_rem' && a % b !== 0)){
+        return `${Math.floor(a/b)}...${a%b}`;
+      }
+      
+      if(mode==='decimal' || (mode==='mixed_dec' && a % b !== 0)){
+        return Math.round((a / b) * 10000) / 10000;
+      }
+
+      return a/b;
+  }
+}
+
+// Evaluate arithmetic expressions with +, -, *, / and parentheses
+function evalArithmeticExpr(expr, isInteger = true, avoidNegative = true) {
+  let pos = 0;
+  let hasError = false;
+
+  function skipWhitespace() {
+    while (pos < expr.length && expr[pos] === ' ') pos++;
+  }
+
+  function parseNumber() {
+    skipWhitespace();
+    let start = pos;
+    if (pos < expr.length && (expr[pos] === '+' || expr[pos] === '-')) {
+      pos++;
+    }
+    while (pos < expr.length && /[0-9.]/.test(expr[pos])) {
+      pos++;
+    }
+    if (start === pos) {
+      hasError = true;
+      return 0;
+    }
+    const num = parseFloat(expr.slice(start, pos));
+    if (isNaN(num)) hasError = true;
+    return num;
+  }
+
+  function parseFactor() {
+    skipWhitespace();
+    if (pos < expr.length && expr[pos] === '(') {
+      pos++; // consume '('
+      const val = parseExpr();
+      skipWhitespace();
+      if (pos < expr.length && expr[pos] === ')') {
+        pos++; // consume ')'
+      } else {
+        hasError = true;
+      }
+      return val;
+    }
+    return parseNumber();
+  }
+
+  function parseTerm() {
+    let val = parseFactor();
+    while (!hasError) {
+      skipWhitespace();
+      if (pos < expr.length && (expr[pos] === '*' || expr[pos] === '/')) {
+        const op = expr[pos];
+        pos++;
+        const nextVal = parseFactor();
+        if (op === '*') {
+          val = val * nextVal;
+        } else {
+          if (nextVal === 0) {
+            hasError = true;
+            return 0;
+          }
+          if (isInteger) {
+            if (Math.abs(val % nextVal) > 1e-9) {
+              hasError = true; // Not divisible evenly
+              return 0;
+            }
+          }
+          val = val / nextVal;
+        }
+      } else {
+        break;
+      }
+    }
+    return val;
+  }
+
+  function parseExpr() {
+    let val = parseTerm();
+    while (!hasError) {
+      skipWhitespace();
+      if (pos < expr.length && (expr[pos] === '+' || expr[pos] === '-')) {
+        const op = expr[pos];
+        pos++;
+        const nextVal = parseTerm();
+        if (op === '+') {
+          val = val + nextVal;
+        } else {
+          val = val - nextVal;
+          if (avoidNegative && val < 0) {
+            hasError = true;
+            return 0;
+          }
+        }
+      } else {
+        break;
+      }
+    }
+    if (avoidNegative && val < 0) hasError = true;
+    return val;
+  }
+
+  const result = parseExpr();
+  skipWhitespace();
+  if (pos !== expr.length) hasError = true;
+  if (isNaN(result) || !isFinite(result)) hasError = true;
+  if (avoidNegative && result < 0) hasError = true;
+
+  return { isValid: !hasError, value: result };
+}
+
+function buildFourOpsQuestion(index) {
+  const type = document.getElementById('numberType').value;
+  const isInteger = (type === 'integer');
+  const avoidNegative = (document.getElementById('negativeMode').value === 'yes');
+  const termsMode = document.getElementById('fourOpsTerms') ? document.getElementById('fourOpsTerms').value : '3';
+  const parenMode = document.getElementById('parenMode') ? document.getElementById('parenMode').value : 'mixed';
+
+  let numTerms = 3;
+  if (termsMode === '4') numTerms = 4;
+  else if (termsMode === '5') numTerms = 5;
+  else if (termsMode === 'rand34') numTerms = rand(3, 4);
+  else if (termsMode === 'rand35') numTerms = rand(3, 5);
+
+  const availableOps = getSelectedOperators();
+  const masks = [
+    document.getElementById('maskA').value || '**',
+    document.getElementById('maskB').value || '*',
+    document.getElementById('maskC').value || '*',
+    document.getElementById('maskD').value || '*',
+    document.getElementById('maskE').value || '*'
+  ];
+
+  let guard = 0;
+  while (guard < 500) {
+    guard++;
+
+    // 1. Generate numbers using maskA, maskB, maskC, maskD, maskE
+    const nums = [];
+    for (let i = 0; i < numTerms; i++) {
+      let n = parseMask(masks[i] || '*');
+      if (typeof n === 'number' && n === 0) n = rand(1, 9);
+      nums.push(n);
+    }
+
+    // 2. Choose operators
+    const ops = [];
+    for (let i = 0; i < numTerms - 1; i++) {
+      ops.push(availableOps[rand(0, availableOps.length - 1)]);
+    }
+
+    // 3. Parentheses placement
+    let useParen = false;
+    if (parenMode === 'always') useParen = true;
+    else if (parenMode === 'mixed') useParen = (Math.random() < 0.5);
+
+    let exprDisp = '';
+    if (!useParen) {
+      let parts = [];
+      for (let i = 0; i < numTerms; i++) {
+        parts.push(nums[i]);
+        if (i < numTerms - 1) parts.push(ops[i]);
+      }
+      exprDisp = parts.join(' ');
+    } else {
+      if (numTerms === 3) {
+        const pattern = rand(1, 2);
+        if (pattern === 1) {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} ${nums[2]}`;
+        } else {
+          exprDisp = `${nums[0]} ${ops[0]} (${nums[1]} ${ops[1]} ${nums[2]})`;
+        }
+      } else if (numTerms === 4) {
+        const pattern = rand(1, 4);
+        if (pattern === 1) {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} ${nums[2]} ${ops[2]} ${nums[3]}`;
+        } else if (pattern === 2) {
+          exprDisp = `${nums[0]} ${ops[0]} (${nums[1]} ${ops[1]} ${nums[2]}) ${ops[2]} ${nums[3]}`;
+        } else if (pattern === 3) {
+          exprDisp = `${nums[0]} ${ops[0]} ${nums[1]} ${ops[1]} (${nums[2]} ${ops[2]} ${nums[3]})`;
+        } else {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} (${nums[2]} ${ops[2]} ${nums[3]})`;
+        }
+      } else { // 5 terms
+        const pattern = rand(1, 4);
+        if (pattern === 1) {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} ${nums[2]} ${ops[2]} ${nums[3]} ${ops[3]} ${nums[4]}`;
+        } else if (pattern === 2) {
+          exprDisp = `${nums[0]} ${ops[0]} (${nums[1]} ${ops[1]} ${nums[2]}) ${ops[2]} ${nums[3]} ${ops[3]} ${nums[4]}`;
+        } else if (pattern === 3) {
+          exprDisp = `${nums[0]} ${ops[0]} ${nums[1]} ${ops[1]} (${nums[2]} ${ops[2]} ${nums[3]}) ${ops[3]} ${nums[4]}`;
+        } else {
+          exprDisp = `(${nums[0]} ${ops[0]} ${nums[1]}) ${ops[1]} (${nums[2]} ${ops[2]} ${nums[3]})`;
+        }
+      }
+    }
+
+    const evalStr = exprDisp.replace(/×/g, '*').replace(/÷/g, '/');
+    const res = evalArithmeticExpr(evalStr, isInteger, avoidNegative);
+
+    if (res.isValid) {
+      let finalAns = res.value;
+      if (!isInteger) {
+        finalAns = Math.round(finalAns * 10000) / 10000;
+      }
+      return {
+        text: `${exprDisp} =`,
+        answer: String(finalAns),
+        op: ''
+      };
+    }
+  }
+
+  return {
+    text: `10 + (2 × 5) =`,
+    answer: "20",
+    op: ''
+  };
+}
+
+function isPrime(n) {
+  if (n <= 1) return false;
+  if (n <= 3) return true;
+  if (n % 2 === 0 || n % 3 === 0) return false;
+  for (let i = 5; i * i <= n; i += 6) {
+    if (n % i === 0 || n % (i + 2) === 0) return false;
+  }
+  return true;
+}
+
+function getFactors(n) {
+  const factors = [];
+  for (let i = 1; i * i <= n; i++) {
+    if (n % i === 0) {
+      factors.push(i);
+      if (i * i !== n) {
+        factors.push(n / i);
+      }
+    }
+  }
+  factors.sort((a, b) => a - b);
+  return factors;
+}
+
+function buildFactorQuestion() {
+  const excludePrime = document.getElementById('excludePrime') ? document.getElementById('excludePrime').value === 'yes' : false;
+  let a;
+  let guard = 0;
+  do {
+    a = parseMask(document.getElementById('maskA').value || '10~100');
+    if (typeof a !== 'number' || isNaN(a)) a = parseInt(a, 10) || rand(10, 100);
+    a = Math.abs(a);
+    if (a <= 1) {
+      guard++;
+      continue;
+    }
+    if (excludePrime && isPrime(a)) {
+      guard++;
+      continue;
+    }
+    break;
+  } while (guard < 300);
+
+  if (guard >= 300 && excludePrime && isPrime(a)) {
+    a = 24;
+  }
+
+  const factors = getFactors(a);
+  return {
+    text: `${a} 的因數：`,
+    answer: factors.join(', '),
+    op: ''
+  };
+}
+
+function buildMultipleQuestion() {
+  const countSelect = document.getElementById('multipleCount');
+  const count = countSelect ? parseInt(countSelect.value, 10) || 5 : 5;
+  let a;
+  let guard = 0;
+  do {
+    a = parseMask(document.getElementById('maskA').value || '2~20');
+    if (typeof a !== 'number' || isNaN(a)) a = parseInt(a, 10) || rand(2, 20);
+    a = Math.abs(a);
+    if (a >= 2) break;
+    guard++;
+  } while (guard < 300);
+
+  if (a < 2) a = rand(2, 12);
+
+  const multiples = [];
+  for (let k = 1; k <= count; k++) {
+    multiples.push(a * k);
+  }
+
+  return {
+    text: `${a} 的前 ${count} 個倍數：`,
+    answer: multiples.join(', '),
+    op: ''
+  };
+}
+
+function lcm(a, b) {
+  if (a === 0 || b === 0) return 0;
+  const g = gcd(a, b);
+  return (a / g) * b;
+}
+
+function getRangeFromMask(maskStr, defMin, defMax) {
+  maskStr = String(maskStr || '').trim();
+  const matches = [...maskStr.matchAll(/(\d+)\s*[~～]\s*(\d+)/g)];
+  if (matches.length > 0) {
+    let minV = Infinity, maxV = -Infinity;
+    for (const m of matches) {
+      const v1 = parseInt(m[1], 10);
+      const v2 = parseInt(m[2], 10);
+      minV = Math.min(minV, v1, v2);
+      maxV = Math.max(maxV, v1, v2);
+    }
+    return { min: Math.max(2, minV), max: Math.max(minV + 4, maxV) };
+  }
+  let minV = Infinity, maxV = -Infinity;
+  for (let i = 0; i < 60; i++) {
+    const val = parseInt(parseMask(maskStr), 10);
+    if (!isNaN(val) && val >= 2) {
+      if (val < minV) minV = val;
+      if (val > maxV) maxV = val;
+    }
+  }
+  if (minV <= maxV && minV !== Infinity) {
+    return { min: Math.max(2, minV), max: Math.max(minV + 4, maxV) };
+  }
+  return { min: defMin, max: defMax };
+}
+
+function buildGcdQuestion(sheetContext = null) {
+  const rangeA = getRangeFromMask(document.getElementById('maskA').value || '10~50', 10, 50);
+  const rangeB = getRangeFromMask(document.getElementById('maskB').value || '10~50', 10, 50);
+  const baseMin = Math.max(2, Math.min(rangeA.min, rangeB.min));
+  const baseMax = Math.max(baseMin + 10, Math.max(rangeA.max, rangeB.max));
+
+  const usedPairs = sheetContext ? sheetContext.usedGcdPairs : new Set();
+  const sheetUsed = sheetContext ? sheetContext.sheetUsed : new Set();
+  const globalUsed = sheetContext ? sheetContext.usedQuestions : usedQuestions;
+  const recentGcds = sheetContext ? sheetContext.recentGcds : [];
+
+  const curSlot = sheetContext ? (sheetContext.gcdSlotIndex + 1) : 1;
+  const wantGcdOne = sheetContext
+    ? (sheetContext.gcdOneCount === 0 && curSlot === sheetContext.gcdOneTargetSlot)
+    : false;
+
+  if (wantGcdOne) {
+    // 產生互質配對 (最大公因數 = 1)，整張考卷最多只會出現這 1 題
+    const coprimeCandidates = [];
+    const searchMax = Math.max(baseMax, 35);
+    const searchMin = Math.min(baseMin, 12);
+    for (let x = searchMin; x <= searchMax; x++) {
+      for (let y = x + 1; y <= searchMax; y++) {
+        if (gcd(x, y) === 1) {
+          const pKey = `${x},${y}`;
+          const qText = `(${x}, ${y}) 最大公因數：`;
+          if (!usedPairs.has(pKey) && !sheetUsed.has(qText)) {
+            coprimeCandidates.push({ a: x, b: y, bothComp: !isPrime(x) && !isPrime(y), fresh: !globalUsed.has(qText) });
+          }
+        }
+      }
+    }
+    if (coprimeCandidates.length > 0) {
+      let pool = coprimeCandidates.filter(c => c.bothComp && c.fresh);
+      if (pool.length === 0) pool = coprimeCandidates.filter(c => c.bothComp);
+      if (pool.length === 0) pool = coprimeCandidates.filter(c => c.fresh);
+      if (pool.length === 0) pool = coprimeCandidates;
+      const chosen = pool[rand(0, pool.length - 1)];
+      return {
+        text: `(${chosen.a}, ${chosen.b}) 最大公因數：`,
+        answer: '1',
+        op: '',
+        kind: 'gcd',
+        pairKey: `${chosen.a},${chosen.b}`,
+        isGcdOne: true,
+        gcdVal: 1
+      };
+    }
+  }
+
+  // 配對公因數 > 1 的題目 (確保答案 > 1，不會出現第 2 次答案為 1)
+  function collectPairedGcdCandidates(minV, maxV, allowReversed = false) {
+    const list = [];
+    for (let x = minV; x <= maxV; x++) {
+      for (let y = x + 1; y <= maxV; y++) {
+        const g = gcd(x, y);
+        if (g > 1) {
+          const pKey = `${x},${y}`;
+          const qText = `(${x}, ${y}) 最大公因數：`;
+          if (!usedPairs.has(pKey) && !sheetUsed.has(qText)) {
+            list.push({
+              a: x,
+              b: y,
+              g,
+              ratioB: y / g,
+              nonMultiple: (y % x !== 0),
+              fresh: !globalUsed.has(qText),
+              pairKey: pKey
+            });
+          } else if (allowReversed) {
+            const revText = `(${y}, ${x}) 最大公因數：`;
+            if (!sheetUsed.has(revText)) {
+              list.push({
+                a: y,
+                b: x,
+                g,
+                ratioB: y / g,
+                nonMultiple: (y % x !== 0),
+                fresh: !globalUsed.has(revText),
+                pairKey: pKey
+              });
+            }
+          }
+        }
+      }
+    }
+    return list;
+  }
+
+  let candidates = collectPairedGcdCandidates(baseMin, baseMax, false);
+  if (candidates.length === 0) {
+    candidates = collectPairedGcdCandidates(4, Math.max(baseMax, 90), false);
+  }
+  if (candidates.length === 0) {
+    candidates = collectPairedGcdCandidates(2, 99, true);
+  }
+
+  if (candidates.length > 0) {
+    // 優先選全新未出過、且倍數比乾淨的配對
+    let filtered = candidates.filter(c => c.fresh && c.ratioB <= 9);
+    if (filtered.length === 0) filtered = candidates.filter(c => c.fresh);
+    if (filtered.length === 0) filtered = candidates;
+
+    // 依公因數 g 分組，避免連續出現相同公因數或全都是 2
+    const byG = new Map();
+    for (const item of filtered) {
+      if (!byG.has(item.g)) byG.set(item.g, []);
+      byG.get(item.g).push(item);
+    }
+
+    let gKeys = Array.from(byG.keys());
+    const nonRecentG = gKeys.filter(g => !recentGcds.includes(g));
+    if (nonRecentG.length > 0) gKeys = nonRecentG;
+
+    // 稍微提高 g >= 3 的權重，讓公因數更豐富多元
+    const weightedG = [];
+    for (const g of gKeys) {
+      const weight = (g >= 3 && g <= 18) ? 3 : 1;
+      for (let w = 0; w < weight; w++) weightedG.push(g);
+    }
+    const chosenG = weightedG[rand(0, weightedG.length - 1)];
+    const group = byG.get(chosenG);
+    const nonMultGroup = group.filter(c => c.nonMultiple);
+    const finalGroup = (nonMultGroup.length > 0 && Math.random() < 0.8) ? nonMultGroup : group;
+    const chosen = finalGroup[rand(0, finalGroup.length - 1)];
+
+    return {
+      text: `(${chosen.a}, ${chosen.b}) 最大公因數：`,
+      answer: String(chosen.g),
+      op: '',
+      kind: 'gcd',
+      pairKey: chosen.pairKey,
+      isGcdOne: false,
+      gcdVal: chosen.g
+    };
+  }
+
+  // 安全保底 (g = 6 > 1)
+  return {
+    text: `(12, 18) 最大公因數：`,
+    answer: '6',
+    op: '',
+    kind: 'gcd',
+    pairKey: '12,18',
+    isGcdOne: false,
+    gcdVal: 6
+  };
+}
+
+function buildLcmQuestion(sheetContext = null) {
+  const rangeA = getRangeFromMask(document.getElementById('maskA').value || '6~30', 6, 30);
+  const rangeB = getRangeFromMask(document.getElementById('maskB').value || '6~30', 6, 30);
+  const baseMin = Math.max(2, Math.min(rangeA.min, rangeB.min));
+  const baseMax = Math.max(baseMin + 12, Math.max(rangeA.max, rangeB.max));
+
+  const usedPairs = sheetContext ? sheetContext.usedLcmPairs : new Set();
+  const sheetUsed = sheetContext ? sheetContext.sheetUsed : new Set();
+  const globalUsed = sheetContext ? sheetContext.usedQuestions : usedQuestions;
+  const recentMults = sheetContext ? sheetContext.recentLcmMultipliers : [];
+
+  const curSlot = sheetContext ? (sheetContext.lcmSlotIndex + 1) : 1;
+  const wantCoprimeProduct = sheetContext
+    ? (sheetContext.lcmCoprimeCount === 0 && curSlot >= sheetContext.lcmCoprimeTargetSlot)
+    : false;
+
+  if (wantCoprimeProduct) {
+    // 一張考卷必須出現一題：答案等於兩數相乘 (互質)、在 100 以內、且答案在大數的 4 倍以內 (小數為 2, 3, 4)
+    const coprimePool = [];
+    for (let x = 2; x <= 4; x++) {
+      const maxY = Math.floor(100 / x);
+      for (let y = x + 1; y <= maxY; y++) {
+        if (gcd(x, y) === 1) {
+          const valLcm = x * y; // 等於兩數相乘, <= 100, 且 = x * y <= 4 * y (大數的4倍以內)
+          const pKey = `${x},${y}`;
+          const qText = `[${x}, ${y}] 最小公倍數：`;
+          if (!usedPairs.has(pKey) && !sheetUsed.has(qText)) {
+            coprimePool.push({
+              a: x,
+              b: y,
+              ans: valLcm,
+              inPreferredRange: (y >= 4 && y <= 25),
+              fresh: !globalUsed.has(qText),
+              pairKey: pKey
+            });
+          }
+        }
+      }
+    }
+
+    if (coprimePool.length > 0) {
+      let pool = coprimePool.filter(c => c.inPreferredRange && c.fresh);
+      if (pool.length === 0) pool = coprimePool.filter(c => c.inPreferredRange);
+      if (pool.length === 0) pool = coprimePool.filter(c => c.fresh);
+      if (pool.length === 0) pool = coprimePool;
+      const chosen = pool[rand(0, pool.length - 1)];
+      return {
+        text: `[${chosen.a}, ${chosen.b}] 最小公倍數：`,
+        answer: String(chosen.ans),
+        op: '',
+        kind: 'lcm',
+        pairKey: chosen.pairKey,
+        isLcmCoprimeProduct: true,
+        lcmMultiplier: chosen.a
+      };
+    }
+  }
+
+  // 其餘公倍數題目：精心配對 (有公因數 g >= 2，答案 < a*b，且答案必須在大數的 4 倍以內，即 lcm <= 4 * max(a,b))
+  function collectPairedLcmCandidates(minV, maxV, allowReversed = false) {
+    const list = [];
+    for (let x = minV; x <= maxV; x++) {
+      for (let y = x + 1; y <= maxV; y++) {
+        const g = gcd(x, y);
+        if (g >= 2) {
+          const mult = x / g; // 因為 lcm(x, y) = (x / g) * y = mult * max(x, y)
+          if (mult >= 1 && mult <= 4) {
+            const valLcm = mult * y;
+            const pKey = `${x},${y}`;
+            const qText = `[${x}, ${y}] 最小公倍數：`;
+            if (!usedPairs.has(pKey) && !sheetUsed.has(qText)) {
+              list.push({
+                a: x,
+                b: y,
+                ans: valLcm,
+                mult,
+                g,
+                fresh: !globalUsed.has(qText),
+                pairKey: pKey
+              });
+            } else if (allowReversed) {
+              const revText = `[${y}, ${x}] 最小公倍數：`;
+              if (!sheetUsed.has(revText)) {
+                list.push({
+                  a: y,
+                  b: x,
+                  ans: valLcm,
+                  mult,
+                  g,
+                  fresh: !globalUsed.has(revText),
+                  pairKey: pKey
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+    return list;
+  }
+
+  let candidates = collectPairedLcmCandidates(baseMin, baseMax, false);
+  if (candidates.length === 0) {
+    candidates = collectPairedLcmCandidates(4, Math.max(baseMax, 60), false);
+  }
+  if (candidates.length === 0) {
+    candidates = collectPairedLcmCandidates(2, 90, false);
+  }
+  if (candidates.length === 0) {
+    candidates = collectPairedLcmCandidates(2, 96, true);
+  }
+
+  if (candidates.length > 0) {
+    let filtered = candidates.filter(c => c.fresh);
+    if (filtered.length === 0) filtered = candidates;
+
+    // 優先選擇 2倍、3倍、4倍 (兩數不互為倍數關係)，穿插少量 1倍 (大數即為小數的倍數)
+    const mult234 = filtered.filter(c => c.mult >= 2 && c.mult <= 4);
+    let workingPool = (mult234.length > 0 && Math.random() < 0.85) ? mult234 : filtered;
+
+    const lastMult = recentMults.length > 0 ? recentMults[recentMults.length - 1] : -1;
+    const diffMultPool = workingPool.filter(c => c.mult !== lastMult);
+    if (diffMultPool.length > 0) workingPool = diffMultPool;
+
+    const chosen = workingPool[rand(0, workingPool.length - 1)];
+    return {
+      text: `[${chosen.a}, ${chosen.b}] 最小公倍數：`,
+      answer: String(chosen.ans),
+      op: '',
+      kind: 'lcm',
+      pairKey: chosen.pairKey,
+      isLcmCoprimeProduct: false,
+      lcmMultiplier: chosen.mult
+    };
+  }
+
+  // 安全保底 ([6, 8] = 24, 24 = 3 * 8 <= 4 * 8)
+  return {
+    text: `[6, 8] 最小公倍數：`,
+    answer: '24',
+    op: '',
+    kind: 'lcm',
+    pairKey: '6,8',
+    isLcmCoprimeProduct: false,
+    lcmMultiplier: 3
+  };
+}
+
+function buildCommonFactorQuestion(sheetContext = null) {
+  const rangeA = getRangeFromMask(document.getElementById('maskA').value || '10~50', 10, 50);
+  const rangeB = getRangeFromMask(document.getElementById('maskB').value || '10~50', 10, 50);
+  const baseMin = Math.max(2, Math.min(rangeA.min, rangeB.min));
+  const baseMax = Math.max(baseMin + 10, Math.max(rangeA.max, rangeB.max));
+
+  const usedPairs = sheetContext ? sheetContext.usedCfPairs : new Set();
+  const sheetUsed = sheetContext ? sheetContext.sheetUsed : new Set();
+  const globalUsed = sheetContext ? sheetContext.usedQuestions : usedQuestions;
+  const recentGcds = sheetContext ? sheetContext.recentCfGcds : [];
+
+  const curSlot = sheetContext ? (sheetContext.cfSlotIndex + 1) : 1;
+  const wantCfOne = sheetContext
+    ? (sheetContext.cfOneCount === 0 && curSlot === sheetContext.cfOneTargetSlot)
+    : false;
+
+  if (wantCfOne) {
+    const coprimeCandidates = [];
+    const searchMax = Math.max(baseMax, 35);
+    const searchMin = Math.min(baseMin, 12);
+    for (let x = searchMin; x <= searchMax; x++) {
+      for (let y = x + 1; y <= searchMax; y++) {
+        if (gcd(x, y) === 1) {
+          const pKey = `${x},${y}`;
+          const qText = `${x} 和 ${y} 的公因數：`;
+          if (!usedPairs.has(pKey) && !sheetUsed.has(qText)) {
+            coprimeCandidates.push({ a: x, b: y, bothComp: !isPrime(x) && !isPrime(y), fresh: !globalUsed.has(qText) });
+          }
+        }
+      }
+    }
+    if (coprimeCandidates.length > 0) {
+      let pool = coprimeCandidates.filter(c => c.bothComp && c.fresh);
+      if (pool.length === 0) pool = coprimeCandidates.filter(c => c.bothComp);
+      if (pool.length === 0) pool = coprimeCandidates.filter(c => c.fresh);
+      if (pool.length === 0) pool = coprimeCandidates;
+      const chosen = pool[rand(0, pool.length - 1)];
+      return {
+        text: `${chosen.a} 和 ${chosen.b} 的公因數：`,
+        answer: '1',
+        op: '',
+        kind: 'common_factor',
+        pairKey: `${chosen.a},${chosen.b}`,
+        isCfOne: true,
+        gcdVal: 1
+      };
+    }
+  }
+
+  function collectPairedCfCandidates(minV, maxV, allowReversed = false) {
+    const list = [];
+    for (let x = minV; x <= maxV; x++) {
+      for (let y = x + 1; y <= maxV; y++) {
+        const g = gcd(x, y);
+        if (g > 1) {
+          const pKey = `${x},${y}`;
+          const qText = `${x} 和 ${y} 的公因數：`;
+          if (!usedPairs.has(pKey) && !sheetUsed.has(qText)) {
+            list.push({
+              a: x,
+              b: y,
+              g,
+              ratioB: y / g,
+              nonMultiple: (y % x !== 0),
+              fresh: !globalUsed.has(qText),
+              pairKey: pKey
+            });
+          } else if (allowReversed) {
+            const revText = `${y} 和 ${x} 的公因數：`;
+            if (!sheetUsed.has(revText)) {
+              list.push({
+                a: y,
+                b: x,
+                g,
+                ratioB: y / g,
+                nonMultiple: (y % x !== 0),
+                fresh: !globalUsed.has(revText),
+                pairKey: pKey
+              });
+            }
+          }
+        }
+      }
+    }
+    return list;
+  }
+
+  let candidates = collectPairedCfCandidates(baseMin, baseMax, false);
+  if (candidates.length === 0) {
+    candidates = collectPairedCfCandidates(4, Math.max(baseMax, 90), false);
+  }
+  if (candidates.length === 0) {
+    candidates = collectPairedCfCandidates(2, 99, true);
+  }
+
+  if (candidates.length > 0) {
+    let filtered = candidates.filter(c => c.fresh && c.ratioB <= 9);
+    if (filtered.length === 0) filtered = candidates.filter(c => c.fresh);
+    if (filtered.length === 0) filtered = candidates;
+
+    const byG = new Map();
+    for (const item of filtered) {
+      if (!byG.has(item.g)) byG.set(item.g, []);
+      byG.get(item.g).push(item);
+    }
+
+    let gKeys = Array.from(byG.keys());
+    const nonRecentG = gKeys.filter(g => !recentGcds.includes(g));
+    if (nonRecentG.length > 0) gKeys = nonRecentG;
+
+    // 優先選擇合成數作為最大公因數 (如 4, 6, 8, 9, 10, 12, 15, 16, 18, 20...)，讓公因數有 3 個以上
+    const weightedG = [];
+    for (const g of gKeys) {
+      const fLen = getFactors(g).length;
+      const weight = (fLen >= 3 && g <= 24) ? 4 : 1;
+      for (let w = 0; w < weight; w++) weightedG.push(g);
+    }
+    const chosenG = weightedG[rand(0, weightedG.length - 1)];
+    const group = byG.get(chosenG);
+    const nonMultGroup = group.filter(c => c.nonMultiple);
+    const finalGroup = (nonMultGroup.length > 0 && Math.random() < 0.8) ? nonMultGroup : group;
+    const chosen = finalGroup[rand(0, finalGroup.length - 1)];
+    const cFactors = getFactors(chosen.g);
+
+    return {
+      text: `${chosen.a} 和 ${chosen.b} 的公因數：`,
+      answer: cFactors.join(', '),
+      op: '',
+      kind: 'common_factor',
+      pairKey: chosen.pairKey,
+      isCfOne: false,
+      gcdVal: chosen.g
+    };
+  }
+
+  return {
+    text: `12 和 18 的公因數：`,
+    answer: '1, 2, 3, 6',
+    op: '',
+    kind: 'common_factor',
+    pairKey: '12,18',
+    isCfOne: false,
+    gcdVal: 6
+  };
+}
+
+function buildCommonMultipleQuestion(sheetContext = null) {
+  const countSelect = document.getElementById('multipleCount');
+  const count = countSelect ? parseInt(countSelect.value, 10) || 3 : 3;
+
+  const rangeA = getRangeFromMask(document.getElementById('maskA').value || '4~24', 4, 24);
+  const rangeB = getRangeFromMask(document.getElementById('maskB').value || '4~24', 4, 24);
+  const baseMin = Math.max(2, Math.min(rangeA.min, rangeB.min));
+  const baseMax = Math.max(baseMin + 10, Math.max(rangeA.max, rangeB.max));
+
+  const usedPairs = sheetContext ? sheetContext.usedCmPairs : new Set();
+  const sheetUsed = sheetContext ? sheetContext.sheetUsed : new Set();
+  const globalUsed = sheetContext ? sheetContext.usedQuestions : usedQuestions;
+  const recentMults = sheetContext ? sheetContext.recentCmMultipliers : [];
+
+  const curSlot = sheetContext ? (sheetContext.cmSlotIndex + 1) : 1;
+  const wantCoprimeProduct = sheetContext
+    ? (sheetContext.cmCoprimeCount === 0 && curSlot >= sheetContext.cmCoprimeTargetSlot)
+    : false;
+
+  function formatCmResult(a, b, baseLcm, pairKey, isCoprime, mult) {
+    const list = [];
+    for (let k = 1; k <= count; k++) {
+      list.push(baseLcm * k);
+    }
+    return {
+      text: `${a} 和 ${b} 的前 ${count} 個公倍數：`,
+      answer: list.join(', '),
+      op: '',
+      kind: 'common_multiple',
+      pairKey,
+      isCmCoprimeProduct: isCoprime,
+      cmMultiplier: mult
+    };
+  }
+
+  if (wantCoprimeProduct) {
+    const coprimePool = [];
+    for (let x = 2; x <= 4; x++) {
+      const maxY = Math.floor(60 / x);
+      for (let y = x + 1; y <= maxY; y++) {
+        if (gcd(x, y) === 1) {
+          const valLcm = x * y;
+          const pKey = `${x},${y}`;
+          const qText = `${x} 和 ${y} 的前 ${count} 個公倍數：`;
+          if (!usedPairs.has(pKey) && !sheetUsed.has(qText)) {
+            coprimePool.push({
+              a: x,
+              b: y,
+              ans: valLcm,
+              inPreferredRange: (y >= 3 && y <= 15),
+              fresh: !globalUsed.has(qText),
+              pairKey: pKey
+            });
+          }
+        }
+      }
+    }
+
+    if (coprimePool.length > 0) {
+      let pool = coprimePool.filter(c => c.inPreferredRange && c.fresh);
+      if (pool.length === 0) pool = coprimePool.filter(c => c.inPreferredRange);
+      if (pool.length === 0) pool = coprimePool.filter(c => c.fresh);
+      if (pool.length === 0) pool = coprimePool;
+      const chosen = pool[rand(0, pool.length - 1)];
+      return formatCmResult(chosen.a, chosen.b, chosen.ans, chosen.pairKey, true, chosen.a);
+    }
+  }
+
+  function collectPairedCmCandidates(minV, maxV, allowReversed = false) {
+    const list = [];
+    for (let x = minV; x <= maxV; x++) {
+      for (let y = x + 1; y <= maxV; y++) {
+        const g = gcd(x, y);
+        if (g >= 2) {
+          const mult = x / g;
+          if (mult >= 1 && mult <= 4) {
+            const valLcm = mult * y;
+            const pKey = `${x},${y}`;
+            const qText = `${x} 和 ${y} 的前 ${count} 個公倍數：`;
+            if (!usedPairs.has(pKey) && !sheetUsed.has(qText)) {
+              list.push({
+                a: x,
+                b: y,
+                ans: valLcm,
+                mult,
+                g,
+                smallEnough: (valLcm <= 90),
+                fresh: !globalUsed.has(qText),
+                pairKey: pKey
+              });
+            } else if (allowReversed) {
+              const revText = `${y} 和 ${x} 的前 ${count} 個公倍數：`;
+              if (!sheetUsed.has(revText)) {
+                list.push({
+                  a: y,
+                  b: x,
+                  ans: valLcm,
+                  mult,
+                  g,
+                  smallEnough: (valLcm <= 90),
+                  fresh: !globalUsed.has(revText),
+                  pairKey: pKey
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+    return list;
+  }
+
+  let candidates = collectPairedCmCandidates(baseMin, baseMax, false);
+  if (candidates.length === 0) {
+    candidates = collectPairedCmCandidates(3, Math.max(baseMax, 45), false);
+  }
+  if (candidates.length === 0) {
+    candidates = collectPairedCmCandidates(2, 72, true);
+  }
+
+  if (candidates.length > 0) {
+    let filtered = candidates.filter(c => c.fresh && c.smallEnough);
+    if (filtered.length === 0) filtered = candidates.filter(c => c.fresh);
+    if (filtered.length === 0) filtered = candidates;
+
+    const mult234 = filtered.filter(c => c.mult >= 2 && c.mult <= 4);
+    let workingPool = (mult234.length > 0 && Math.random() < 0.85) ? mult234 : filtered;
+
+    const lastMult = recentMults.length > 0 ? recentMults[recentMults.length - 1] : -1;
+    const diffMultPool = workingPool.filter(c => c.mult !== lastMult);
+    if (diffMultPool.length > 0) workingPool = diffMultPool;
+
+    const chosen = workingPool[rand(0, workingPool.length - 1)];
+    return formatCmResult(chosen.a, chosen.b, chosen.ans, chosen.pairKey, false, chosen.mult);
+  }
+
+  return formatCmResult(4, 6, 12, '4,6', false, 2);
+}
+
+function resolveFactorMultipleSubMode(intMode, index) {
+  if (intMode === 'factor' || intMode === 'multiple' || intMode === 'common_factor' || intMode === 'common_multiple' || intMode === 'gcd' || intMode === 'lcm') {
+    return intMode;
+  }
+  if (intMode === 'mix_factor_multiple') {
+    return (index % 2 === 1) ? 'factor' : 'multiple';
+  }
+  if (intMode === 'mix_cf_cm') {
+    return (index % 2 === 1) ? 'common_factor' : 'common_multiple';
+  }
+  if (intMode === 'mix_gcd_lcm') {
+    return (index % 2 === 1) ? 'gcd' : 'lcm';
+  }
+  if (intMode === 'mix_all_factors') {
+    const modes = ['factor', 'common_factor', 'gcd'];
+    return modes[(index - 1) % modes.length];
+  }
+  if (intMode === 'mix_all_multiples') {
+    const modes = ['multiple', 'common_multiple', 'lcm'];
+    return modes[(index - 1) % modes.length];
+  }
+  if (intMode === 'all_mix') {
+    const activeModes = getSelectedFmMixModes();
+    return activeModes[(index - 1) % activeModes.length];
+  }
+  return 'factor';
+}
+
+const UNIT_DEFINITIONS = {
+  length: [
+    { key: 'km', scale: 1000000, zh: '公里', en: 'km' },
+    { key: 'm',  scale: 1000,    zh: '公尺', en: 'm' },
+    { key: 'cm', scale: 10,      zh: '公分', en: 'cm', isCm: true },
+    { key: 'mm', scale: 1,       zh: '毫米', en: 'mm' }
+  ],
+  weight: [
+    { key: 't',  scale: 1000000000, zh: '公噸', en: 't' },
+    { key: 'kg', scale: 1000000,    zh: '公斤', en: 'kg' },
+    { key: 'g',  scale: 1000,       zh: '公克', en: 'g' },
+    { key: 'mg', scale: 1,          zh: '毫克', en: 'mg' }
+  ],
+  capacity: [
+    { key: 'kl', scale: 1000000, zh: '公秉',   en: 'kl' },
+    { key: 'l',  scale: 1000,    zh: '公升',   en: 'L' },
+    { key: 'dl', scale: 100,     zh: '分公升', en: 'dl' },
+    { key: 'ml', scale: 1,       zh: '毫升',   en: 'ml', isMl: true }
+  ],
+  area: [
+    { key: 'km2', scale: 10000000000, zh: '平方公里', en: 'km²' },
+    { key: 'ha',  scale: 100000000,   zh: '公頃',     en: 'ha' },
+    { key: 'a',   scale: 1000000,     zh: '公畝',     en: 'a' },
+    { key: 'm2',  scale: 10000,       zh: '平方公尺', en: 'm²' },
+    { key: 'cm2', scale: 1,           zh: '平方公分', en: 'cm²', isCm2: true }
+  ],
+  volume: [
+    { key: 'm3',  scale: 1000000, zh: '立方公尺', en: 'm³' },
+    { key: 'cm3', scale: 1,       zh: '立方公分', en: 'cm³', isCm3: true }
+  ],
+  vol_cap: [
+    { key: 'm3',  scale: 1000000, zh: '立方公尺', en: 'm³',  group: 'vol' },
+    { key: 'kl',  scale: 1000000, zh: '公秉',     en: 'kl',  group: 'cap' },
+    { key: 'l',   scale: 1000,    zh: '公升',     en: 'L',   group: 'cap' },
+    { key: 'dl',  scale: 100,     zh: '分公升',   en: 'dl',  group: 'cap' },
+    { key: 'ml',  scale: 1,       zh: '毫升',     en: 'ml',  group: 'cap', isMl: true },
+    { key: 'cm3', scale: 1,       zh: '立方公分', en: 'cm³', group: 'vol', isCm3: true }
+  ],
+  time: [
+    { key: 'day', scale: 86400, zh: '日',   en: 'd' },
+    { key: 'hr',  scale: 3600,  zh: '小時', en: 'hr' },
+    { key: 'min', scale: 60,    zh: '分鐘', en: 'min' },
+    { key: 'sec', scale: 1,     zh: '秒',   en: 's' }
+  ]
+};
+
+function getUnitLabel(category, unitKey, symbolStyle = 'zh') {
+  const cmNameChoice = document.getElementById('cmName') ? document.getElementById('cmName').value : '公分';
+  const mlNameChoice = document.getElementById('mlName') ? document.getElementById('mlName').value : '毫升';
+  const cmBase = (cmNameChoice === '釐米') ? '釐米' : '公分';
+
+  const defs = UNIT_DEFINITIONS[category] || UNIT_DEFINITIONS.length;
+  const def = defs.find(d => d.key === unitKey) || defs[0];
+
+  let zhName = def.zh;
+  let enName = def.en;
+
+  if (def.isCm) {
+    zhName = cmNameChoice;
+  } else if (def.isCm2) {
+    zhName = `平方${cmBase}`;
+  } else if (def.isCm3) {
+    zhName = `立方${cmBase}`;
+  } else if (def.isMl) {
+    zhName = mlNameChoice;
+  }
+
+  if (symbolStyle === 'en') return enName;
+  if (symbolStyle === 'both') return `${zhName}(${enName})`;
+  return zhName;
+}
+
+function getSelectedCategoryUnits(category) {
+  const cbs = document.querySelectorAll(`.unit-cb-item[data-cat="${category}"]:checked`);
+  let units = Array.from(cbs).map(cb => cb.value);
+  if (units.length < 2) {
+    const allCbs = Array.from(document.querySelectorAll(`.unit-cb-item[data-cat="${category}"]`));
+    units = allCbs.slice(0, 2).map(cb => {
+      cb.checked = true;
+      return cb.value;
+    });
+  }
+  return units;
+}
+
+function handleUnitCbChange(el, category = 'length') {
+  const checked = document.querySelectorAll(`.unit-cb-item[data-cat="${category}"]:checked`);
+  if (checked.length < 2) {
+    alert('每個單位換算類別至少需勾選 2 個單位！');
+    if (el) el.checked = true;
+    return;
+  }
+  generateWorksheet();
+}
+
+function handleUnitMixCatChange(el) {
+  const checked = document.querySelectorAll('.unit-mix-cat-cb:checked');
+  if (checked.length < 1) {
+    alert('綜合大混合至少需勾選 1 個換算類別！');
+    if (el) el.checked = true;
+    return;
+  }
+  generateWorksheet();
+}
+
+function handleCmNameChange() {
+  const cmChoice = document.getElementById('cmName') ? document.getElementById('cmName').value : '公分';
+  const cmBase = (cmChoice === '釐米') ? '釐米' : '公分';
+  const cbCmLabel = document.getElementById('cbCmLabel');
+  const cbCm2Label = document.getElementById('cbCm2Label');
+  const cbCm3Label = document.getElementById('cbCm3Label');
+  const cbVcCm3Label = document.getElementById('cbVcCm3Label');
+  if (cbCmLabel) cbCmLabel.textContent = `${cmChoice}(cm)`;
+  if (cbCm2Label) cbCm2Label.textContent = `平方${cmBase}(cm²)`;
+  if (cbCm3Label) cbCm3Label.textContent = `立方${cmBase}(cm³)`;
+  if (cbVcCm3Label) cbVcCm3Label.textContent = `立方${cmBase}(cm³)`;
+  generateWorksheet();
+}
+
+function handleMlNameChange() {
+  const mlChoice = document.getElementById('mlName') ? document.getElementById('mlName').value : '毫升';
+  const cbMlLabel = document.getElementById('cbMlLabel');
+  const cbVcMlLabel = document.getElementById('cbVcMlLabel');
+  if (cbMlLabel) cbMlLabel.textContent = `${mlChoice}(ml)`;
+  if (cbVcMlLabel) cbVcMlLabel.textContent = `${mlChoice}(ml)`;
+  generateWorksheet();
+}
+
+function resolveUnitSymbolStyles(symbolSetting) {
+  if (symbolSetting === 'mix_zh_en') {
+    const pickStyle = (Math.random() < 0.5) ? 'zh' : 'en';
+    return { fromSymbolStyle: pickStyle, toSymbolStyle: pickStyle };
+  }
+  if (symbolSetting === 'cross_zh_en') {
+    return (Math.random() < 0.5)
+      ? { fromSymbolStyle: 'zh', toSymbolStyle: 'en' }
+      : { fromSymbolStyle: 'en', toSymbolStyle: 'zh' };
+  }
+  if (symbolSetting === 'en') return { fromSymbolStyle: 'en', toSymbolStyle: 'en' };
+  if (symbolSetting === 'both') return { fromSymbolStyle: 'both', toSymbolStyle: 'both' };
+  return { fromSymbolStyle: 'zh', toSymbolStyle: 'zh' };
+}
+
+function getUnitBaseVal(minV, maxV, rangeSetting) {
+  if (rangeSetting === 'custom') {
+    const parsed = parseMask(document.getElementById('maskA').value || '1~100');
+    const num = parseInt(parsed, 10);
+    if (!isNaN(num) && num > 0) return num;
+  } else if (rangeSetting === 'easy') {
+    return rand(Math.max(1, minV), Math.min(25, maxV));
+  } else if (rangeSetting === 'hard') {
+    return rand(Math.max(10, minV), Math.max(minV, maxV * 4));
+  }
+  return rand(minV, maxV);
+}
+
+function buildTimeQuestion(index) {
+  const modeSetting = document.getElementById('lengthMode') ? document.getElementById('lengthMode').value : 'mix';
+  const trapSetting = document.getElementById('trapMode') ? document.getElementById('trapMode').value : 'mix';
+  const decimalSetting = document.getElementById('unitDecimalMode') ? document.getElementById('unitDecimalMode').value : 'yes';
+  const symbolSetting = document.getElementById('unitSymbol') ? document.getElementById('unitSymbol').value : 'mix_zh_en';
+  const rangeSetting = document.getElementById('lengthRange') ? document.getElementById('lengthRange').value : 'medium';
+
+  const { fromSymbolStyle, toSymbolStyle } = resolveUnitSymbolStyles(symbolSetting);
+  const unitLabelFrom = (uKey) => getUnitLabel('time', uKey, fromSymbolStyle);
+  const unitLabelTo = (uKey) => getUnitLabel('time', uKey, toSymbolStyle);
+
+  const defs = UNIT_DEFINITIONS.time;
+  const scaleMap = {};
+  defs.forEach(d => { scaleMap[d.key] = d.scale; });
+
+  const checkedUnits = getSelectedCategoryUnits('time');
+  let allPairs = [];
+  for (let i = 0; i < checkedUnits.length; i++) {
+    for (let j = 0; j < checkedUnits.length; j++) {
+      const u1 = checkedUnits[i];
+      const u2 = checkedUnits[j];
+      if (scaleMap[u1] > scaleMap[u2]) {
+        allPairs.push({
+          big: u1,
+          small: u2,
+          ratio: scaleMap[u1] / scaleMap[u2]
+        });
+      }
+    }
+  }
+  if (allPairs.length === 0) {
+    allPairs = [{ big: 'hr', small: 'min', ratio: 60 }];
+  }
+
+  let isTrap = false;
+  if (modeSetting === 'trap' || trapSetting === 'always') {
+    isTrap = true;
+  } else if (trapSetting === 'mix') {
+    isTrap = (Math.random() < 0.35);
+  }
+
+  // Prefer adjacent pairs (ratio 24 or 60) for standard and compound modes
+  const adjacentPairs = allPairs.filter(p => p.ratio === 24 || p.ratio === 60);
+  const crossPairs = allPairs.filter(p => p.ratio === 1440 || p.ratio === 3600);
+
+  let pairPool = adjacentPairs.length > 0 ? adjacentPairs : allPairs;
+  if (isTrap && crossPairs.length > 0 && Math.random() < 0.25 && !['compound_to_single', 'compound_to_single_dec', 'single_to_compound'].includes(modeSetting)) {
+    pairPool = crossPairs;
+  }
+  const pair = pairPool[rand(0, pairPool.length - 1)];
+
+  const uBigFrom = unitLabelFrom(pair.big);
+  const uSmallTo = unitLabelTo(pair.small);
+  const uSmallFrom = unitLabelFrom(pair.small);
+  const uBigTo = unitLabelTo(pair.big);
+
+  const cleanSteps60 = [6, 12, 15, 18, 24, 30, 36, 42, 45, 48, 54];
+  const cleanSteps24 = [6, 12, 18, 3, 9, 15, 21];
+
+  function pickCleanTimeRemainder(ratio) {
+    if (ratio === 60) return cleanSteps60[rand(0, cleanSteps60.length - 1)];
+    if (ratio === 24) {
+      return (Math.random() < 0.75) ? [6, 12, 18][rand(0, 2)] : cleanSteps24[rand(0, cleanSteps24.length - 1)];
+    }
+    if (ratio === 3600) return [360, 720, 900, 1800, 2700][rand(0, 4)];
+    if (ratio === 1440) return [360, 720, 1080][rand(0, 2)];
+    return Math.round(ratio / 2);
+  }
+
+  if (isTrap) {
+    let trapType = rand(1, 3);
+    if (decimalSetting === 'no') trapType = rand(2, 3);
+    else if (decimalSetting === 'only') trapType = 1;
+
+    if (trapType === 1) {
+      // 陷阱 1：60進位/24進位小數換算陷阱 (如 1.5小時=90分鐘、0.25小時=15分鐘、45分鐘=0.75小時、36小時=1.5日)
+      const tPair = (adjacentPairs.length > 0) ? adjacentPairs[rand(0, adjacentPairs.length - 1)] : pair;
+      const tbFrom = unitLabelFrom(tPair.big);
+      const tsTo = unitLabelTo(tPair.small);
+      const tsFrom = unitLabelFrom(tPair.small);
+      const tbTo = unitLabelTo(tPair.big);
+
+      const whole = rand(0, tPair.ratio === 24 ? 3 : 5);
+      const rem = pickCleanTimeRemainder(tPair.ratio);
+      const totalSmall = whole * tPair.ratio + rem;
+      const decBig = Number((totalSmall / tPair.ratio).toFixed(3));
+
+      if (Math.random() < 0.55) {
+        return {
+          text: `${decBig} ${tbFrom} =`,
+          answer: String(totalSmall),
+          suffix: tsTo,
+          op: ''
+        };
+      } else {
+        return {
+          text: `${totalSmall} ${tsFrom} =`,
+          answer: String(decBig),
+          suffix: tbTo,
+          op: ''
+        };
+      }
+    }
+
+    if (trapType === 2 && (pair.ratio === 24 || pair.ratio === 60)) {
+      // 陷阱 2：整百數或個位餘數複名數陷阱 (如 3小時5分=185分、100分=1小時40分)
+      if (Math.random() < 0.5 && modeSetting !== 'single_to_compound') {
+        const bigVal = rand(2, 8);
+        const smallVal = rand(1, 9);
+        const totalInSmall = bigVal * pair.ratio + smallVal;
+        return {
+          text: `${bigVal} ${uBigFrom} ${smallVal} ${uSmallFrom} =`,
+          answer: String(totalInSmall),
+          suffix: uSmallTo,
+          op: ''
+        };
+      } else {
+        const roundTotals = pair.ratio === 60
+          ? [70, 80, 90, 100, 110, 130, 140, 150, 160, 170, 190, 200, 250, 310, 400]
+          : [30, 36, 40, 50, 60, 70, 80, 90, 100];
+        const totalInSmall = roundTotals[rand(0, roundTotals.length - 1)];
+        const bigVal = Math.floor(totalInSmall / pair.ratio);
+        const smallVal = totalInSmall % pair.ratio;
+        if (smallVal > 0) {
+          return {
+            text: `${totalInSmall} ${uSmallFrom} =`,
+            answer: String(bigVal),
+            suffix: uBigTo,
+            answer2: String(smallVal),
+            suffix2: uSmallTo,
+            isDualUnit: true,
+            op: ''
+          };
+        }
+      }
+    }
+
+    // 陷阱 3：跨級時間換算 (如 2小時=7200秒、1日=1440分鐘)
+    if (crossPairs.length > 0) {
+      const cPair = crossPairs[rand(0, crossPairs.length - 1)];
+      const cbFrom = unitLabelFrom(cPair.big);
+      const csTo = unitLabelTo(cPair.small);
+      const csFrom = unitLabelFrom(cPair.small);
+      const cbTo = unitLabelTo(cPair.big);
+      const mult = rand(1, 5);
+      const totalS = mult * cPair.ratio;
+      if (Math.random() < 0.6) {
+        return { text: `${mult} ${cbFrom} =`, answer: String(totalS), suffix: csTo, op: '' };
+      } else {
+        return { text: `${totalS} ${csFrom} =`, answer: String(mult), suffix: cbTo, op: '' };
+      }
+    }
+  }
+
+  let curMode = modeSetting;
+  if (decimalSetting === 'no' && (curMode === 'small_to_big_dec' || curMode === 'compound_to_single_dec')) {
+    curMode = (curMode === 'compound_to_single_dec') ? 'compound_to_single' : 'small_to_big_int';
+  } else if (decimalSetting === 'only') {
+    curMode = (curMode === 'compound_to_single_dec') ? 'compound_to_single_dec' : (Math.random() < 0.65 ? 'small_to_big_dec' : 'compound_to_single_dec');
+  } else if (modeSetting === 'mix' || modeSetting === 'trap') {
+    const candidateModes = ['big_to_small', 'small_to_big_int'];
+    if (decimalSetting !== 'no') {
+      candidateModes.push('small_to_big_dec', 'compound_to_single_dec');
+    }
+    if (decimalSetting !== 'only') {
+      candidateModes.push('compound_to_single', 'single_to_compound');
+    }
+    curMode = candidateModes[rand(0, candidateModes.length - 1)];
+  }
+
+  if (curMode === 'big_to_small') {
+    const maxM = pair.ratio >= 1440 ? 6 : (pair.ratio === 24 ? 12 : 20);
+    const val = getUnitBaseVal(1, maxM, rangeSetting);
+    return {
+      text: `${val} ${uBigFrom} =`,
+      answer: String(val * pair.ratio),
+      suffix: uSmallTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'small_to_big_int') {
+    const maxM = pair.ratio >= 1440 ? 6 : (pair.ratio === 24 ? 12 : 20);
+    const target = getUnitBaseVal(1, maxM, rangeSetting);
+    return {
+      text: `${target * pair.ratio} ${uSmallFrom} =`,
+      answer: String(target),
+      suffix: uBigTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'small_to_big_dec') {
+    const whole = rand(0, pair.ratio === 24 ? 4 : 8);
+    const rem = pickCleanTimeRemainder(pair.ratio);
+    const valInSmall = whole * pair.ratio + rem;
+    const ans = Number((valInSmall / pair.ratio).toFixed(3));
+    return {
+      text: `${valInSmall} ${uSmallFrom} =`,
+      answer: String(ans),
+      suffix: uBigTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'compound_to_single') {
+    const bigVal = getUnitBaseVal(1, pair.ratio === 24 ? 6 : 12, rangeSetting);
+    const smallVal = rand(1, Math.min(59, pair.ratio - 1));
+    const totalInSmall = bigVal * pair.ratio + smallVal;
+    return {
+      text: `${bigVal} ${uBigFrom} ${smallVal} ${uSmallFrom} =`,
+      answer: String(totalInSmall),
+      suffix: uSmallTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'compound_to_single_dec') {
+    const bigVal = getUnitBaseVal(1, pair.ratio === 24 ? 5 : 10, rangeSetting);
+    const rem = pickCleanTimeRemainder(pair.ratio);
+    const ans = Number((bigVal + rem / pair.ratio).toFixed(3));
+    return {
+      text: `${bigVal} ${uBigFrom} ${rem} ${uSmallFrom} =`,
+      answer: String(ans),
+      suffix: uBigTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'single_to_compound') {
+    const bigVal = getUnitBaseVal(1, pair.ratio === 24 ? 6 : 12, rangeSetting);
+    const smallVal = rand(1, Math.min(59, pair.ratio - 1));
+    const totalInSmall = bigVal * pair.ratio + smallVal;
+    return {
+      text: `${totalInSmall} ${uSmallFrom} =`,
+      answer: String(bigVal),
+      suffix: uBigTo,
+      answer2: String(smallVal),
+      suffix2: uSmallTo,
+      isDualUnit: true,
+      op: ''
+    };
+  }
+
+  const fbVal = rand(2, 10);
+  return {
+    text: `${fbVal} ${uBigFrom} =`,
+    answer: String(fbVal * pair.ratio),
+    suffix: uSmallTo,
+    op: ''
+  };
+}
+
+function buildMetricUnitQuestion(category, index) {
+  const modeSetting = document.getElementById('lengthMode') ? document.getElementById('lengthMode').value : 'mix';
+  const trapSetting = document.getElementById('trapMode') ? document.getElementById('trapMode').value : 'mix';
+  const decimalSetting = document.getElementById('unitDecimalMode') ? document.getElementById('unitDecimalMode').value : 'yes';
+  const symbolSetting = document.getElementById('unitSymbol') ? document.getElementById('unitSymbol').value : 'mix_zh_en';
+  const rangeSetting = document.getElementById('lengthRange') ? document.getElementById('lengthRange').value : 'medium';
+
+  const { fromSymbolStyle, toSymbolStyle } = resolveUnitSymbolStyles(symbolSetting);
+  const unitLabelFrom = (uKey) => getUnitLabel(category, uKey, fromSymbolStyle);
+  const unitLabelTo = (uKey) => getUnitLabel(category, uKey, toSymbolStyle);
+
+  const defs = UNIT_DEFINITIONS[category] || UNIT_DEFINITIONS.length;
+  const defMap = {};
+  defs.forEach(d => { defMap[d.key] = d; });
+
+  const checkedUnits = getSelectedCategoryUnits(category);
+  let allPairs = [];
+
+  for (let i = 0; i < checkedUnits.length; i++) {
+    for (let j = 0; j < checkedUnits.length; j++) {
+      if (i === j) continue;
+      const u1 = checkedUnits[i];
+      const u2 = checkedUnits[j];
+      const d1 = defMap[u1];
+      const d2 = defMap[u2];
+      if (!d1 || !d2) continue;
+
+      if (d1.scale > d2.scale) {
+        allPairs.push({
+          big: u1,
+          small: u2,
+          ratio: d1.scale / d2.scale,
+          isCrossGroup: d1.group && d2.group && d1.group !== d2.group
+        });
+      } else if (category === 'vol_cap' && d1.scale === d2.scale && u1 < u2) {
+        allPairs.push({
+          big: u1,
+          small: u2,
+          ratio: 1,
+          isEqualUnit: true,
+          isCrossGroup: true
+        });
+      }
+    }
+  }
+
+  // Filter out extreme ratios (> 1,000,000) unless no smaller ratio pair exists
+  const reasonablePairs = allPairs.filter(p => p.ratio <= 1000000);
+  let possiblePairs = reasonablePairs.length > 0 ? reasonablePairs : allPairs;
+
+  if (possiblePairs.length === 0) {
+    possiblePairs = [{ big: defs[0].key, small: defs[1].key, ratio: defs[0].scale / defs[1].scale }];
+  }
+
+  let isTrap = false;
+  if (modeSetting === 'trap' || trapSetting === 'always') {
+    isTrap = true;
+  } else if (trapSetting === 'mix') {
+    isTrap = (Math.random() < 0.35);
+  }
+
+  // Determine target question mode
+  let curMode = modeSetting;
+  if (decimalSetting === 'no' && (curMode === 'small_to_big_dec' || curMode === 'compound_to_single_dec')) {
+    curMode = (curMode === 'compound_to_single_dec') ? 'compound_to_single' : 'small_to_big_int';
+  } else if (decimalSetting === 'only') {
+    curMode = (curMode === 'compound_to_single_dec') ? 'compound_to_single_dec' : (Math.random() < 0.65 ? 'small_to_big_dec' : 'compound_to_single_dec');
+  } else if (modeSetting === 'mix' || modeSetting === 'trap') {
+    const candidateModes = ['big_to_small', 'small_to_big_int'];
+    if (decimalSetting !== 'no') {
+      candidateModes.push('small_to_big_dec', 'compound_to_single_dec');
+    }
+    if (decimalSetting !== 'only') {
+      candidateModes.push('compound_to_single', 'single_to_compound');
+    }
+    curMode = candidateModes[rand(0, candidateModes.length - 1)];
+  }
+
+  // Compound modes require ratio > 1
+  const isCompoundMode = ['compound_to_single', 'compound_to_single_dec', 'single_to_compound'].includes(curMode);
+  let activePairs = isCompoundMode ? possiblePairs.filter(p => p.ratio > 1) : possiblePairs;
+  if (activePairs.length === 0) activePairs = possiblePairs;
+
+  // In vol_cap, prioritize cross-group (volume <-> capacity) pairs
+  if (category === 'vol_cap') {
+    const crossGroupPairs = activePairs.filter(p => p.isCrossGroup);
+    if (crossGroupPairs.length > 0 && Math.random() < 0.8) {
+      activePairs = crossGroupPairs;
+    }
+  }
+
+  const pair = activePairs[rand(0, activePairs.length - 1)];
+
+  // Equal-scale unit conversion in vol_cap (e.g., 1 m³ = 1 kl, 1 cm³ = 1 ml)
+  if (pair.ratio === 1) {
+    const flip = Math.random() < 0.5;
+    const fromKey = flip ? pair.big : pair.small;
+    const toKey = flip ? pair.small : pair.big;
+    const uFrom = unitLabelFrom(fromKey);
+    const uTo = unitLabelTo(toKey);
+
+    let val;
+    if (decimalSetting === 'only' || (decimalSetting === 'yes' && Math.random() < 0.45)) {
+      val = Number((getUnitBaseVal(1, 50, rangeSetting) + rand(1, 99) / (Math.random() < 0.5 ? 10 : 100)).toFixed(2));
+    } else {
+      val = getUnitBaseVal(1, 250, rangeSetting);
+    }
+    return {
+      text: `${val} ${uFrom} =`,
+      answer: String(val),
+      suffix: uTo,
+      op: ''
+    };
+  }
+
+  const zeros = Math.max(1, Math.round(Math.log10(pair.ratio)));
+  const uBigFrom = unitLabelFrom(pair.big);
+  const uSmallTo = unitLabelTo(pair.small);
+  const uSmallFrom = unitLabelFrom(pair.small);
+  const uBigTo = unitLabelTo(pair.big);
+
+  // --- 陷阱題生成 ---
+  if (isTrap) {
+    let trapType = rand(1, 4);
+    if (decimalSetting === 'no') {
+      trapType = (pair.ratio >= 100) ? rand(1, 2) : 1;
+    } else if (decimalSetting === 'only') {
+      trapType = rand(3, 4);
+    }
+
+    if (trapType === 1) {
+      // 陷阱 1：大數跨級與多零大幅度換算
+      const bigNumberChoices = (zeros >= 5)
+        ? [5, 8, 12, 15, 20, 25, 35, 50, 80]
+        : (zeros === 4)
+          ? [15, 25, 40, 60, 80, 120, 150, 250, 500]
+          : [120, 250, 500, 800, 1200, 1500, 2000, 2500, 5000, 10000, 15000];
+      const bigVal = bigNumberChoices[rand(0, bigNumberChoices.length - 1)];
+
+      if (decimalSetting !== 'only' && (Math.random() < 0.55 || decimalSetting === 'no')) {
+        const ans = bigVal * pair.ratio;
+        return {
+          text: `${bigVal} ${uBigFrom} =`,
+          answer: String(ans),
+          suffix: uSmallTo,
+          op: ''
+        };
+      } else {
+        let smallVal = bigVal * pair.ratio;
+        let ansVal = bigVal;
+        if (decimalSetting === 'only') {
+          smallVal = (bigVal * 10 + rand(1, 9)) * (pair.ratio / 10);
+          ansVal = Number((smallVal / pair.ratio).toFixed(3));
+        }
+        return {
+          text: `${smallVal} ${uSmallFrom} =`,
+          answer: String(ansVal),
+          suffix: uBigTo,
+          op: ''
+        };
+      }
+    }
+
+    if (trapType === 2 && pair.ratio >= 100) {
+      // 陷阱 2：複名數中間補零 / 缺位陷阱 (如 5公里6公尺=5006公尺、3平方公尺45平方公分=30045平方公分、2立方公尺500立方公分=2000500立方公分)
+      const bigVal = rand(1, 25);
+      const maxSmallDigits = Math.min(3, zeros - 1);
+      const chosenDigits = rand(1, maxSmallDigits);
+      const smallVal = rand(1, Math.pow(10, chosenDigits) - 1);
+      const totalInSmall = bigVal * pair.ratio + smallVal;
+
+      if (modeSetting === 'single_to_compound') {
+        return {
+          text: `${totalInSmall} ${uSmallFrom} =`,
+          answer: String(bigVal),
+          suffix: uBigTo,
+          answer2: String(smallVal),
+          suffix2: uSmallTo,
+          isDualUnit: true,
+          op: ''
+        };
+      }
+      return {
+        text: `${bigVal} ${uBigFrom} ${smallVal} ${uSmallFrom} =`,
+        answer: String(totalInSmall),
+        suffix: uSmallTo,
+        op: ''
+      };
+    }
+
+    if (trapType === 3) {
+      // 陷阱 3：微小數逆換算與位數陷阱 (如 0.05公里=50公尺、0.03平方公尺=300平方公分、0.008立方公尺=8000立方公分)
+      const decPlaces = rand(1, Math.min(3, zeros));
+      const x = (decPlaces >= 2 && Math.random() < 0.35) ? (rand(1, 8) * 10 + rand(1, 9)) : rand(1, 9);
+      const decimalBig = Number((x / Math.pow(10, decPlaces)).toFixed(decPlaces));
+      const ansSmall = Math.round(decimalBig * pair.ratio);
+
+      if (Math.random() < 0.6) {
+        return {
+          text: `${decimalBig} ${uBigFrom} =`,
+          answer: String(ansSmall),
+          suffix: uSmallTo,
+          op: ''
+        };
+      } else {
+        return {
+          text: `${ansSmall} ${uSmallFrom} =`,
+          answer: String(decimalBig),
+          suffix: uBigTo,
+          op: ''
+        };
+      }
+    }
+
+    if (trapType === 4) {
+      // 陷阱 4：帶小數跨級與中間含零小數 (如 12.05公里=12050公尺、3.04平方公尺=30400平方公分、2.005立方公尺=2005000立方公分)
+      const intPart = rand(1, 18);
+      const decPlaces = Math.min(3, Math.max(1, zeros));
+      const rem = (decPlaces >= 2) ? rand(1, 9) : rand(1, 9);
+      const decVal = Number((intPart + rem / Math.pow(10, decPlaces)).toFixed(decPlaces));
+      const ans = Math.round(decVal * pair.ratio);
+
+      if (Math.random() < 0.65) {
+        return {
+          text: `${decVal} ${uBigFrom} =`,
+          answer: String(ans),
+          suffix: uSmallTo,
+          op: ''
+        };
+      } else {
+        return {
+          text: `${ans} ${uSmallFrom} =`,
+          answer: String(decVal),
+          suffix: uBigTo,
+          op: ''
+        };
+      }
+    }
+  }
+
+  // --- 標準題型生成 ---
+  if (curMode === 'big_to_small') {
+    const maxV = zeros >= 5 ? 25 : (zeros === 4 ? 40 : 60);
+    const val = getUnitBaseVal(1, maxV, rangeSetting);
+    const ans = val * pair.ratio;
+    return {
+      text: `${val} ${uBigFrom} =`,
+      answer: String(ans),
+      suffix: uSmallTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'small_to_big_int') {
+    const maxV = zeros >= 5 ? 25 : (zeros === 4 ? 40 : 50);
+    const target = getUnitBaseVal(1, maxV, rangeSetting);
+    const valInSmall = target * pair.ratio;
+    return {
+      text: `${valInSmall} ${uSmallFrom} =`,
+      answer: String(target),
+      suffix: uBigTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'small_to_big_dec') {
+    const maxDecPlaces = Math.min(3, zeros);
+    const decPlaces = rand(1, maxDecPlaces);
+    const base = getUnitBaseVal(0, zeros >= 4 ? 15 : 25, rangeSetting);
+    let rem = rand(1, Math.pow(10, decPlaces) - 1);
+    if (rem % 10 === 0) rem += rand(1, 9);
+    const ans = Number((base + rem / Math.pow(10, decPlaces)).toFixed(decPlaces));
+    const valInSmall = Math.round(ans * pair.ratio);
+
+    return {
+      text: `${valInSmall} ${uSmallFrom} =`,
+      answer: String(ans),
+      suffix: uBigTo,
+      op: ''
+    };
+  }
+
+  function generateCleanSmallPart() {
+    if (pair.ratio === 10) return rand(1, 9);
+    if (pair.ratio === 100) return rand(1, 99);
+    if (pair.ratio === 1000) {
+      const r = rand(1, 3);
+      if (r === 1) return rand(1, 9);
+      if (r === 2) return rand(10, 99);
+      return rand(100, 999);
+    }
+    if (pair.ratio === 10000) {
+      const r = rand(1, 3);
+      if (r === 1) return rand(1, 99);
+      if (r === 2) return rand(1, 99) * 100;
+      return rand(100, 9999);
+    }
+    // ratio >= 100000
+    const r = rand(1, 3);
+    if (r === 1) return rand(1, 999);
+    if (r === 2) return rand(1, 99) * 1000;
+    return rand(1, 999) * 100;
+  }
+
+  if (curMode === 'compound_to_single') {
+    const bigVal = getUnitBaseVal(1, zeros >= 4 ? 15 : 30, rangeSetting);
+    const smallVal = generateCleanSmallPart();
+    const totalInSmall = bigVal * pair.ratio + smallVal;
+    return {
+      text: `${bigVal} ${uBigFrom} ${smallVal} ${uSmallFrom} =`,
+      answer: String(totalInSmall),
+      suffix: uSmallTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'compound_to_single_dec') {
+    const bigVal = getUnitBaseVal(1, zeros >= 4 ? 15 : 25, rangeSetting);
+    const maxDecPlaces = Math.min(3, zeros);
+    const decPlaces = rand(1, maxDecPlaces);
+    let rem = rand(1, Math.pow(10, decPlaces) - 1);
+    if (rem % 10 === 0) rem += rand(1, 9);
+    const ans = Number((bigVal + rem / Math.pow(10, decPlaces)).toFixed(decPlaces));
+    const smallVal = Math.round((rem / Math.pow(10, decPlaces)) * pair.ratio);
+    return {
+      text: `${bigVal} ${uBigFrom} ${smallVal} ${uSmallFrom} =`,
+      answer: String(ans),
+      suffix: uBigTo,
+      op: ''
+    };
+  }
+
+  if (curMode === 'single_to_compound') {
+    const bigVal = getUnitBaseVal(1, zeros >= 4 ? 15 : 30, rangeSetting);
+    const smallVal = generateCleanSmallPart();
+    const totalInSmall = bigVal * pair.ratio + smallVal;
+    return {
+      text: `${totalInSmall} ${uSmallFrom} =`,
+      answer: String(bigVal),
+      suffix: uBigTo,
+      answer2: String(smallVal),
+      suffix2: uSmallTo,
+      isDualUnit: true,
+      op: ''
+    };
+  }
+
+  const fallbackVal = getUnitBaseVal(1, 30, rangeSetting);
+  return {
+    text: `${fallbackVal} ${uBigFrom} =`,
+    answer: String(fallbackVal * pair.ratio),
+    suffix: uSmallTo,
+    op: ''
+  };
+}
+
+function buildUnitQuestion(index) {
+  let cat = document.getElementById('unitCategory') ? document.getElementById('unitCategory').value : 'length';
+  if (cat === 'all_mix') {
+    const checkedCats = Array.from(document.querySelectorAll('.unit-mix-cat-cb:checked')).map(cb => cb.value);
+    const pool = checkedCats.length > 0 ? checkedCats : ['length', 'weight', 'capacity', 'area', 'volume', 'vol_cap', 'time'];
+    cat = pool[(index - 1) % pool.length];
+  }
+  if (cat === 'time') {
+    return buildTimeQuestion(index);
+  }
+  return buildMetricUnitQuestion(cat, index);
+}
+
+function buildLengthQuestion(index) {
+  return buildMetricUnitQuestion('length', index);
+}
+
+function buildQuestion(index, sheetContext = null){
+  const type = document.getElementById('numberType').value;
+  const intMode = (type === 'integer' && document.getElementById('integerMode')) ? document.getElementById('integerMode').value : 'arithmetic';
+
+  if (type === 'unit') {
+    return buildUnitQuestion(index);
+  }
+
+  if (type === 'integer' && intMode !== 'arithmetic') {
+    const subMode = resolveFactorMultipleSubMode(intMode, index);
+    if (subMode === 'factor') return buildFactorQuestion();
+    if (subMode === 'multiple') return buildMultipleQuestion();
+    if (subMode === 'common_factor') return buildCommonFactorQuestion(sheetContext);
+    if (subMode === 'common_multiple') return buildCommonMultipleQuestion(sheetContext);
+    if (subMode === 'gcd') return buildGcdQuestion(sheetContext);
+    if (subMode === 'lcm') return buildLcmQuestion(sheetContext);
+  }
+
+  const opMode = document.getElementById('operatorMode').value;
+  if (opMode === 'four_ops') {
+    return buildFourOpsQuestion(index);
+  }
+
+  const op = chooseOperator();
+  const fracMode = document.getElementById('fractionMode').value;
+
+  let a,b;
+  let guard = 0;
+
+  if (type === 'fraction' && (fracMode === 'm2i' || fracMode === 'i2m' || fracMode === 'mix_conv')) {
+    // Conversion mode: Mixed <-> Improper
+    const doSimplify = shouldSimplifyFraction();
+    do {
+      let isMixedToImproper;
+      if (fracMode === 'm2i') isMixedToImproper = true;
+      else if (fracMode === 'i2m') isMixedToImproper = false;
+      else isMixedToImproper = (index % 2 === 1);
+
+      const rawMask = document.getElementById('maskA').value || '';
+      if (isMixedToImproper) {
+        // Mixed -> Improper: First number is mixed, second is blank
+        a = parseMask(rawMask.includes('+') ? rawMask : "*+*/*");
+        const f = parseFraction(a);
+        if (f.d <= 1 || f.w <= 0 || f.n <= 0 || (guard < 200 && f.n >= f.d)) {
+          guard++;
+          continue;
+        }
+        const imp = toImproper(f);
+        const target = doSimplify ? simplify(imp.n, imp.d) : imp;
+        let answer;
+        if (target.d === 1) {
+          answer = String(target.n);
+        } else {
+          answer = `${target.n}/${target.d}`;
+        }
+        return { text: `${a} =`, answer: answer, op: '' };
+      } else {
+        // Improper -> Mixed: First number is improper, second is blank
+        if ((rawMask === '*/*' || rawMask.includes('+')) && guard > 60) {
+          const d = rand(2, 9);
+          const n = rand(d, d * 4 + 3);
+          a = `${n}/${d}`;
+        } else {
+          a = parseMask(rawMask.includes('+') ? "*/*" : (rawMask || "*/*"));
+        }
+        const imp = parseFraction(a);
+        if (imp.d <= 1 || imp.n < imp.d) {
+          guard++;
+          continue;
+        }
+        const m = toMixed(imp, doSimplify);
+        const answer = (m.n === 0 || m.d === 1) ? String(m.w + (m.d === 1 ? m.n : 0)) : `${m.w}+${m.n}/${m.d}`;
+        return { text: `${a} =`, answer: answer, op: '' };
+      }
+    } while (guard < 300);
+    // Fallback if conversion fails
+    return { text: "3/2 =", answer: "1+1/2", op: '' };
+  }
+
+  do{
+
+    a = parseMask(
+      document.getElementById('maskA').value
+    );
+
+    b = parseMask(
+      document.getElementById('maskB').value
+    );
+
+    if(op==='-'){
+
+      if(
+        document.getElementById('negativeMode').value
+        === 'yes'
+      ){
+        let valA, valB;
+        if (type === 'decimal') { valA = parseFloat(a); valB = parseFloat(b); }
+        else if (type === 'fraction') {
+          const f1 = toImproper(parseFraction(a)); const f2 = toImproper(parseFraction(b));
+          valA = f1.n / f1.d; valB = f2.n / f2.d;
+        } else { valA = a; valB = b; }
+
+        if(valA<valB){
+          [a,b] = [b,a];
+        }
+      }
+    }
+
+    if(op==='÷' && type === 'integer'){
+
+      if(b===0) b=rand(2,9);
+
+      const mode =
+      document.getElementById('divisionMode').value;
+
+      if(mode==='integer'){
+        if (a < b) [a, b] = [b, a];
+        a = a - (a % b);
+      } else if(mode==='remainder'){
+        if (a < b) [a, b] = [b, a];
+      } else if(mode==='decimal'){
+        // Allow a < b
+      } else if(mode==='mixed_rem'){
+        if (a < b) [a, b] = [b, a];
+        if (Math.random() < 0.5) a = a - (a % b);
+      } else if(mode==='mixed_dec'){
+        if (Math.random() < 0.5) {
+          if (a < b) [a, b] = [b, a];
+          a = a - (a % b);
+        }
+      }
+    }
+
+    guard++;
+
+  }while(
+    (badQuestion(a,b,op) || (op==='÷' && a===0)) &&
+    guard<500
+  );
+
+  // Fallback for extreme cases to avoid returning bad questions
+  if (guard >= 500 && badQuestion(a, b, op)) {
+    a = rand(10, 20);
+    b = rand(2, 5);
+    if (op === '-') a = 20, b = 10;
+    if (op === '÷') a = 20, b = 4;
+  }
+
+  const carryMode =
+  document.getElementById('carryMode').value;
+
+  if(type === 'integer'){
+    if(op==='+'){
+
+      const carry = hasCarry(a,b);
+
+      if(carryMode==='need' && !carry){
+        return buildQuestion(index);
+      }
+
+      if(carryMode==='none' && carry){
+        return buildQuestion(index);
+      }
+    }
+
+    if(op==='-'){
+
+      const borrow = hasBorrow(a,b);
+
+      if(carryMode==='need' && !borrow){
+        return buildQuestion(index);
+      }
+
+      if(carryMode==='none' && borrow){
+        return buildQuestion(index);
+      }
+    }
+  }
+
+  return {
+    text:`${a}${op}${b}=`,
+    answer:calculate(a,b,op),
+    op: op
+  };
+}
+
+function getLayoutConfig(total, isFourOps = false, isFactorMultiple = false, isUnit = false){
+  const userCol = document.getElementById('columnLayout') ? document.getElementById('columnLayout').value : 'auto';
+  const type = document.getElementById('numberType') ? document.getElementById('numberType').value : 'integer';
+  const intMode = (type === 'integer' && document.getElementById('integerMode')) ? document.getElementById('integerMode').value : 'arithmetic';
+  const isLongFactorMode = isFactorMultiple && !['gcd', 'lcm', 'mix_gcd_lcm'].includes(intMode);
+  const unitCat = document.getElementById('unitCategory') ? document.getElementById('unitCategory').value : 'length';
+  const unitMode = document.getElementById('lengthMode') ? document.getElementById('lengthMode').value : 'mix';
+  const unitSym = document.getElementById('unitSymbol') ? document.getElementById('unitSymbol').value : 'mix_zh_en';
+  const isLongUnitMode = isUnit && (
+    unitSym === 'both' ||
+    ['area', 'volume', 'vol_cap', 'all_mix'].includes(unitCat) ||
+    ['compound_to_single', 'compound_to_single_dec', 'single_to_compound'].includes(unitMode)
+  );
+
+  let columns = 2;
+  if (userCol !== 'auto') {
+    columns = parseInt(userCol, 10) || 2;
+  } else {
+    if(total > 30) columns = 3;
+    if(total > 55) columns = 4;
+    if(total > 80) columns = 5;
+
+    if ((isFactorMultiple || isUnit) && columns > 3) {
+      columns = 3;
+    }
+    if ((isLongFactorMode || isLongUnitMode) && total <= 44) {
+      columns = 2;
+    }
+  }
+
+  const rows = Math.ceil(total / columns);
+  let size = Math.round(Math.max(10, 24 - (columns * 2)) * 1.5);
+  if (columns === 1) {
+    if (rows > 35) size = 11;
+    else if (rows > 25) size = 13;
+    else if (rows > 18) size = 16;
+    else if (rows > 12) size = 20;
+    else size = 24;
+  } else if (isFourOps) {
+    size = Math.max(11, Math.round(size * 0.72));
+  } else if (isFactorMultiple) {
+    if (columns >= 4) size = 11;
+    else if (columns === 3) size = isLongFactorMode ? 12 : 14;
+    else if (columns === 2) size = isLongFactorMode ? 15 : 17;
+    else size = 13;
+  } else if (isUnit) {
+    if (columns >= 4) size = 11;
+    else if (columns === 3) size = isLongUnitMode ? 12 : 13;
+    else if (columns === 2) size = isLongUnitMode ? 15 : 16;
+    else size = 13;
+  } else {
+    if (columns === 2) size = Math.max(size, 20);
+    else if (columns === 3) size = Math.max(size, 16);
+    else if (columns >= 4) size = Math.max(size, 14);
+  }
+  return { columns, rows, size };
+}
+
+function getAnswerFontStyle(ansStr, isFraction) {
+  if (isFraction) return '';
+  const len = String(ansStr || '').length;
+  if (len <= 7) return '';
+  if (len > 25) return 'font-size:10px; line-height:1.1; padding:2px;';
+  if (len > 18) return 'font-size:11px; line-height:1.15; padding:2px;';
+  if (len > 12) return 'font-size:12px; line-height:1.2; padding:2px;';
+  return 'font-size:13px; line-height:1.2; padding:2px;';
+}
+
+function createQuestionHTML(
+  i,
+  text,
+  isAnswer=false,
+  answer='',
+  mainOp='',
+  suffix='',
+  qObj=null
+){
+  const type = document.getElementById('numberType').value;
+  const intMode = (type === 'integer' && document.getElementById('integerMode')) ? document.getElementById('integerMode').value : 'arithmetic';
+  const isFactorMultiple = (type === 'integer' && intMode !== 'arithmetic');
+  const isUnit = (type === 'unit');
+  const isDualUnit = Boolean(qObj && qObj.isDualUnit);
+  const answer2 = (qObj && qObj.answer2 !== undefined) ? qObj.answer2 : '';
+  const suffix2 = (qObj && qObj.suffix2 !== undefined) ? qObj.suffix2 : '';
+
+  let displayText = text;
+  let displayAnswer = answer;
+
+  if (type === 'fraction') {
+    if (mainOp) {
+      const parts = text.split(mainOp);
+      const f1 = formatFractionMathML(parts[0].trim());
+      const f2 = formatFractionMathML(parts[1].replace('=', '').trim());
+      displayText = `${f1} ${mainOp} ${f2} ${text.includes('=') ? '=' : ''}`;
+    } else if (text.includes('=')) {
+      const parts = text.split('=');
+      displayText = `${formatFractionMathML(parts[0].trim())} = ${formatFractionMathML(parts[1].trim())}`;
+    } else {
+      displayText = formatFractionMathML(text);
+    }
+    displayAnswer = formatFractionMathML(answer);
+  }
+
+  const answerStyle = isAnswer ? getAnswerFontStyle(answer, type === 'fraction') : '';
+  const answer2Style = isAnswer ? getAnswerFontStyle(answer2, false) : '';
+
+  const factorBoxClass = isFactorMultiple ? ' factor-box' : '';
+  const unitBoxClass = isUnit ? ' unit-box' : '';
+  const fractionBoxClass = (type === 'fraction') ? ' fraction-box' : '';
+  const boxStyle = document.getElementById('boxStyle') ? document.getElementById('boxStyle').value : 'box';
+  const boxStyleClass = boxStyle === 'underline' ? ' style-underline' : ' style-box';
+
+  let unitCompactClass = '';
+  if (isUnit) {
+    const totalCharLen = String(displayText).length + String(suffix).length + String(suffix2).length + (isDualUnit ? 6 : 0);
+    if (totalCharLen > 20) unitCompactClass = ' unit-xcompact';
+    else if (totalCharLen > 14) unitCompactClass = ' unit-compact';
+  }
+
+  const suffixHTML = suffix ? `<div class="qsuffix${unitCompactClass}">${suffix}</div>` : '';
+  const suffix2HTML = suffix2 ? `<div class="qsuffix${unitCompactClass}">${suffix2}</div>` : '';
+
+  if (isDualUnit) {
+    if (isAnswer) {
+      return `
+      <div class="question">
+        <div class="qnum">${i}.</div>
+        <div class="qtext${unitCompactClass}">${displayText}</div>
+        <div class="answer-box answer unit-box unit-dual-box${boxStyleClass}" style="${answerStyle}">${displayAnswer}</div>
+        ${suffixHTML}
+        <div class="answer-box answer unit-box unit-dual-box${boxStyleClass}" style="margin-left:5px; ${answer2Style}">${answer2}</div>
+        ${suffix2HTML}
+      </div>`;
+    }
+
+    return `
+    <div class="question" data-qindex="${i}">
+      <div class="qnum">${i}.</div>
+      <div class="qtext${unitCompactClass}">${displayText}</div>
+      <div class="answer-wrapper unit-box">
+        <input type="text"
+               class="answer-box answer-input unit-box unit-dual-box${boxStyleClass}"
+               data-qindex="${i}"
+               data-ans="${encodeURIComponent(answer)}"
+               placeholder=""
+               autocomplete="off"
+               spellcheck="false"
+               onkeydown="handleAnswerKey(event, this)">
+        ${suffixHTML}
+        <input type="text"
+               class="answer-box answer-input unit-box unit-dual-box${boxStyleClass}"
+               style="margin-left:5px;"
+               data-qindex="${i}"
+               data-ans="${encodeURIComponent(answer2)}"
+               placeholder=""
+               autocomplete="off"
+               spellcheck="false"
+               onkeydown="handleAnswerKey(event, this)">
+        ${suffix2HTML}
+        <span class="feedback-mark"></span>
+      </div>
+    </div>`;
+  }
+
+  if(isAnswer){
+    return `
+    <div class="question">
+      <div class="qnum">${i}.</div>
+      <div class="qtext${unitCompactClass}">${displayText}</div>
+      <div class="answer-box answer${factorBoxClass}${unitBoxClass}${fractionBoxClass}${boxStyleClass}" style="${answerStyle}">${displayAnswer}</div>
+      ${suffixHTML}
+    </div>`;
+  }
+
+  return `
+  <div class="question" data-qindex="${i}">
+    <div class="qnum">${i}.</div>
+    <div class="qtext${unitCompactClass}">${displayText}</div>
+    <div class="answer-wrapper${factorBoxClass}${unitBoxClass}${fractionBoxClass}">
+      <input type="text"
+             class="answer-box answer-input${factorBoxClass}${unitBoxClass}${fractionBoxClass}${boxStyleClass}"
+             data-qindex="${i}"
+             data-ans="${encodeURIComponent(answer)}"
+             placeholder=""
+             autocomplete="off"
+             spellcheck="false"
+             onkeydown="handleAnswerKey(event, this)">
+      ${suffixHTML}
+      <span class="feedback-mark"></span>
+    </div>
+  </div>`;
+}
+
+function normalizeListAnswer(str) {
+  if (!str) return [];
+  return str.toString()
+    .replace(/[，、\s]+/g, ',')
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+    .sort((a, b) => {
+      const na = parseFloat(a);
+      const nb = parseFloat(b);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return a.localeCompare(b);
+    });
+}
+
+function isAnswerMatch(userVal, correctVal) {
+  userVal = (userVal || '').toString().trim();
+  correctVal = (correctVal || '').toString().trim();
+  if (!userVal) return false;
+  if (userVal === correctVal) return true;
+
+  // Clean unit suffix and thousand separators if student typed them
+  const cleanU = userVal
+    .replace(/平方公里|平方公尺|平方公分|平方釐米|立方公尺|立方公分|立方釐米|公頃|公畝|公里|公尺|公分|釐米|毫米|公噸|公斤|公克|毫克|公秉|千公升|分公升|公合|毫公升|毫升|公升|小時|分鐘|c\.c\.|cc|km²|m²|cm²|km2|m2|cm2|m³|cm³|m3|cm3|day|hr|min|sec|ha|kl|dl|ml|km|cm|mm|kg|mg|m|t|g|l|a|d|h|s|日|天|時|分|秒|\(|\)/gi, '')
+    .replace(/,/g, '')
+    .trim();
+  const cleanC = correctVal.replace(/,/g, '').trim();
+  if (cleanU && cleanU === cleanC) return true;
+
+  if (correctVal.includes(',') || userVal.includes('、') || userVal.includes(',') || userVal.includes(' ')) {
+    const uList = normalizeListAnswer(userVal);
+    const cList = normalizeListAnswer(correctVal);
+    if (uList.length === cList.length && uList.length > 0) {
+      const match = uList.every((val, idx) => val === cList[idx] || (parseFloat(val) === parseFloat(cList[idx]) && !isNaN(parseFloat(val))));
+      if (match) return true;
+    }
+  }
+
+  const normU = userVal.replace(/\s*\+\s*/g, '+').replace(/\s+/g, '+');
+  const normC = correctVal.replace(/\s*\+\s*/g, '+').replace(/\s+/g, '+');
+  if (normU === normC) return true;
+
+  const numU = parseFloat(cleanU || userVal);
+  const numC = parseFloat(cleanC || correctVal);
+  if (!isNaN(numU) && !isNaN(numC) && !correctVal.includes('/') && !correctVal.includes('+')) {
+    if (Math.abs(numU - numC) < 1e-6) return true;
+  }
+
+  return false;
+}
+
+function checkInteractiveAnswers() {
+  const questionEls = Array.from(document.querySelectorAll('.question[data-qindex]'));
+  if (questionEls.length === 0) return;
+
+  let correctCount = 0;
+  let answeredCount = 0;
+  const total = questionEls.length;
+
+  questionEls.forEach(qEl => {
+    const qInputs = Array.from(qEl.querySelectorAll('.answer-input'));
+    if (qInputs.length === 0) return;
+    const mark = qEl.querySelector('.feedback-mark');
+
+    let allCorrect = true;
+    let anyAnswered = false;
+    const correctParts = [];
+
+    qInputs.forEach(input => {
+      const correctAns = decodeURIComponent(input.getAttribute('data-ans') || '');
+      correctParts.push(correctAns);
+      const userVal = input.value.trim();
+
+      if (userVal.length > 0) anyAnswered = true;
+
+      if (isAnswerMatch(userVal, correctAns)) {
+        input.classList.remove('is-wrong');
+        input.classList.add('is-correct');
+      } else {
+        allCorrect = false;
+        input.classList.remove('is-correct');
+        input.classList.add('is-wrong');
+      }
+    });
+
+    if (anyAnswered) answeredCount++;
+
+    if (allCorrect) {
+      correctCount++;
+      if (mark) {
+        mark.className = 'feedback-mark correct';
+        mark.innerHTML = '✓';
+      }
+    } else {
+      if (mark) {
+        mark.className = 'feedback-mark wrong';
+        mark.innerHTML = `✗ (${correctParts.join(' , ')})`;
+      }
+    }
+  });
+
+  const score = Math.round((correctCount / total) * 100);
+
+  document.querySelectorAll('.score-display-box').forEach(el => {
+    el.innerHTML = `得分：<span style="font-size:15px; color:#b91c1c;">${score}</span> 分 (對 ${correctCount} / 共 ${total} 題)`;
+  });
+
+  const banner = document.getElementById('interactiveBanner');
+  const bannerScore = document.getElementById('bannerScore');
+  const bannerTitle = document.getElementById('bannerTitle');
+  const bannerDetail = document.getElementById('bannerDetail');
+
+  if (banner && bannerScore && bannerTitle && bannerDetail) {
+    bannerScore.innerText = score + '分';
+    if (score === 100) {
+      bannerTitle.innerText = '🎉 完美滿分！太厲害了！';
+      bannerScore.style.color = '#15803d';
+      bannerScore.style.backgroundColor = '#dcfce7';
+    } else if (score >= 80) {
+      bannerTitle.innerText = '👏 表現優異！繼續保持！';
+      bannerScore.style.color = '#1d4ed8';
+      bannerScore.style.backgroundColor = '#dbeafe';
+    } else if (score >= 60) {
+      bannerTitle.innerText = '💪 及格了！再細心一點會更好！';
+      bannerScore.style.color = '#b45309';
+      bannerScore.style.backgroundColor = '#fef3c7';
+    } else {
+      bannerTitle.innerText = '📝 再接再厲，多練習幾次一定會進步！';
+      bannerScore.style.color = '#b91c1c';
+      bannerScore.style.backgroundColor = '#fee2e2';
+    }
+    bannerDetail.innerText = `答對 ${correctCount} 題 / 共 ${total} 題 (已填寫 ${answeredCount} 題)，正確率 ${score}%`;
+    banner.style.display = 'flex';
+    banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function clearInteractiveInputs() {
+  const inputs = document.querySelectorAll('.answer-input');
+  inputs.forEach(input => {
+    input.value = '';
+    input.classList.remove('is-correct', 'is-wrong');
+  });
+  document.querySelectorAll('.feedback-mark').forEach(mark => {
+    mark.className = 'feedback-mark';
+    mark.innerHTML = '';
+  });
+  document.querySelectorAll('.score-display-box').forEach(el => {
+    el.innerHTML = '得分：____________';
+  });
+  const banner = document.getElementById('interactiveBanner');
+  if (banner) banner.style.display = 'none';
+  if (inputs.length > 0) inputs[0].focus();
+}
+
+function handleAnswerKey(e, input) {
+  const inputs = Array.from(document.querySelectorAll('.answer-input'));
+  const idx = inputs.indexOf(input);
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (idx !== -1 && idx < inputs.length - 1) {
+      inputs[idx + 1].focus();
+      inputs[idx + 1].select();
+    } else {
+      checkInteractiveAnswers();
+    }
+  } else if (e.key === 'ArrowUp' && (input.selectionStart === 0 || e.ctrlKey)) {
+    if (idx > 0) {
+      inputs[idx - 1].focus();
+    }
+  } else if (e.key === 'ArrowDown' && (input.selectionStart === input.value.length || e.ctrlKey)) {
+    if (idx !== -1 && idx < inputs.length - 1) {
+      inputs[idx + 1].focus();
+    }
+  }
+}
+
+function getUnitHintText() {
+  const cat = document.getElementById('unitCategory') ? document.getElementById('unitCategory').value : 'length';
+  const cmChoice = document.getElementById('cmName') ? document.getElementById('cmName').value : '公分';
+  const cmBase = (cmChoice === '釐米') ? '釐米' : '公分';
+  const mlChoice = document.getElementById('mlName') ? document.getElementById('mlName').value : '毫升';
+
+  if (cat === 'length') {
+    return `【換算參考：1 公里(km) = 1000 公尺(m)、1 公尺(m) = 100 ${cmChoice}(cm)、1 ${cmChoice}(cm) = 10 毫米(mm)】`;
+  }
+  if (cat === 'weight') {
+    return `【換算參考：1 公噸(t) = 1000 公斤(kg)、1 公斤(kg) = 1000 公克(g)、1 公克(g) = 1000 毫克(mg)】`;
+  }
+  if (cat === 'capacity') {
+    return `【換算參考：1 公秉(kl) = 1000 公升(L)、1 公升(L) = 10 分公升(dl) = 1000 ${mlChoice}(ml)、1 分公升(dl) = 100 ${mlChoice}(ml)】`;
+  }
+  if (cat === 'area') {
+    return `【換算參考：1 平方公里(km²) = 100 公頃(ha)、1 公頃(ha) = 100 公畝(a)、1 公畝(a) = 100 平方公尺(m²)、1 平方公尺(m²) = 10000 平方${cmBase}(cm²)】`;
+  }
+  if (cat === 'volume') {
+    return `【換算參考：1 立方公尺(m³) = 1000000 立方${cmBase}(cm³)】`;
+  }
+  if (cat === 'vol_cap') {
+    return `【換算參考：1 立方公尺(m³) = 1 公秉(kl) = 1000 公升(L)、1 公升(L) = 1000 ${mlChoice}(ml) = 1000 立方${cmBase}(cm³)、1 立方${cmBase}(cm³) = 1 ${mlChoice}(ml)】`;
+  }
+  if (cat === 'time') {
+    return `【換算參考：1 日(d) = 24 小時(hr)、1 小時(hr) = 60 分鐘(min)、1 分鐘(min) = 60 秒(s)】`;
+  }
+  return `【換算參考：1km=1000m=100000cm | 1t=1000kg=1000000g | 1kl=1000L, 1L=10dl=1000ml | 1km²=100ha=10000a=1000000m², 1m²=10000cm² | 1m³=1kl=1000L=1000000cm³ | 1日=24時, 1時=60分, 1分=60秒】`;
+}
+
+function generateWorksheet(){
+  usedQuestions.clear();
+
+  const total = Math.max(
+    1,
+    Math.min(
+      100,
+      parseInt(document.getElementById('questionCount').value) || 40
+    )
+  );
+
+  const sheetCount = Math.max(
+    1,
+    Math.min(
+      50,
+      parseInt(document.getElementById('sheetCount').value) || 1
+    )
+  );
+
+  const answerMode = document.getElementById('includeAnswer').value;
+  const isFourOps = (document.getElementById('operatorMode').value === 'four_ops');
+  const type = document.getElementById('numberType').value;
+  const isUnit = (type === 'unit');
+  const intMode = (type === 'integer' && document.getElementById('integerMode')) ? document.getElementById('integerMode').value : 'arithmetic';
+  const isFactorMultiple = (type === 'integer' && intMode !== 'arithmetic');
+
+  const { columns, rows, size } = getLayoutConfig(total, isFourOps, isFactorMultiple, isUnit);
+  document.documentElement.style.setProperty('--qsize', size + 'px');
+
+  const container = document.getElementById('papersContainer');
+  if(!container) return;
+  container.innerHTML = '';
+
+  const banner = document.getElementById('interactiveBanner');
+  if (banner) banner.style.display = 'none';
+
+  const sheetsData = [];
+
+  for(let s = 1; s <= sheetCount; s++){
+    const questions = [];
+    const sheetUsed = new Set();
+
+    let totalGcd = 0;
+    let totalLcm = 0;
+    let totalCf = 0;
+    let totalCm = 0;
+    if (type === 'integer' && intMode !== 'arithmetic') {
+      for (let idx = 1; idx <= total; idx++) {
+        const subMode = resolveFactorMultipleSubMode(intMode, idx);
+        if (subMode === 'gcd') totalGcd++;
+        else if (subMode === 'lcm') totalLcm++;
+        else if (subMode === 'common_factor') totalCf++;
+        else if (subMode === 'common_multiple') totalCm++;
+      }
+    }
+
+    const sheetContext = {
+      sheetUsed,
+      usedQuestions,
+      gcdSlotIndex: 0,
+      gcdOneCount: 0,
+      gcdOneTargetSlot: totalGcd >= 1 ? rand(1, totalGcd) : -1,
+      lcmSlotIndex: 0,
+      lcmCoprimeCount: 0,
+      lcmCoprimeTargetSlot: totalLcm >= 1 ? rand(1, totalLcm) : 1,
+      cfSlotIndex: 0,
+      cfOneCount: 0,
+      cfOneTargetSlot: totalCf >= 1 ? rand(1, totalCf) : -1,
+      cmSlotIndex: 0,
+      cmCoprimeCount: 0,
+      cmCoprimeTargetSlot: totalCm >= 1 ? rand(1, totalCm) : 1,
+      usedGcdPairs: new Set(),
+      usedLcmPairs: new Set(),
+      usedCfPairs: new Set(),
+      usedCmPairs: new Set(),
+      recentGcds: [],
+      recentLcmMultipliers: [],
+      recentCfGcds: [],
+      recentCmMultipliers: []
+    };
+
+    for(let i = 1; i <= total; i++){
+      let q;
+      let qKey;
+      let guard = 0;
+
+      do{
+        q = buildQuestion(i, sheetContext);
+        qKey = isUnit ? `${q.text}|${q.suffix || ''}|${q.suffix2 || ''}` : q.text;
+        guard++;
+      } while((sheetUsed.has(qKey) || (guard < 200 && usedQuestions.has(qKey))) && guard < 500);
+
+      usedQuestions.add(qKey);
+      sheetUsed.add(qKey);
+      if (q.kind === 'gcd') {
+        sheetContext.gcdSlotIndex++;
+        if (q.isGcdOne || q.answer === '1') {
+          sheetContext.gcdOneCount++;
+        }
+        if (q.pairKey) sheetContext.usedGcdPairs.add(q.pairKey);
+        if (q.gcdVal) {
+          sheetContext.recentGcds.push(q.gcdVal);
+          if (sheetContext.recentGcds.length > 3) sheetContext.recentGcds.shift();
+        }
+      } else if (q.kind === 'lcm') {
+        sheetContext.lcmSlotIndex++;
+        if (q.isLcmCoprimeProduct) {
+          sheetContext.lcmCoprimeCount++;
+        }
+        if (q.pairKey) sheetContext.usedLcmPairs.add(q.pairKey);
+        if (q.lcmMultiplier) {
+          sheetContext.recentLcmMultipliers.push(q.lcmMultiplier);
+          if (sheetContext.recentLcmMultipliers.length > 2) sheetContext.recentLcmMultipliers.shift();
+        }
+      } else if (q.kind === 'common_factor') {
+        sheetContext.cfSlotIndex++;
+        if (q.isCfOne || q.answer === '1') {
+          sheetContext.cfOneCount++;
+        }
+        if (q.pairKey) sheetContext.usedCfPairs.add(q.pairKey);
+        if (q.gcdVal) {
+          sheetContext.recentCfGcds.push(q.gcdVal);
+          if (sheetContext.recentCfGcds.length > 3) sheetContext.recentCfGcds.shift();
+        }
+      } else if (q.kind === 'common_multiple') {
+        sheetContext.cmSlotIndex++;
+        if (q.isCmCoprimeProduct) {
+          sheetContext.cmCoprimeCount++;
+        }
+        if (q.pairKey) sheetContext.usedCmPairs.add(q.pairKey);
+        if (q.cmMultiplier) {
+          sheetContext.recentCmMultipliers.push(q.cmMultiplier);
+          if (sheetContext.recentCmMultipliers.length > 2) sheetContext.recentCmMultipliers.shift();
+        }
+      }
+      questions.push(q);
+    }
+
+    sheetsData.push({ sheetIndex: s, questions });
+  }
+
+  let hintHTML = '';
+  if (isFourOps) {
+    hintHTML = `<div class="rule-hint" style="text-align:center; font-size:12px; font-weight:bold; color:#222; margin-bottom:5px; background:#f5f5f5; padding:2px 8px; border-radius:4px; letter-spacing:0.5px;">【提示：有括號先算、先乘除後加減、由左而右計算】</div>`;
+  } else if (isUnit) {
+    const showUnitHint = document.getElementById('unitHint') ? document.getElementById('unitHint').value === 'yes' : false;
+    if (showUnitHint) {
+      hintHTML = `<div class="rule-hint" style="text-align:center; font-size:11.5px; font-weight:bold; color:#222; margin-bottom:5px; background:#f5f5f5; padding:2px 8px; border-radius:4px; letter-spacing:0.3px;">${getUnitHintText()}</div>`;
+    }
+  }
+
+  function buildPaperHTML(sIndex, questions, isAnswer) {
+    const titleText = isAnswer ? '答案卷' : '數學訓練卷';
+    const subTitle = sheetCount > 1 ? `<span style="font-size:18px; font-weight:normal; color:#555; margin-left:8px;">(第 ${sIndex} 份)</span>` : '';
+    const paperClass = isAnswer ? 'paper answer-paper' : 'paper question-paper';
+
+    let gridHTML = '';
+    for(let i = 1; i <= questions.length; i++){
+      const q = questions[i - 1];
+      gridHTML += createQuestionHTML(i, q.text, isAnswer, q.answer, q.op, q.suffix || '', q);
+    }
+
+    return `
+    <div class="${paperClass}">
+      <div class="title">${titleText}${subTitle}</div>
+      <div class="info-row">
+        <div>姓名：____________</div>
+        <div>日期：${formattedDate}</div>
+        <div class="score-display-box">${isAnswer ? '得分' : '分數'}：____________</div>
+      </div>
+      ${hintHTML}
+      <div class="question-grid" style="grid-template-columns: repeat(${columns}, 1fr); grid-template-rows: repeat(${rows}, 1fr);">
+        ${gridHTML}
+      </div>
+    </div>`;
+  }
+
+  let allHTML = '';
+
+  if (answerMode === 'none') {
+    for (const sheet of sheetsData) {
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, false);
+    }
+  } else if (answerMode === 'alternate') {
+    for (const sheet of sheetsData) {
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, false);
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, true);
+    }
+  } else {
+    // 'back' (default): All question papers first, then all answer papers
+    for (const sheet of sheetsData) {
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, false);
+    }
+    for (const sheet of sheetsData) {
+      allHTML += buildPaperHTML(sheet.sheetIndex, sheet.questions, true);
+    }
+  }
+
+  container.innerHTML = allHTML;
+}
+
+generateWorksheet();
+
+</script>
+
+</body>
+</html>
